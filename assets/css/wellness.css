@@ -1,0 +1,44 @@
+.wellness-grid{display:grid;gap:24px;grid-template-columns:2fr 1fr;grid-template-areas:"wellbeing device" "trends notes"}
+.hr-badge{padding:4px 10px;border-radius:999px;border:1px solid rgba(39,224,255,.25);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.4px}
+.hr-badge--low,.hr-badge--strong{color:#0FF7B1;background:rgba(15,247,177,.16);border-color:rgba(15,247,177,.3)}
+.hr-badge--moderate,.hr-badge--neutral{color:#FFD966;background:rgba(255,217,102,.18);border-color:rgba(255,217,102,.3)}
+.hr-badge--high,.hr-badge--weak{color:#FF6F6F;background:rgba(255,111,111,.18);border-color:rgba(255,111,111,.3)}
+.wellness-tile{background:linear-gradient(160deg,rgba(19,38,51,.82),rgba(7,23,32,.62));border:1px solid rgba(119,213,255,.18);border-radius:22px;padding:22px;box-shadow:0 20px 50px rgba(9,31,43,.48);backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:18px}
+.wellness-tile header{display:flex;justify-content:space-between;align-items:center;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.28px;font-size:.82rem}
+.wellness-tile--wellbeing{grid-area:wellbeing;min-height:260px;position:relative;overflow:hidden}
+.wellness-tile--trends{grid-area:trends}
+.wellness-tile--device{grid-area:device}
+.wellness-tile--notes{grid-area:notes}
+.wellbeing-ring{position:relative;width:220px;height:220px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;background:radial-gradient(circle at 50% 50%,rgba(39,224,255,.24),rgba(7,23,32,0));}
+.wellbeing-ring__frame{position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--cyan) var(--value,0%),rgba(39,224,255,.1) 0);mask:radial-gradient(circle at center,transparent 64%,black 66%)}
+.wellbeing-ring__value{position:relative;font-size:2.8rem;font-weight:700;color:var(--txt);display:flex;flex-direction:column;align-items:center;gap:6px}
+.wellbeing-ring__value small{font-size:.9rem;color:var(--muted)}
+.wellbeing-status{font-size:1rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.wellbeing-copy{color:var(--muted);line-height:1.5}
+.wellbeing-meta{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.trend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.trend-card{padding:16px;border-radius:16px;background:rgba(7,23,32,.6);border:1px solid rgba(119,213,255,.16);display:flex;flex-direction:column;gap:12px;transition:box-shadow .2s,transform .2s}
+.trend-card.is-highlighted{box-shadow:0 0 0 3px rgba(39,224,255,.45);transform:translateY(-3px)}
+.trend-card header{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.3px}
+.trend-score{font-size:1.8rem;font-weight:700;color:var(--txt)}
+.trend-spark svg{width:100%;height:60px}
+.trend-footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.8rem}
+.device-row{display:flex;align-items:center;gap:12px}
+.device-dot{width:12px;height:12px;border-radius:50%;background:#0FF7B1;box-shadow:0 0 12px rgba(15,247,177,.6)}
+.device-dot.is-warning{background:#FFD966;box-shadow:0 0 12px rgba(255,217,102,.5)}
+.device-dot.is-error{background:#FF6F6F;box-shadow:0 0 12px rgba(255,111,111,.5)}
+.device-meta strong{display:block;font-size:1rem;color:var(--txt)}
+.device-meta small{color:var(--muted)}
+.device-grid{display:grid;gap:12px}
+.device-grid dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.9rem;color:var(--muted)}
+.device-grid dt{color:var(--txt)}
+.notes-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;font-size:.9rem;color:var(--muted)}
+.notes-list li{padding:12px;border-radius:14px;background:rgba(7,23,32,.6);border:1px solid rgba(119,213,255,.14)}
+.notes-list time{display:block;font-size:.75rem;letter-spacing:.3px;text-transform:uppercase;color:rgba(215,243,255,.65)}
+@media(max-width:1080px){
+  .wellness-grid{grid-template-columns:1fr;grid-template-areas:"wellbeing" "trends" "device" "notes"}
+  .wellbeing-ring{margin-bottom:12px}
+}
+@media(max-width:480px){
+  .wellbeing-ring{width:180px;height:180px}
+}
