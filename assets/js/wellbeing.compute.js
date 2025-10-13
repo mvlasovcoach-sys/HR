@@ -155,20 +155,40 @@
     return value.toLocaleString(undefined, {maximumFractionDigits: 0});
   }
 
+  function toneClass(tone) {
+    switch (tone) {
+      case 'strong':
+      case 'low':
+        return 'pill pill--strong';
+      case 'high':
+      case 'weak':
+        return 'pill pill--critical';
+      case 'moderate':
+        return 'pill pill--caution';
+      case 'neutral':
+      default:
+        return 'pill pill--neutral';
+    }
+  }
+
   function render(sample, scores, horizon) {
-    const frame = root.querySelector('[data-ring-frame]');
+    const ringEl = root.querySelector('[data-wellbeing-ring]');
     const scoreEl = root.querySelector('[data-wellbeing-score]');
     const statusEl = root.querySelector('[data-wellbeing-status]');
     const copyEl = root.querySelector('[data-wellbeing-copy]');
     const stateEl = root.querySelector('[data-wellbeing-state]');
     const horizonLabel = root.querySelector('[data-trend-horizon]');
 
-    if (frame) frame.style.setProperty('--value', `${Math.round(scores.wellbeing)}%`);
+    if (ringEl) ringEl.style.setProperty('--value', `${Math.round(scores.wellbeing)}%`);
     if (scoreEl) scoreEl.textContent = Math.round(scores.wellbeing);
 
     const wellbeingState = scores.wellbeing >= 75 ? 'Optimal' : scores.wellbeing >= 50 ? 'Balanced' : 'Watch';
     if (statusEl) statusEl.textContent = wellbeingState;
-    if (stateEl) stateEl.textContent = `${wellbeingState}`;
+    if (stateEl) {
+      stateEl.textContent = `${wellbeingState}`;
+      const stateTone = wellbeingState === 'Optimal' ? 'pill pill--strong' : wellbeingState === 'Watch' ? 'pill pill--caution' : 'pill pill--neutral';
+      stateEl.className = `${stateTone}`;
+    }
     if (copyEl) {
       if (scores.wellbeing >= 75) {
         copyEl.textContent = 'Wellbeing trending above baseline — maintain current recovery cadence.';
@@ -189,7 +209,7 @@
       const badge = status(scores[key], key === 'cardio' ? 'positive' : 'negative');
       if (badgeEl) {
         badgeEl.textContent = badge.label;
-        badgeEl.className = `hr-badge hr-badge--${badge.tone}`;
+        badgeEl.className = `tile__badge ${toneClass(badge.tone)}`;
       }
       if (scoreEl) scoreEl.textContent = Math.round(scores[key]);
       if (countEl) countEl.textContent = `${trends[key][horizon].length} pts`;

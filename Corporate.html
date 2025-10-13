@@ -2,6 +2,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Corporate</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/corporate.css?v=20240920">
 </head><body>
@@ -9,24 +11,23 @@
   <div id="sidebar-slot"></div>
   <main class="main main--corporate">
     <div class="header header--corporate">
-      <div class="header__stack">
-        <div class="header__title">Corporate</div>
-        <p id="corporate-range-caption" class="header__caption" aria-live="polite"></p>
+      <div class="header__title">
+        <span>Corporate</span>
+        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-corp">
+          Aggregates only · No raw biosignals
+          <span class="tooltip" id="tooltip-agg-corp" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
+        </span>
+        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-ml-corp">
+          Fixed thresholds · No ML
+          <span class="tooltip" id="tooltip-ml-corp" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
+        </span>
       </div>
       <div class="header__actions">
-        <div class="gdpr-badges" role="status" aria-live="polite">
-          <span class="gdpr-badge" tabindex="0" aria-label="Aggregated view lock. Aggregated 7 day plus per team; no raw ECG or HRV visible; only derived metrics.">
-            <svg class="badge__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5a3.5 3.5 0 0 0-3.5 3.5v2H3.75A1.75 1.75 0 0 0 2 8.75v4.5C2 14.44 3.56 16 5.25 16h5.5C12.44 16 14 14.44 14 13.25v-4.5A1.75 1.75 0 0 0 12.25 7H11.5V5a3.5 3.5 0 0 0-3.5-3.5Zm-2 3.5a2 2 0 1 1 4 0v2h-4V5Zm-1.5 4.25c0-.138.112-.25.25-.25h6.5c.138 0 .25.112.25.25v4.5c0 .69-.81 1.5-1.5 1.5h-5.5c-.69 0-1.5-.81-1.5-1.5v-4.5Z"/></svg>
-            Anonymized aggregates · No raw biosignals
-          </span>
-          <span class="gdpr-badge" tabindex="0" aria-label="Fixed thresholds badge. Rules rely on fixed thresholds with no machine learning.">
-            <svg class="badge__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M7.25 1a.75.75 0 0 0-.66.393L1.27 11.393A.75.75 0 0 0 1.93 12.5h12.14a.75.75 0 0 0 .66-1.107L9.41 1.393A.75.75 0 0 0 8.75 1h-1.5Zm.75 3.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm-.75 3.5h1.5a.75.75 0 0 1 .75.75V11a.75.75 0 0 1-.75.75h-1.5A.75.75 0 0 1 6.5 11V8.75a.75.75 0 0 1 .75-.75Z"/></svg>
-            Fixed thresholds · No ML
-          </span>
-        </div>
+        <button class="btn btn--ghost" type="button" id="scenario-trigger">Load Night-Shift Scenario</button>
         <div id="date-controls"></div>
       </div>
     </div>
+    <p id="corporate-range-caption" class="header__caption" aria-live="polite"></p>
 
     <div class="corp-tabs" role="tablist" aria-label="Corporate overview tabs">
       <button class="corp-tab is-active" role="tab" aria-selected="true" aria-controls="corp-overview" id="tab-overview" data-tab="overview">Overview</button>
@@ -35,22 +36,22 @@
       <button class="corp-tab" role="tab" aria-selected="false" aria-controls="corp-activity" id="tab-activity" data-tab="activity">Activity Log</button>
     </div>
 
-    <section id="corp-overview" class="corp-panel is-active" role="tabpanel" aria-labelledby="tab-overview">
+    <section id="corp-overview" class="panel corp-panel is-active" role="tabpanel" aria-labelledby="tab-overview">
       <div class="kpi-grid" id="corporate-kpis"></div>
     </section>
 
-    <section id="corp-heatmap" class="corp-panel" role="tabpanel" aria-labelledby="tab-heatmap" hidden>
+    <section id="corp-heatmap" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-heatmap" hidden>
       <div class="heatmap-wrapper">
-        <div class="heatmap-legend" aria-hidden="true">
-          <span><span class="legend-swatch legend-swatch--low" aria-hidden="true"></span> ≤55</span>
-          <span><span class="legend-swatch legend-swatch--mid" aria-hidden="true"></span> 56–69</span>
-          <span><span class="legend-swatch legend-swatch--high" aria-hidden="true"></span> ≥70</span>
+        <div class="legend heatmap-legend" aria-hidden="true">
+          <span class="legend__item"><span class="legend__swatch legend__swatch--low" aria-hidden="true"></span>≤55</span>
+          <span class="legend__item"><span class="legend__swatch legend__swatch--mid" aria-hidden="true"></span>56–69</span>
+          <span class="legend__item"><span class="legend__swatch legend__swatch--high" aria-hidden="true"></span>≥70</span>
         </div>
         <div class="heatmap-grid" role="grid" aria-label="Wellbeing heatmap" id="corporate-heatmap"></div>
       </div>
     </section>
 
-    <section id="corp-events" class="corp-panel" role="tabpanel" aria-labelledby="tab-events" hidden>
+    <section id="corp-events" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-events" hidden>
       <div class="events-controls">
         <fieldset>
           <legend>Team</legend>
@@ -68,12 +69,13 @@
       <div class="events-timeline" id="corporate-events" aria-live="polite"></div>
     </section>
 
-    <section id="corp-activity" class="corp-panel" role="tabpanel" aria-labelledby="tab-activity" hidden>
+    <section id="corp-activity" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-activity" hidden>
       <div class="activity-actions">
-        <button id="activity-export" type="button" class="btn-secondary">Export CSV</button>
+        <button id="activity-export" type="button" class="btn btn--ghost">Export CSV</button>
       </div>
       <div class="activity-table" id="corporate-activity" aria-live="polite"></div>
     </section>
+    <footer class="corp-footer" aria-label="Compliance note">EU cloud, encryption at rest/in transit</footer>
   </main>
 </div>
 <script defer src="./assets/js/app-shell.js?v=20240920"></script>

@@ -82,6 +82,22 @@
     return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" points="${path}" /></svg>`;
   }
 
+  function toneClass(tone) {
+    switch (tone) {
+      case 'strong':
+      case 'low':
+        return 'pill pill--strong';
+      case 'high':
+      case 'weak':
+        return 'pill pill--critical';
+      case 'moderate':
+        return 'pill pill--caution';
+      case 'neutral':
+      default:
+        return 'pill pill--neutral';
+    }
+  }
+
   function status(score, type) {
     if (type === 'positive') {
       if (score >= 70) return {label: 'Strong', tone: 'strong'};
@@ -121,15 +137,15 @@
         const updatedText = isNaN(updated.getTime()) ? 'Updated recently' : `Updated ${updated.toLocaleDateString()}`;
         const trend = Array.isArray(metric.trend) && metric.trend.length ? metric.trend : defaults[key].trend;
         const badge = status(metric.score, METRICS[key].type);
-        return `<article class="hr-card" role="button" tabindex="0" data-focus="${key}">
-        <div class="hr-card__ring"></div>
-        <div class="hr-card__head">
-          <span class="hr-card__label">${METRICS[key].label}</span>
-          <span class="hr-badge hr-badge--${badge.tone}">${badge.label}</span>
+        return `<article class="tile tile--interactive" role="button" tabindex="0" data-focus="${key}">
+        <div class="tile__ring" aria-hidden="true"></div>
+        <div class="tile__head">
+          <span class="tile__title">${METRICS[key].label}</span>
+          <span class="tile__badge ${toneClass(badge.tone)}">${badge.label}</span>
         </div>
-        <div class="hr-card__score">${Math.round(metric.score)}<span>/100</span></div>
-        <div class="hr-card__spark">${sparkline(trend)}</div>
-        <footer class="hr-card__foot">
+        <div class="tile__kpi">${Math.round(metric.score)}<span>/100</span></div>
+        <div class="spark">${sparkline(trend)}</div>
+        <footer class="tile__foot">
           <span>${updatedText}</span>
           <span>${trend.length} pts</span>
         </footer>
@@ -137,11 +153,11 @@
       })
       .join('');
 
-    mount.innerHTML = `<div class="hr-panel__meta">
+    mount.innerHTML = `<div class="panel__meta">
       <span>HR Board</span>
       <span>${rangeLabel(range)}</span>
     </div>
-    <div class="hr-panel__grid">${cards}</div>`;
+    <div class="panel__grid">${cards}</div>`;
   }
 
   render();

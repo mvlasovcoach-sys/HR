@@ -2,6 +2,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Wellness</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/wellness.css?v=20240920">
 </head><body>
@@ -11,19 +13,25 @@
     <div class="header">
       <div class="header__title">
         <span>Wellness</span>
-        <span class="header__badge">Fixed thresholds · No ML</span>
+        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-wellness">
+          Aggregates only · No raw biosignals
+          <span class="tooltip" id="tooltip-agg-wellness" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
+        </span>
+        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-ml-wellness">
+          Fixed thresholds · No ML
+          <span class="tooltip" id="tooltip-ml-wellness" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
+        </span>
       </div>
       <div id="date-controls"></div>
     </div>
     <section id="wellness-root" class="wellness-grid" aria-live="polite">
-      <article class="wellness-tile wellness-tile--wellbeing">
-        <header>
-          <span>Wellbeing Score</span>
-          <span data-wellbeing-state>Balanced</span>
+      <article class="tile wellness-tile wellness-tile--wellbeing">
+        <header class="tile__head">
+          <span class="tile__title">Wellbeing Score</span>
+          <span class="pill pill--neutral" data-wellbeing-state aria-live="polite">Balanced</span>
         </header>
-        <div class="wellbeing-ring" role="img" aria-label="Overall wellbeing score">
-          <div class="wellbeing-ring__frame" data-ring-frame></div>
-          <div class="wellbeing-ring__value">
+        <div class="ring ring--lg" role="img" aria-label="Overall wellbeing score" data-wellbeing-ring style="--value:72%;">
+          <div class="ring__value">
             <span data-wellbeing-score>72</span>
             <small>/100</small>
           </div>
@@ -33,61 +41,61 @@
           <p class="wellbeing-copy" data-wellbeing-copy>Vitals remain within expected variance.</p>
         </div>
       </article>
-      <article class="wellness-tile wellness-tile--trends">
-        <header>
-          <span>Trend breakdown</span>
+      <article class="tile wellness-tile wellness-tile--trends">
+        <header class="tile__head">
+          <span class="tile__title">Trend breakdown</span>
           <span data-trend-horizon>7-day view</span>
         </header>
         <div class="trend-grid">
-          <div class="trend-card" data-trend-card="stress" tabindex="0">
-            <header>
-              <span>Stress</span>
-              <span class="hr-badge hr-badge--low" data-trend-badge="stress">Low</span>
+          <div class="tile tile--compact trend-card" data-trend-card="stress" tabindex="0">
+            <header class="tile__head">
+              <span class="tile__title">Stress</span>
+              <span class="tile__badge pill pill--strong" data-trend-badge="stress">Low</span>
             </header>
-            <div class="trend-spark" data-trend-spark="stress"></div>
-            <div class="trend-footer">
+            <div class="spark trend-spark" data-trend-spark="stress"></div>
+            <div class="tile__foot trend-footer">
               <span class="trend-score" data-trend-score="stress">42</span>
               <span data-trend-count="stress">7 pts</span>
             </div>
           </div>
-          <div class="trend-card" data-trend-card="burnout" tabindex="0">
-            <header>
-              <span>Burnout</span>
-              <span class="hr-badge hr-badge--low" data-trend-badge="burnout">Low</span>
+          <div class="tile tile--compact trend-card" data-trend-card="burnout" tabindex="0">
+            <header class="tile__head">
+              <span class="tile__title">Burnout</span>
+              <span class="tile__badge pill pill--strong" data-trend-badge="burnout">Low</span>
             </header>
-            <div class="trend-spark" data-trend-spark="burnout"></div>
-            <div class="trend-footer">
+            <div class="spark trend-spark" data-trend-spark="burnout"></div>
+            <div class="tile__foot trend-footer">
               <span class="trend-score" data-trend-score="burnout">31</span>
               <span data-trend-count="burnout">7 pts</span>
             </div>
           </div>
-          <div class="trend-card" data-trend-card="fatigue" tabindex="0">
-            <header>
-              <span>Fatigue</span>
-              <span class="hr-badge hr-badge--low" data-trend-badge="fatigue">Low</span>
+          <div class="tile tile--compact trend-card" data-trend-card="fatigue" tabindex="0">
+            <header class="tile__head">
+              <span class="tile__title">Fatigue</span>
+              <span class="tile__badge pill pill--strong" data-trend-badge="fatigue">Low</span>
             </header>
-            <div class="trend-spark" data-trend-spark="fatigue"></div>
-            <div class="trend-footer">
+            <div class="spark trend-spark" data-trend-spark="fatigue"></div>
+            <div class="tile__foot trend-footer">
               <span class="trend-score" data-trend-score="fatigue">52</span>
               <span data-trend-count="fatigue">7 pts</span>
             </div>
           </div>
-          <div class="trend-card" data-trend-card="cardio" tabindex="0">
-            <header>
-              <span>Cardio Index</span>
-              <span class="hr-badge hr-badge--strong" data-trend-badge="cardio">Strong</span>
+          <div class="tile tile--compact trend-card" data-trend-card="cardio" tabindex="0">
+            <header class="tile__head">
+              <span class="tile__title">Cardio Index</span>
+              <span class="tile__badge pill pill--strong" data-trend-badge="cardio">Strong</span>
             </header>
-            <div class="trend-spark" data-trend-spark="cardio"></div>
-            <div class="trend-footer">
+            <div class="spark trend-spark" data-trend-spark="cardio"></div>
+            <div class="tile__foot trend-footer">
               <span class="trend-score" data-trend-score="cardio">74</span>
               <span data-trend-count="cardio">7 pts</span>
             </div>
           </div>
         </div>
       </article>
-      <article class="wellness-tile wellness-tile--device">
-        <header>
-          <span>Device &amp; Battery</span>
+      <article class="tile wellness-tile wellness-tile--device">
+        <header class="tile__head">
+          <span class="tile__title">Device &amp; Battery</span>
           <span data-device-estimate>~18h</span>
         </header>
         <div class="device-row">
@@ -108,9 +116,9 @@
           </dl>
         </div>
       </article>
-      <article class="wellness-tile wellness-tile--notes">
-        <header>
-          <span>Notes / Minor deviations</span>
+      <article class="tile wellness-tile wellness-tile--notes">
+        <header class="tile__head">
+          <span class="tile__title">Notes / Minor deviations</span>
           <span>Last 24h</span>
         </header>
         <ul class="notes-list" id="wellness-notes">

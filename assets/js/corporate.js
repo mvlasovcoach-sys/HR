@@ -1,6 +1,13 @@
+
 (function(){
   const page = document.querySelector('.main--corporate');
   if (!page) return;
+
+  const VERSION = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const DATA_ROOT = './data/org';
+  const SCENARIO_ID = 'night_shift';
+  const SCENARIO_ROOT = `./data/scenario/${SCENARIO_ID}`;
+  const jsonCache = new Map();
 
   const els = {
     kpis: document.getElementById('corporate-kpis'),
@@ -13,7 +20,8 @@
     panels: Array.from(document.querySelectorAll('.corp-panel')),
     teamFilter: document.getElementById('event-team-filter'),
     severityFilter: document.getElementById('event-severity-filter'),
-    typeFilter: document.getElementById('event-type-filter')
+    typeFilter: document.getElementById('event-type-filter'),
+    scenarioBtn: document.getElementById('scenario-trigger')
   };
 
   const state = {
@@ -33,22 +41,85 @@
     heatmapCells: [],
     pendingHighlight: null,
     highlightTimer: null,
-    activitySort: {key: 'date', direction: 'desc'}
+    activitySort: {key: 'date', direction: 'desc'},
+    scenario: null
   };
 
   const KPI_CONFIG = [
-    {key: 'wellbeing_avg', label: 'Wellbeing', suffix: '', format: (v)=>Math.round(v)},
-    {key: 'high_stress_pct', label: 'High Stress', suffix: '%', format: (v)=>Math.round(v)},
-    {key: 'fatigue_elevated_pct', label: 'Elevated Fatigue', suffix: '%', format: (v)=>Math.round(v)},
-    {key: 'engagement_active_pct', label: 'Active Engagement', suffix: '%', format: (v)=>Math.round(v)}
+    {key: 'wellbeing_avg', label: 'Org Wellbeing', unitLabel: '/100', suffix: '', description: 'Rolling average', format: v => Math.round(v)},
+    {key: 'high_stress_pct', label: 'High Stress', unitLabel: '% of staff', suffix: '%', description: 'Stress ≥70', format: v => Math.round(v)},
+    {key: 'fatigue_elevated_pct', label: 'Elevated Fatigue', unitLabel: '% of staff', suffix: '%', description: 'Fatigue ≥60', format: v => Math.round(v)},
+    {key: 'engagement_active_pct', label: 'Active Engagement', unitLabel: '% of staff', suffix: '%', description: '≥1 daily log action', format: v => Math.round(v)}
   ];
+
+  async function loadJson(path) {
+    if (jsonCache.has(path)) {
+      return jsonCache.get(path);
+    }
+    const response = await fetch(`${path}?v=${VERSION}`, {cache: 'no-store'});
+    if (!response.ok) {
+      throw new Error(`Failed to load ${path}`);
+    }
+    const data = await response.json();
+    jsonCache.set(path, data);
+    return data;
+  }
+
+  function updateScenarioButton(){
+    if (!els.scenarioBtn) return;
+    els.scenarioBtn.textContent = state.scenario ? 'Return to Live View' : 'Load Night-Shift Scenario';
+  }
+
+  function restoreScenarioFromStorage(){
+    try {
+      const stored = localStorage.getItem('hr:scenario');
+      if (stored === SCENARIO_ID) {
+        state.scenario = SCENARIO_ID;
+      }
+    } catch (e) {
+      state.scenario = null;
+    }
+    updateScenarioButton();
+  }
+
+  function setupScenarioButton(){
+    if (!els.scenarioBtn) return;
+    els.scenarioBtn.addEventListener('click', async () => {
+      state.scenario = state.scenario ? null : SCENARIO_ID;
+      if (state.scenario) {
+        localStorage.setItem('hr:scenario', state.scenario);
+      } else {
+        localStorage.removeItem('hr:scenario');
+      }
+      updateScenarioButton();
+      state.filters.team.clear();
+      state.filters.severity.clear();
+      state.filters.type.clear();
+      await loadEvents();
+      buildFilterControls();
+      await loadMetricsForSelection(state.rangeSelection);
+    });
+  }
+
+  function severityPillClass(severity){
+    switch (severity) {
+      case 'critical':
+        return 'pill pill--critical';
+      case 'warning':
+        return 'pill pill--caution';
+      default:
+        return 'pill pill--neutral';
+    }
+  }
 
   init();
 
   async function init(){
+    restoreScenarioFromStorage();
     await loadTeams();
     await loadEvents();
     buildFilterControls();
+    setupScenarioButton();
     setupTabs();
     els.exportBtn?.addEventListener('click', exportActivityToCsv);
     window.addEventListener('storage', onRangeChange);
@@ -57,8 +128,7 @@
 
   async function loadTeams(){
     try {
-      const resp = await fetch('./data/org/teams.json', {cache: 'no-store'});
-      const data = await resp.json();
+      const data = await loadJson(`${DATA_ROOT}/teams.json`);
       state.teams = Array.isArray(data.depts) ? data.depts : [];
       state.teamMap = new Map(state.teams.map(d => [d.id, d.name]));
     } catch (e) {
@@ -69,9 +139,10 @@
   }
 
   async function loadEvents(){
+    const path = state.scenario ? `${SCENARIO_ROOT}/events.json` : `${DATA_ROOT}/events.json`;
     try {
-      const resp = await fetch('./data/org/events.json', {cache: 'no-store'});
-      state.events = await resp.json();
+      const data = await loadJson(path);
+      state.events = Array.isArray(data) ? data : Array.isArray(data?.events) ? data.events : [];
     } catch (e) {
       console.error('Failed to load events', e);
       state.events = [];
@@ -154,14 +225,24 @@
   }
 
   async function loadMetricsForSelection(selection){
-    const path = metricsPathForSelection(selection);
+    const path = metricsPathForSelection(selection, state.scenario);
     try {
-      const resp = await fetch(path, {cache: 'no-store'});
-      state.metrics = await resp.json();
+      state.metrics = await loadJson(path);
     } catch (e) {
-      console.error('Failed to load metrics', e);
-      state.metrics = null;
-      return;
+      if (state.scenario) {
+        console.warn('Scenario metrics missing, falling back to baseline', e);
+        try {
+          state.metrics = await loadJson(metricsPathForSelection(selection, null));
+        } catch (fallbackError) {
+          console.error('Failed to load metrics', fallbackError);
+          state.metrics = null;
+          return;
+        }
+      } else {
+        console.error('Failed to load metrics', e);
+        state.metrics = null;
+        return;
+      }
     }
     updateRangeWindow();
     renderRangeCaption();
@@ -171,21 +252,18 @@
     renderEvents();
   }
 
-  function metricsPathForSelection(selection){
-    if (selection && selection.preset) {
-      switch (selection.preset) {
-        case 'day':
-        case '7d':
-          return './data/org/metrics_7d.json';
-        case 'month':
-          return './data/org/metrics_month.json';
-        case 'year':
-          return './data/org/metrics_year.json';
-        default:
-          return './data/org/metrics_month.json';
-      }
+  function metricsPathForSelection(selection, scenarioKey){
+    const preset = normalizePreset(selection);
+    const base = scenarioKey ? SCENARIO_ROOT : DATA_ROOT;
+    switch (preset) {
+      case 'day':
+      case '7d':
+        return `${base}/metrics_7d.json`;
+      case 'year':
+        return `${base}/metrics_year.json`;
+      default:
+        return `${base}/metrics_month.json`;
     }
-    return './data/org/metrics_month.json';
   }
 
   function updateRangeWindow(){
@@ -225,7 +303,8 @@
     const startLabel = formatDateLabel(start);
     const endLabel = formatDateLabel(end);
     const presetLabel = rangePresetDescription();
-    els.rangeCaption.textContent = `${presetLabel} · ${startLabel} – ${endLabel}`;
+    const scenarioPrefix = state.scenario ? 'Night-Shift Scenario · ' : '';
+    els.rangeCaption.textContent = `${scenarioPrefix}${presetLabel} · ${startLabel} – ${endLabel}`;
   }
 
   function rangePresetDescription(){
@@ -250,30 +329,48 @@
     KPI_CONFIG.forEach(cfg => {
       const value = state.metrics.kpi[cfg.key];
       if (value == null) return;
-      const card = document.createElement('article');
-      card.className = 'kpi-card';
-      card.setAttribute('role', 'group');
-      card.setAttribute('aria-label', `${cfg.label} KPI`);
-
-      const label = document.createElement('span');
-      label.className = 'kpi-card__label';
-      label.textContent = cfg.label;
-
-      const val = document.createElement('div');
-      val.className = 'kpi-card__value';
       const formatted = typeof cfg.format === 'function' ? cfg.format(value) : value;
-      val.textContent = `${formatted}${cfg.suffix}`;
-      val.setAttribute('aria-label', `${cfg.label} ${formatted}${cfg.suffix}`);
+      const sparkValues = Array.isArray(trend[cfg.key]) ? trend[cfg.key] : [Number(value)];
+
+      const tile = document.createElement('article');
+      tile.className = 'tile tile--muted';
+      tile.setAttribute('role', 'group');
+      tile.setAttribute('aria-label', `${cfg.label} KPI`);
+
+      const head = document.createElement('div');
+      head.className = 'tile__head';
+      const title = document.createElement('span');
+      title.className = 'tile__title';
+      title.textContent = cfg.label;
+      head.appendChild(title);
+      tile.appendChild(head);
+
+      const metricRow = document.createElement('div');
+      metricRow.className = 'kpi-metric';
+      const ring = document.createElement('div');
+      ring.className = 'ring kpi-ring';
+      ring.setAttribute('aria-hidden', 'true');
+      const ringValue = Math.max(0, Math.min(100, formatted));
+      ring.style.setProperty('--value', `${ringValue}%`);
+      metricRow.appendChild(ring);
+
+      const metricValue = document.createElement('div');
+      metricValue.className = 'tile__kpi';
+      metricValue.innerHTML = `${formatted}${cfg.suffix || ''}<span>${cfg.unitLabel || ''}</span>`;
+      metricRow.appendChild(metricValue);
+      tile.appendChild(metricRow);
 
       const spark = document.createElement('div');
-      spark.className = 'kpi-card__spark';
-      const sparkValues = Array.isArray(trend[cfg.key]) ? trend[cfg.key] : [Number(value)];
+      spark.className = 'spark';
       spark.innerHTML = createSparklineSvg(sparkValues);
+      tile.appendChild(spark);
 
-      card.appendChild(label);
-      card.appendChild(val);
-      card.appendChild(spark);
-      els.kpis.appendChild(card);
+      const foot = document.createElement('footer');
+      foot.className = 'tile__foot';
+      foot.innerHTML = `<span>${cfg.description}</span><span>${sparkValues.length} pts</span>`;
+      tile.appendChild(foot);
+
+      els.kpis.appendChild(tile);
     });
   }
 
@@ -291,7 +388,7 @@
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     }).join(' ');
     const areaPoints = `0,${height} ${points} ${width},${height}`;
-    return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><polygon points="${areaPoints}" fill="rgba(94, 123, 255, 0.18)"></polygon><polyline points="${points}" fill="none" stroke="rgba(126, 169, 255, 0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`;
+    return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><polygon points="${areaPoints}" fill="rgba(39, 224, 255, 0.12)"></polygon><polyline points="${points}" fill="none" stroke="rgba(39, 224, 255, 0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`;
   }
 
   function renderHeatmap(){
@@ -304,7 +401,7 @@
     const rows = Array.isArray(hm.rows) ? hm.rows : [];
     const cols = Array.isArray(hm.cols) ? hm.cols : [];
     const colDates = Array.isArray(hm.colDates) ? hm.colDates : cols.map(() => null);
-    els.heatmap.style.gridTemplateColumns = `repeat(${cols.length + 1}, minmax(72px, 1fr))`;
+    els.heatmap.style.gridTemplateColumns = `repeat(${cols.length + 1}, minmax(0, 1fr))`;
 
     // Header row
     const headerCorner = document.createElement('div');
@@ -343,7 +440,10 @@
         if (iso) btn.dataset.iso = iso;
         if (typeof val === 'number') {
           btn.textContent = String(Math.round(val));
-          btn.title = `${state.teamMap.get(rowId) || rowId} — ${formatDateLabel(iso || col)}: ${Math.round(val)}`;
+          const teamName = state.teamMap.get(rowId) || rowId;
+          const dayLabel = formatDateLabel(iso || col);
+          btn.title = `${teamName} — ${dayLabel}: ${Math.round(val)}`;
+          btn.setAttribute('aria-label', `${teamName} • ${dayLabel} • ${Math.round(val)}`);
           btn.dataset.level = getHeatmapLevel(val);
         } else {
           btn.textContent = '–';
@@ -439,41 +539,61 @@
       wrapper.appendChild(heading);
 
       events.forEach(ev => {
+        const teamName = state.teamMap.get(ev.team) || ev.team;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'timeline-event';
         btn.dataset.severity = ev.severity;
         btn.dataset.team = ev.team;
         if (ev.heatmapDate) btn.dataset.iso = ev.heatmapDate;
-        btn.title = ev.detail || ev.rule || '';
+        const isoDate = ev.heatmapDate || (ev.ts ? ev.ts.split('T')[0] : '');
+        btn.setAttribute('aria-label', `${splitCamel(ev.type)} for ${teamName} at ${formatTime(ev.ts)}`);
+
+        const card = document.createElement('div');
+        card.className = 'tile tile--compact tile--interactive';
+
+        const head = document.createElement('div');
+        head.className = 'tile__head';
+        const severity = document.createElement('span');
+        severity.className = severityPillClass(ev.severity);
+        severity.textContent = capitalize(ev.severity);
+        head.appendChild(severity);
+        const time = document.createElement('time');
+        time.dateTime = ev.ts;
+        time.textContent = formatTime(ev.ts);
+        head.appendChild(time);
+        card.appendChild(head);
 
         const title = document.createElement('div');
         title.className = 'timeline-event__title';
-        const teamName = state.teamMap.get(ev.team) || ev.team;
-        title.textContent = `${splitCamel(ev.type)} · ${teamName}`;
+        title.textContent = splitCamel(ev.type);
+        card.appendChild(title);
 
-        const meta = document.createElement('div');
-        meta.className = 'timeline-event__meta';
-        const severity = document.createElement('span');
-        severity.textContent = capitalize(ev.severity);
-        const time = document.createElement('span');
-        time.textContent = formatTime(ev.ts);
-        meta.appendChild(severity);
-        meta.appendChild(time);
+        const foot = document.createElement('div');
+        foot.className = 'tile__foot';
+        const teamPill = document.createElement('span');
+        teamPill.className = 'pill team-pill';
+        teamPill.textContent = teamName;
+        foot.appendChild(teamPill);
+        const rulePill = document.createElement('span');
+        rulePill.className = 'pill pill--neutral has-tooltip';
+        rulePill.tabIndex = 0;
+        rulePill.textContent = 'Trigger';
+        const tooltip = document.createElement('span');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = ev.rule || ev.detail || 'Threshold triggered';
+        rulePill.appendChild(tooltip);
+        rulePill.setAttribute('aria-label', tooltip.textContent);
+        foot.appendChild(rulePill);
+        card.appendChild(foot);
 
-        const rule = document.createElement('div');
-        rule.className = 'timeline-event__rule';
-        rule.textContent = ev.rule || ev.detail || '';
-
-        btn.appendChild(title);
-        btn.appendChild(meta);
-        btn.appendChild(rule);
+        btn.appendChild(card);
 
         btn.addEventListener('click', () => {
           if (state.activeTab === 'heatmap') {
-            highlightHeatmapColumn(ev.heatmapDate || (ev.ts ? ev.ts.split('T')[0] : ''));
+            highlightHeatmapColumn(isoDate);
           } else {
-            state.pendingHighlight = ev.heatmapDate || (ev.ts ? ev.ts.split('T')[0] : '');
+            state.pendingHighlight = isoDate;
           }
         });
 
@@ -518,6 +638,8 @@
       });
       container.appendChild(btn);
     });
+
+    updateFilterVisuals(container, setRef);
   }
 
   function updateFilterVisuals(container, setRef){
