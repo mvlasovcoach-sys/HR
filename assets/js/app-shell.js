@@ -12,6 +12,7 @@
         <li><a href="./User.html" data-key="wellness">Wellness</a></li>\
         <li><a href="./Analytics.html" data-key="analytics">Analytics</a></li>\
         <li><a href="./Engagement.html" data-key="engagement">Engagement</a></li>\
+        <li><a href="./Corporate.html" data-key="corporate">Corporate</a></li>\
         <li><a href="./Settings.html" data-key="settings">Settings</a></li>\
       </ul></nav>';
   }

@@ -1,0 +1,9 @@
+{
+  "org": "SPA2099 Demo Co.",
+  "depts": [
+    {"id": "ops", "name": "Operations"},
+    {"id": "cs", "name": "Customer Service"},
+    {"id": "it", "name": "IT"},
+    {"id": "lab", "name": "Lab"}
+  ]
+}
