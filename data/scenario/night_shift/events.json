@@ -1,0 +1,29 @@
+[
+  {
+    "ts": "2025-10-10T08:00:00Z",
+    "team": "ops",
+    "type": "RecoveryDrop",
+    "severity": "critical",
+    "detail": "Night-shift rotation drove ≥19% drop in wellbeing",
+    "rule": "Operations wellbeing fell ≥19 points vs baseline within 48h",
+    "heatmapDate": "2025-10-10"
+  },
+  {
+    "ts": "2025-10-12T06:00:00Z",
+    "team": "cs",
+    "type": "HighStressCluster",
+    "severity": "critical",
+    "detail": "≥30% staff with Stress ≥70 for 2+ days",
+    "rule": "≥30% of staff reported stress ≥70 for at least two consecutive days",
+    "heatmapDate": "2025-10-12"
+  },
+  {
+    "ts": "2025-10-13T09:30:00Z",
+    "team": "lab",
+    "type": "FatigueSpike",
+    "severity": "info",
+    "detail": "Shift-end fatigue >65 for two consecutive shifts",
+    "rule": "Shift-end fatigue mean ≥65 for at least two consecutive shifts",
+    "heatmapDate": "2025-10-13"
+  }
+]

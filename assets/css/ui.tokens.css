@@ -1,0 +1,64 @@
+:root {
+  --bg: #07141B;
+  --surface-glass-a: rgba(19, 38, 51, 0.85);
+  --surface-glass-b: rgba(7, 23, 32, 0.62);
+  --surface-panel: linear-gradient(145deg, rgba(19,38,51,0.85), rgba(7,23,32,0.65));
+  --surface-tile: radial-gradient(circle at 20% -10%, rgba(39,224,255,0.18), transparent 60%), rgba(9,24,32,0.72);
+  --surface-tile-muted: rgba(7, 23, 32, 0.6);
+  --surface-pill: rgba(23, 66, 83, 0.28);
+  --surface-button: rgba(11, 31, 41, 0.5);
+  --surface-button-active: rgba(11, 31, 41, 0.7);
+  --stroke: rgba(119, 213, 255, 0.25);
+  --stroke-strong: rgba(39, 224, 255, 0.4);
+  --txt: #D7F3FF;
+  --muted: #8DB6C7;
+  --cyan: #27E0FF;
+  --accent-strong: #0FF7B1;
+  --accent-caution: #FFD966;
+  --accent-critical: #FF6F6F;
+  --accent-info: #82B6FF;
+  --shadow-panel: 0 18px 60px rgba(13, 42, 58, 0.45);
+  --shadow-tile: 0 12px 40px rgba(9, 31, 43, 0.5) inset, 0 0 0 1px rgba(39, 224, 255, 0.12);
+  --shadow-hover: 0 20px 45px rgba(7, 23, 32, 0.55);
+  --shadow-ring: 0 0 40px rgba(39, 224, 255, 0.4);
+  --radius-pill: 999px;
+  --radius-panel: 24px;
+  --radius-tile: 20px;
+  --radius-soft: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --focus-ring: 0 0 0 3px rgba(39, 224, 255, 0.35);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
