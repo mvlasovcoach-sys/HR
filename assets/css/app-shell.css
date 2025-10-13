@@ -1,0 +1,39 @@
+:root{
+  --bg:#07141B; --txt:#D7F3FF; --muted:#8DB6C7;
+  --glassA:rgba(17,40,54,.72); --glassB:rgba(9,24,32,.52);
+  --stroke:rgba(119,213,255,.25); --cyan:#27E0FF; --purple:#8A5BFF;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,sans-serif;margin:0}
+a{color:inherit}
+.page{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+@media(max-width:768px){
+  .page{grid-template-columns:220px 1fr}
+}
+@media(max-width:640px){
+  .page{grid-template-columns:1fr}
+  .side{position:relative;height:auto}
+}
+.side{position:sticky;top:0;height:100vh;padding:20px;box-sizing:border-box;
+  background:linear-gradient(180deg,var(--glassA),var(--glassB));
+  border-right:1px solid var(--stroke);box-shadow:0 0 80px rgba(0,207,255,.06) inset}
+.side__brand{font-weight:800;letter-spacing:.2px;margin-bottom:16px;opacity:.9}
+.side__nav{list-style:none;margin:0;padding:8px 0;display:flex;flex-direction:column;gap:4px}
+.side__nav a{display:block;padding:10px 12px;border-radius:12px;color:var(--txt);
+  text-decoration:none;border:1px solid transparent;opacity:.9;transition:background .2s ease,border-color .2s ease}
+.side__nav a:hover{border-color:var(--stroke);background:rgba(11,31,41,.45)}
+.side__nav a.is-active{border-color:var(--stroke);
+  box-shadow:0 0 12px rgba(39,224,255,.2) inset; background:rgba(11,31,41,.6)}
+.main{padding:24px;box-sizing:border-box}
+@media(max-width:480px){
+  .main{padding:18px}
+}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+.header__title{font-weight:700;font-size:1.4rem}
+.dc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dc button{padding:8px 12px;border:1px solid var(--stroke);background:rgba(11,31,41,.5);
+  color:var(--txt);border-radius:10px;cursor:pointer;transition:background .2s ease,box-shadow .2s ease}
+.dc button.is-active{box-shadow:0 0 12px rgba(39,224,255,.2) inset;background:rgba(11,31,41,.7)}
+.dc input[type="date"]{background:rgba(11,31,41,.5);border:1px solid var(--stroke);color:var(--txt);
+  padding:8px 10px;border-radius:10px;min-width:140px}
+.dc__sep{width:8px;height:1px;background:transparent}
+.coming-soon{color:var(--muted);font-size:1.05rem;margin-top:32px}
