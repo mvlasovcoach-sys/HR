@@ -1,0 +1,45 @@
+{
+  "range": "7d",
+  "n": 128,
+  "kpi": {
+    "wellbeing_avg": 58,
+    "high_stress_pct": 34,
+    "fatigue_elevated_pct": 41,
+    "engagement_active_pct": 64
+  },
+  "delta": {
+    "wellbeing_avg": -9,
+    "high_stress_pct": 12,
+    "fatigue_elevated_pct": 14,
+    "engagement_active_pct": -8
+  },
+  "heatmap": {
+    "rows": ["ops", "cs", "it", "lab"],
+    "cols": ["D-6", "D-5", "D-4", "D-3", "D-2", "D-1", "D"],
+    "dates": [
+      "2025-10-07",
+      "2025-10-08",
+      "2025-10-09",
+      "2025-10-10",
+      "2025-10-11",
+      "2025-10-12",
+      "2025-10-13"
+    ],
+    "value": {
+      "ops": [61, 60, 59, 48, 44, 43, 46],
+      "cs": [64, 63, 62, 52, 47, 46, 49],
+      "it": [72, 71, 70, 58, 54, 52, 55],
+      "lab": [69, 68, 67, 56, 50, 49, 52]
+    }
+  },
+  "activity": [
+    {"date": "2025-10-12", "team": "ops", "hydration": 54, "caffeine": 58, "meds": 8, "steps_active_pct": 58},
+    {"date": "2025-10-12", "team": "cs", "hydration": 48, "caffeine": 64, "meds": 7, "steps_active_pct": 54},
+    {"date": "2025-10-12", "team": "it", "hydration": 46, "caffeine": 44, "meds": 6, "steps_active_pct": 60},
+    {"date": "2025-10-12", "team": "lab", "hydration": 42, "caffeine": 38, "meds": 6, "steps_active_pct": 56},
+    {"date": "2025-10-13", "team": "ops", "hydration": 52, "caffeine": 61, "meds": 9, "steps_active_pct": 57},
+    {"date": "2025-10-13", "team": "cs", "hydration": 46, "caffeine": 68, "meds": 8, "steps_active_pct": 53},
+    {"date": "2025-10-13", "team": "it", "hydration": 44, "caffeine": 46, "meds": 7, "steps_active_pct": 59},
+    {"date": "2025-10-13", "team": "lab", "hydration": 40, "caffeine": 42, "meds": 6, "steps_active_pct": 55}
+  ]
+}

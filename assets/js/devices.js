@@ -11,7 +11,7 @@ function initPage(){
     exportBtn?.addEventListener('click', exportCsv);
     window.addEventListener('storage', evt => {
       if (!evt) return;
-      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
         render();
       }
     });
@@ -184,7 +184,8 @@ function initPage(){
       const link = document.createElement('a');
       link.href = url;
       const teamSlug = team === 'all' ? 'all' : team;
-      link.download = `fleet_${teamSlug}_${preset}.csv`;
+      const stamp = formatFileDate(new Date());
+      link.download = `fleet_${teamSlug}_${preset}_${stamp}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -219,7 +220,10 @@ function initPage(){
       if (!ts) return '—';
       const date = new Date(ts);
       if (isNaN(date)) return ts;
-      return date.toLocaleString();
+      const lang = window.I18N?.getLang?.() || 'en';
+      const datePart = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'}).format(date);
+      const timePart = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'}).format(date);
+      return `${datePart} · ${timePart}`;
     }
 
     function teamName(team){
@@ -233,7 +237,7 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
@@ -260,6 +264,26 @@ function initPage(){
         if (map && map[team]) return map[team];
       } catch (e) {}
       return team;
+    }
+
+    function formatFileDate(date){
+      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '0000-00-00';
+      const year = String(date.getFullYear());
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function readScenario(){
+      try {
+        return localStorage.getItem('hr:scenario') || 'live';
+      } catch (err) {
+        return 'live';
+      }
+    }
+
+    function scenarioPrefix(){
+      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
     }
 }
 

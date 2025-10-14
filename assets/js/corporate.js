@@ -20,6 +20,7 @@ function initCorporatePage(){
     eventTeam: document.getElementById('f-team'),
     eventSeverity: document.getElementById('f-sev'),
     eventType: document.getElementById('f-type'),
+    eventBadges: document.getElementById('event-badges'),
     activityPanel: document.getElementById('corp-activity'),
     activityTable: document.getElementById('activity-table'),
     exportBtn: document.getElementById('export-activity')
@@ -49,7 +50,24 @@ function initCorporatePage(){
     heatmapDates: [],
     selectedColumn: null,
     activityCsvRows: [],
+    activitySort: {key: 'date', dir: 'desc'},
     insufficient: false
+  };
+
+  const SEVERITIES = ['critical', 'warning', 'info'];
+
+  const t = (key, fallback, vars) => {
+    try {
+      const translated = window.I18N?.t?.(key, vars);
+      if (typeof translated === 'string' && translated && translated !== key) {
+        return translated;
+      }
+    } catch (err) {
+      // ignore translation errors
+    }
+    if (typeof fallback === 'function') return fallback(vars);
+    if (typeof fallback === 'string') return fallback;
+    return key.replace(/^label\.|^range\./, '');
   };
 
   boot().catch(err => console.error('Corporate init failed', err));
@@ -82,6 +100,7 @@ function initCorporatePage(){
     });
 
     els.exportBtn?.addEventListener('click', exportActivity);
+    els.activityTable?.addEventListener('click', handleActivitySortClick);
 
     window.addEventListener('storage', handleStorageEvent);
     document.addEventListener('i18n:change', handleI18nChange);
@@ -103,7 +122,7 @@ function initCorporatePage(){
   function setupEventFilters(){
     if (els.eventTeam) {
       els.eventTeam.innerHTML = '';
-      els.eventTeam.setAttribute('aria-label', 'Filter events by team');
+      els.eventTeam.setAttribute('aria-label', t('events.filter.teamAll', 'Filter events by team'));
       state.teams.forEach(team => {
         const option = document.createElement('option');
         option.value = team.id;
@@ -118,10 +137,29 @@ function initCorporatePage(){
       }
     }
     if (els.eventSeverity) {
-      els.eventSeverity.value = '';
+      const current = els.eventSeverity.value || '';
+      const options = document.createDocumentFragment();
+      const all = document.createElement('option');
+      all.value = '';
+      all.textContent = t('events.filter.severityAll', 'All severities');
+      options.appendChild(all);
+      SEVERITIES.forEach(level => {
+        const option = document.createElement('option');
+        option.value = level;
+        option.textContent = t(`events.severity.${level}`, level.toUpperCase());
+        if (level === current) option.selected = true;
+        options.appendChild(option);
+      });
+      els.eventSeverity.innerHTML = '';
+      els.eventSeverity.appendChild(options);
+      state.eventFilterSeverity = current;
     }
     if (els.eventType) {
-      els.eventType.innerHTML = '<option value="">All types</option>';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = t('events.filter.typeAll', 'All types');
+      els.eventType.innerHTML = '';
+      els.eventType.appendChild(placeholder);
     }
   }
 
@@ -206,7 +244,11 @@ function initCorporatePage(){
       if (evt?.type) types.add(evt.type);
     });
     const current = els.eventType.value || '';
-    els.eventType.innerHTML = '<option value="">All types</option>';
+    els.eventType.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = t('events.filter.typeAll', 'All types');
+    els.eventType.appendChild(placeholder);
     Array.from(types).sort().forEach(type => {
       const option = document.createElement('option');
       option.value = type;
@@ -412,20 +454,25 @@ function initCorporatePage(){
       return true;
     });
 
+    updateEventBadges(filtered);
+
     list.innerHTML = '';
 
     if (state.eventsDateFilter) {
       const note = document.createElement('div');
       note.className = 'event-filter-note';
       const label = state.eventsDateFilter.label || formatDateLabel(state.eventsDateFilter.date);
-      note.textContent = `Filtered by ${label}`;
+      note.textContent = t('events.filteredBy', vars => `Filtered by ${vars?.label ?? ''}`, {label});
       list.appendChild(note);
     }
 
     if (!filtered.length) {
       const empty = document.createElement('p');
       empty.className = 'caption';
-      empty.textContent = 'No events in range';
+      const hasFilters = state.eventFilterTeams.size || state.eventFilterSeverity || state.eventFilterType || state.eventsDateFilter;
+      empty.textContent = hasFilters
+        ? t('events.emptyFiltered', 'Filters returned no events.')
+        : t('events.empty', 'No detection events in this range.');
       list.appendChild(empty);
       return;
     }
@@ -452,7 +499,7 @@ function initCorporatePage(){
       header.className = 'event-header';
       const severity = document.createElement('span');
       severity.className = severityClass(evt.severity);
-      severity.textContent = (evt.severity || 'info').toUpperCase();
+      severity.textContent = t(`events.severity.${evt.severity || 'info'}`, (evt.severity || 'info').toUpperCase());
 
       const title = document.createElement('strong');
       title.textContent = evt.type || 'Event';
@@ -465,7 +512,7 @@ function initCorporatePage(){
 
       const meta = document.createElement('div');
       meta.className = 'event-meta';
-      const team = state.teamMap.get(evt.team) || evt.team;
+      const team = getTeamName(evt.team);
       if (team) {
         const chip = document.createElement('span');
         chip.className = 'event-pill';
@@ -525,29 +572,22 @@ function initCorporatePage(){
       return true;
     });
 
-    const headers = ['Date', 'Team', 'Hydration Logs', 'Caffeine Logs', 'Medications Logged', 'Active Steps %'];
-    const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+    const lang = window.I18N?.getLang?.() || 'en';
+    const columns = buildActivityColumns(lang);
+    const thead = `<thead><tr>${columns.map(activityHeaderCell).join('')}</tr></thead>`;
     let tbody = '';
     let csvRows = [];
 
     if (state.insufficient) {
-      tbody = `<tbody><tr><td colspan="${headers.length}">—</td></tr></tbody>`;
+      tbody = `<tbody><tr><td colspan="${columns.length}">—</td></tr></tbody>`;
     } else if (!filtered.length) {
-      tbody = `<tbody><tr><td colspan="${headers.length}">No activity data</td></tr></tbody>`;
+      tbody = `<tbody><tr><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr></tbody>`;
     } else {
-      const lang = window.I18N?.getLang?.() || 'en';
-      const dateFormatter = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit', year: 'numeric'});
-      const bodyRows = filtered.map(row => {
-        const dateLabel = formatDateLabel(row.date, {formatter: dateFormatter});
-        const team = state.teamMap.get(row.team) || row.team || '—';
-        const hydration = numericOrDash(row.hydration);
-        const caffeine = numericOrDash(row.caffeine);
-        const meds = numericOrDash(row.meds);
-        const steps = numericOrDash(row.steps_active_pct);
-        if (hydration !== '—' && caffeine !== '—' && meds !== '—' && steps !== '—') {
-          csvRows.push([row.date, team, hydration, caffeine, meds, steps]);
-        }
-        return `<tr><td>${dateLabel}</td><td>${team}</td><td>${hydration}</td><td>${caffeine}</td><td>${meds}</td><td>${steps}</td></tr>`;
+      const sorted = sortActivityRows(filtered, columns, lang);
+      const bodyRows = sorted.map(row => {
+        const cells = columns.map(col => `<td>${col.render(row, lang)}</td>`);
+        csvRows.push(columns.map(col => col.render(row, lang)));
+        return `<tr>${cells.join('')}</tr>`;
       });
       tbody = `<tbody>${bodyRows.join('')}</tbody>`;
     }
@@ -565,9 +605,105 @@ function initCorporatePage(){
     return String(Math.round(num));
   }
 
+  function numericValue(value){
+    const num = Number(value);
+    return Number.isFinite(num) ? num : Number.NEGATIVE_INFINITY;
+  }
+
+  function dateValue(value){
+    if (!value) return Number.NEGATIVE_INFINITY;
+    const ts = Date.parse(value);
+    return Number.isFinite(ts) ? ts : Number.NEGATIVE_INFINITY;
+  }
+
+  function compareNumbers(a, b){
+    if (a === b) return 0;
+    return a < b ? -1 : 1;
+  }
+
+  function getTeamName(id){
+    return state.teamMap.get(id) || id || '—';
+  }
+
+  function buildActivityColumns(lang){
+    const dateFormatter = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit', year: 'numeric'});
+    return [
+      {
+        key: 'date',
+        label: t('activity.date', 'Date'),
+        render: (row) => formatDateLabel(row.date, {formatter: dateFormatter}),
+        sort: (a, b) => compareNumbers(dateValue(a.date), dateValue(b.date))
+      },
+      {
+        key: 'team',
+        label: t('activity.team', 'Team'),
+        render: (row) => getTeamName(row.team),
+        sort: (a, b) => getTeamName(a.team).localeCompare(getTeamName(b.team), lang, {sensitivity: 'base'})
+      },
+      {
+        key: 'hydration',
+        label: t('activity.hydration', 'Hydration Logs'),
+        render: (row) => numericOrDash(row.hydration),
+        sort: (a, b) => compareNumbers(numericValue(a.hydration), numericValue(b.hydration))
+      },
+      {
+        key: 'caffeine',
+        label: t('activity.caffeine', 'Caffeine Logs'),
+        render: (row) => numericOrDash(row.caffeine),
+        sort: (a, b) => compareNumbers(numericValue(a.caffeine), numericValue(b.caffeine))
+      },
+      {
+        key: 'meds',
+        label: t('activity.meds', 'Medications Logged'),
+        render: (row) => numericOrDash(row.meds),
+        sort: (a, b) => compareNumbers(numericValue(a.meds), numericValue(b.meds))
+      },
+      {
+        key: 'steps',
+        label: t('activity.steps', 'Active Steps %'),
+        render: (row) => numericOrDash(row.steps_active_pct),
+        sort: (a, b) => compareNumbers(numericValue(a.steps_active_pct), numericValue(b.steps_active_pct))
+      }
+    ];
+  }
+
+  function activityHeaderCell(column){
+    const isActive = state.activitySort.key === column.key;
+    const dir = isActive ? state.activitySort.dir : 'none';
+    const ariaSort = isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
+    const icon = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
+    return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort="${column.key}">${column.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
+  }
+
+  function sortActivityRows(rows, columns, lang){
+    const active = columns.find(col => col.key === state.activitySort.key) || columns[0];
+    const direction = state.activitySort.dir === 'asc' ? 1 : -1;
+    return rows.slice().sort((a, b) => {
+      const result = active.sort(a, b, lang);
+      if (result !== 0) return result * direction;
+      const fallback = columns[0].sort(a, b, lang);
+      return fallback * direction;
+    });
+  }
+
+  function handleActivitySortClick(evt){
+    const trigger = evt.target.closest('[data-sort]');
+    if (!trigger) return;
+    evt.preventDefault();
+    const key = trigger.getAttribute('data-sort');
+    if (!key) return;
+    if (state.activitySort.key === key) {
+      state.activitySort.dir = state.activitySort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.activitySort = {key, dir: key === 'date' ? 'desc' : 'asc'};
+    }
+    renderActivity(state.metrics?.activity);
+  }
+
   function exportActivity(){
     if (!state.activityCsvRows.length) return;
-    const headers = ['Date', 'Team', 'Hydration Logs', 'Caffeine Logs', 'Medications Logged', 'Active Steps %'];
+    const lang = window.I18N?.getLang?.() || 'en';
+    const headers = buildActivityColumns(lang).map(col => csvEscape(col.label));
     const lines = [headers.join(',')].concat(state.activityCsvRows.map(row => row.map(csvEscape).join(',')));
     const csv = lines.join('\n');
     const blob = new Blob([csv], {type: 'text/csv'});
@@ -596,10 +732,12 @@ function initCorporatePage(){
   function updateCaption(){
     if (!els.caption) return;
     const teamLabel = state.teamSelection === 'all'
-      ? (window.I18N?.t('label.team.all') || 'All Teams')
+      ? t('label.team.all', 'All Teams')
       : (state.teamMap.get(state.teamSelection) || state.teamSelection);
-    const rangeLabel = state.rangeLabel || 'Range';
-    els.caption.textContent = `Org avg · ${rangeLabel} · ${teamLabel}`;
+    const rangeLabel = state.rangeLabel || t('label.range', 'Range');
+    const prefix = t('caption.orgAverage', 'Org avg');
+    const sep = t('caption.separator', ' · ');
+    els.caption.textContent = `${scenarioPrefix()}${prefix}${sep}${rangeLabel}${sep}${teamLabel}`;
   }
 
   function handleStorageEvent(evt){
@@ -621,6 +759,11 @@ function initCorporatePage(){
         renderAll();
       });
     }
+    if (evt.key === 'hr:scenario') {
+      Promise.all([loadEvents(), loadMetrics()]).then(() => {
+        renderAll();
+      });
+    }
   }
 
   function syncEventTeamSelection(){
@@ -633,6 +776,8 @@ function initCorporatePage(){
 
   function handleI18nChange(){
     state.rangeLabel = resolveRangeConfig(state.rangeSelection).label;
+    setupEventFilters();
+    buildEventTypeOptions();
     renderAll();
   }
 
@@ -728,20 +873,50 @@ function initCorporatePage(){
     const year = String(date.getFullYear());
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}${month}${day}`;
+    return `${year}-${month}-${day}`;
   }
 
   async function fetchJson(path){
-    const version = window.APP_VERSION || '';
-    const url = new URL(path, document.baseURI);
-    if (version) {
-      url.searchParams.set('v', version);
+    return await window.dataLoader.fetch(path);
+  }
+
+  function updateEventBadges(events){
+    if (!els.eventBadges) return;
+    if (state.insufficient) {
+      els.eventBadges.innerHTML = '';
+      return;
     }
-    const response = await fetch(url.toString(), {cache: 'no-store'});
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${path}`);
+    const list = Array.isArray(events) ? events : [];
+    const counts = {critical: 0, warning: 0, info: 0};
+    list.forEach(evt => {
+      const sev = evt?.severity;
+      if (sev && Object.prototype.hasOwnProperty.call(counts, sev)) {
+        counts[sev] += 1;
+      }
+    });
+    const total = list.length;
+    const pills = [
+      `<span class="pill pill--neutral">${t('events.count.total', vars => `Total ${vars?.count ?? 0}`, {count: total})}</span>`
+    ];
+    SEVERITIES.forEach(level => {
+      const count = counts[level];
+      const className = level === 'critical' ? 'pill--critical' : level === 'warning' ? 'pill--caution' : 'pill--neutral';
+      const label = t(`events.severity.${level}`, level.toUpperCase());
+      pills.push(`<span class="pill ${className}">${t(`events.count.${level}`, vars => `${label} ${vars?.count ?? 0}`, {count, label})}</span>`);
+    });
+    els.eventBadges.innerHTML = pills.join('');
+  }
+
+  function readScenario(){
+    try {
+      return localStorage.getItem('hr:scenario') || 'live';
+    } catch (err) {
+      return 'live';
     }
-    return await response.json();
+  }
+
+  function scenarioPrefix(){
+    return readScenario() === 'night' ? t('caption.scenarioPrefix', 'Night-Shift Scenario · ') : '';
   }
 }
 

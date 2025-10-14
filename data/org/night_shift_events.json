@@ -1,0 +1,72 @@
+[
+  {
+    "ts": "2025-10-10T08:00:00Z",
+    "team": "ops",
+    "type": "RecoveryDrop",
+    "severity": "warning",
+    "detail": "3-day recovery fell ≥15% vs baseline",
+    "rule": "3-day moving average wellbeing dropped ≥15% vs team baseline",
+    "thresholds": {
+      "metric": "Wellbeing MA(3)",
+      "delta": "−15% vs baseline",
+      "window": "72h"
+    },
+    "heatmapDate": "2025-10-10"
+  },
+  {
+    "ts": "2025-10-11T02:15:00Z",
+    "team": "ops",
+    "type": "NightShiftStress",
+    "severity": "warning",
+    "detail": "Night shift stress surged ≥35% vs baseline",
+    "rule": "Night shift cohort stress ≥35% above baseline for 2+ shifts",
+    "thresholds": {
+      "metric": "Stress index",
+      "delta": "+35%",
+      "window": "48h"
+    },
+    "heatmapDate": "2025-10-11"
+  },
+  {
+    "ts": "2025-10-12T03:40:00Z",
+    "team": "cs",
+    "type": "NightShiftFatigue",
+    "severity": "critical",
+    "detail": "Overnight fatigue exceeded 70 for two teams",
+    "rule": "Night shift fatigue ≥70 across 2 teams for consecutive nights",
+    "thresholds": {
+      "metric": "Fatigue index",
+      "limit": ">=70",
+      "occurrences": "2 nights"
+    },
+    "heatmapDate": "2025-10-12"
+  },
+  {
+    "ts": "2025-10-12T06:00:00Z",
+    "team": "cs",
+    "type": "HighStressCluster",
+    "severity": "critical",
+    "detail": "≥30% staff with Stress ≥70 for 2+ days",
+    "rule": "≥30% of staff reported stress ≥70 for at least two consecutive days",
+    "thresholds": {
+      "metric": "Stress ≥70",
+      "population": "≥30% of team",
+      "duration": "48h"
+    },
+    "heatmapDate": "2025-10-12"
+  },
+  {
+    "ts": "2025-10-13T09:30:00Z",
+    "team": "lab",
+    "type": "FatigueSpike",
+    "severity": "info",
+    "detail": "Shift-end fatigue >65 for two consecutive shifts",
+    "rule": "Shift-end fatigue mean ≥65 for at least two consecutive shifts",
+    "thresholds": {
+      "metric": "Fatigue index",
+      "limit": ">65",
+      "occurrences": "2 shifts"
+    },
+    "heatmapDate": "2025-10-13"
+  }
+]

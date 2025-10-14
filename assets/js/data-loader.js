@@ -24,6 +24,30 @@
     return JSON.stringify({path, range: range || null, team: team || 'all', mode: mode || 'json'});
   }
 
+  function readScenario(){
+    try {
+      return localStorage.getItem('hr:scenario') || 'live';
+    } catch (err) {
+      return 'live';
+    }
+  }
+
+  function scenarioPath(path){
+    const scenario = readScenario();
+    if (scenario !== 'night') return path;
+    const suffixes = [
+      {match: 'metrics_7d.json', replace: 'night_shift_metrics_7d.json'},
+      {match: 'events.json', replace: 'night_shift_events.json'}
+    ];
+    for (const entry of suffixes) {
+      if (path.includes(entry.replace)) return path;
+      if (path.endsWith(entry.match)) {
+        return path.slice(0, -entry.match.length) + entry.replace;
+      }
+    }
+    return path;
+  }
+
   function waitForVersion(){
     if (typeof window.APP_VERSION !== 'undefined') {
       return Promise.resolve(window.APP_VERSION || '');
@@ -44,7 +68,8 @@
     const range = normalizeRange(options.range);
     const team = options.team || null;
     const mode = options.as || 'json';
-    const key = buildKey(path, range, team, mode);
+    const resolvedPath = scenarioPath(path);
+    const key = buildKey(resolvedPath, range, team, mode);
     const now = Date.now();
     if (cache.has(key)) {
       const entry = cache.get(key);
@@ -55,7 +80,7 @@
     }
 
     const version = await waitForVersion();
-    const url = new URL(path, document.baseURI);
+    const url = new URL(resolvedPath, document.baseURI);
     if (version) {
       url.searchParams.set('v', version);
     }
