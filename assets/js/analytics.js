@@ -149,11 +149,13 @@ function initPage(){
     }
 
     function renderTracker(metrics, team){
-      const values = metrics.series?.wellbeing_avg || [];
+      const info = metricDeltaInfo(metrics, 'wellbeing_avg', team);
+      const values = Array.isArray(info.series) && info.series.length ? info.series : (metrics.series?.wellbeing_avg || []);
       const maValues = useMA ? movingAverage(values, 3) : values;
-      const previous = teamValue(metrics.previous, 'wellbeing_avg', team) ?? metrics.previous?.wellbeing_avg;
-      const current = teamValue(metrics.kpi, 'wellbeing_avg', team) ?? metrics.kpi?.wellbeing_avg;
-      const delta = current != null && previous != null ? current - previous : 0;
+      const current = info.current;
+      const fallbackPrevious = current != null && info.delta != null ? current - info.delta : null;
+      const previous = info.previous != null ? info.previous : fallbackPrevious;
+      const delta = info.delta != null ? info.delta : (current != null && previous != null ? current - previous : 0);
       const badge = deltaBadge(delta, true);
       const modeLabel = useMA ? t('label.movingAverage') : t('label.actual');
 
@@ -174,7 +176,7 @@ function initPage(){
 
       chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
 
-      currentSeries = maValues.reduce((acc, value, index) => {
+      currentSeries = maValues.length ? maValues.reduce((acc, value, index) => {
         const num = Number(value);
         if (Number.isFinite(num)) {
           acc.push(num);
@@ -183,7 +185,7 @@ function initPage(){
           acc.push(fallback ?? 0);
         }
         return acc;
-      }, []);
+      }, []) : [];
 
       renderWellbeingChart(currentSeries);
     }
@@ -247,10 +249,12 @@ function initPage(){
       const cards = BREAKDOWN_KEYS.map(cfg => {
         const list = metrics.breakdown[cfg.key] || [];
         const entry = team !== 'all' ? list.find(item => item.team === team) : aggregateEntry(list);
-        const value = entry?.value ?? metrics.kpi?.[cfg.key] ?? 0;
-        const previous = entry?.previous ?? metrics.previous?.[cfg.key] ?? value;
-        const series = entry?.series || metrics.series?.[cfg.key] || [];
-        const badge = deltaBadge(value - previous, !cfg.inverse);
+        const info = breakdownInfo(metrics, cfg.key, team, entry);
+        const value = info.value ?? 0;
+        const previous = info.previous ?? value;
+        const series = info.series || [];
+        const delta = info.delta != null ? info.delta : value - previous;
+        const badge = deltaBadge(delta, !cfg.inverse);
         return `<article class="tile breakdown-card">
           <header class="tile__head">
             <span class="tile__title">${t(cfg.label)}</span>
@@ -270,9 +274,9 @@ function initPage(){
     function renderMiniKpis(metrics, team){
       if (!miniGrid) return;
       const items = BREAKDOWN_KEYS.map(cfg => {
-        const value = teamValue(metrics.kpi, cfg.key, team) ?? metrics.kpi?.[cfg.key] ?? 0;
-        const previous = teamValue(metrics.previous, cfg.key, team) ?? metrics.previous?.[cfg.key] ?? value;
-        const delta = value - previous;
+        const info = metricDeltaInfo(metrics, cfg.key, team);
+        const value = info.current ?? 0;
+        const delta = info.delta != null ? info.delta : (info.previous != null ? value - info.previous : 0);
         const badge = deltaBadge(delta, !cfg.inverse);
         const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
         return `<div class="mini-kpis__item">
@@ -317,6 +321,48 @@ function initPage(){
       }
       if (key in source) return source[key];
       return null;
+    }
+
+    function metricDeltaInfo(metrics, key, team){
+      if (!metrics) return {current: null, previous: null, delta: null, series: []};
+      const current = teamValue(metrics.kpi, key, team) ?? metrics.kpi?.[key] ?? null;
+      let delta = null;
+      if (team !== 'all' && metrics?.delta?.teams?.[team] && key in metrics.delta.teams[team]) {
+        const raw = metrics.delta.teams[team][key];
+        delta = Number.isFinite(raw) ? raw : null;
+      } else if (metrics?.delta && key in metrics.delta) {
+        const raw = metrics.delta[key];
+        delta = Number.isFinite(raw) ? raw : null;
+      }
+      let previous = null;
+      if (delta != null && current != null) {
+        previous = current - delta;
+      } else {
+        const candidate = teamValue(metrics.previous, key, team) ?? metrics.previous?.[key];
+        if (Number.isFinite(candidate)) {
+          previous = candidate;
+          if (current != null) {
+            delta = current - previous;
+          }
+        }
+      }
+      const series = Array.isArray(metrics?.series?.[key]) ? metrics.series[key] : [];
+      return {current, previous, delta, series};
+    }
+
+    function breakdownInfo(metrics, key, team, entry){
+      const base = metricDeltaInfo(metrics, key, team);
+      const value = entry?.value ?? base.current;
+      let delta = entry && Number.isFinite(entry.delta) ? entry.delta : base.delta;
+      let previous = entry && Number.isFinite(entry.previous) ? entry.previous : base.previous;
+      if (previous == null && value != null && delta != null) {
+        previous = value - delta;
+      }
+      if (delta == null && previous != null && value != null) {
+        delta = value - previous;
+      }
+      const series = Array.isArray(entry?.series) && entry.series.length ? entry.series : base.series;
+      return {value, previous, delta, series};
     }
 
     function toggleInsufficient(active){

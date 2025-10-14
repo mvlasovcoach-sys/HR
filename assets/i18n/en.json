@@ -57,9 +57,9 @@
   "caption.range": "{range}",
   "caption.scenarioPrefix": "Night-Shift Scenario · ",
   "caption.teamAll": "All Teams",
-  "delta.up": "Improved vs prior",
-  "delta.down": "Declined vs prior",
-  "delta.equal": "No change vs prior",
+  "delta.up": "Improved",
+  "delta.down": "Declined",
+  "delta.equal": "No change",
   "delta.header": "Δ vs prior period",
   "about.title": "About this platform",
   "about.bullet1": "Aggregates only; no raw ECG/HRV; fixed thresholds; no ML",
@@ -104,5 +104,9 @@
   "drawer.metaTeam": "Team",
   "drawer.metaTime": "Detected",
   "drawer.noThresholds": "No threshold details provided.",
-  "nps.target": "Target ≥ +25"
+  "nps.target": "Target ≥ +25",
+  "events.severity.critical": "Critical",
+  "events.severity.warning": "Warning",
+  "events.severity.info": "Informational",
+  "label.generatedAt": "Generated {date}"
 }

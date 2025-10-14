@@ -8,6 +8,15 @@
     const exportBtn = document.getElementById('pilot-export');
 
     let events = [];
+    const state = {
+      engagement: null,
+      metrics: null,
+      range: {preset: '7d'},
+      team: 'all',
+      preset: '7d',
+      eventCounts: {critical: 0, warning: 0, info: 0},
+      kpiSummary: []
+    };
 
     exportBtn?.addEventListener('click', handleExport);
     window.addEventListener('storage', evt => {
@@ -75,6 +84,11 @@
         loadEngagement(preset, range, team),
         loadMetrics(preset, range, team)
       ]);
+      state.range = range;
+      state.team = team;
+      state.preset = preset;
+      state.engagement = engagement;
+      state.metrics = metrics;
       renderKpis(engagement, preset, team, range);
       renderHeatmap(metrics);
       renderEvents(range, team);
@@ -104,16 +118,30 @@
     function renderKpis(data, preset, team, range){
       if (!data) {
         kpiSection.innerHTML = '<p role="status">No KPI data</p>';
+        state.kpiSummary = [];
         return;
       }
       const npsSlice = getNpsSlice(preset);
-      const kpis = [
-        buildKpiCard('kpi.onboarding', data.kpi?.onboarding_pct, data.previous?.onboarding_pct, data.targets?.onboarding_pct, data.series?.onboarding_pct || []),
-        buildKpiCard('kpi.weeklyActive', data.kpi?.weekly_active_pct, data.previous?.weekly_active_pct, data.targets?.weekly_active_pct, data.series?.weekly_active_pct || []),
-        buildKpiCard('kpi.nps', teamNpsCurrent(npsSlice, team), teamNpsPrevious(npsSlice, team), data.targets?.nps, npsSlice?.values || []),
-        buildKpiCard('kpi.alertCount', alertCount(range, team), null, null, alertSpark(data.timeline || [], range, team))
+      const onboardingVal = data.kpi?.onboarding_pct;
+      const onboardingPrev = data.previous?.onboarding_pct;
+      const weeklyVal = data.kpi?.weekly_active_pct;
+      const weeklyPrev = data.previous?.weekly_active_pct;
+      const npsCurrent = teamNpsCurrent(npsSlice, team);
+      const npsPrevious = teamNpsPrevious(npsSlice, team);
+      const alertsValue = alertCount(range, team);
+      const cards = [
+        buildKpiCard('kpi.onboarding', onboardingVal, onboardingPrev, data.targets?.onboarding_pct, data.series?.onboarding_pct || []),
+        buildKpiCard('kpi.weeklyActive', weeklyVal, weeklyPrev, data.targets?.weekly_active_pct, data.series?.weekly_active_pct || []),
+        buildKpiCard('kpi.nps', npsCurrent, npsPrevious, data.targets?.nps, npsSlice?.values || []),
+        buildKpiCard('kpi.alertCount', alertsValue, null, 3, alertSpark(data.timeline || [], range, team))
       ];
-      kpiSection.innerHTML = kpis.join('');
+      kpiSection.innerHTML = cards.join('');
+      state.kpiSummary = [
+        buildSummaryEntry('kpi.onboarding', onboardingVal, onboardingPrev, data.targets?.onboarding_pct, '%'),
+        buildSummaryEntry('kpi.weeklyActive', weeklyVal, weeklyPrev, data.targets?.weekly_active_pct, '%'),
+        buildSummaryEntry('kpi.nps', npsCurrent, npsPrevious, data.targets?.nps, 'nps'),
+        buildSummaryEntry('kpi.alertCount', alertsValue, null, 3, 'count', {skipDelta: true})
+      ];
     }
 
     function buildKpiCard(labelKey, value, previous, target, series){
@@ -173,8 +201,13 @@
         return acc;
       }, {});
       const severities = ['critical', 'warning', 'info'];
-      const list = severities.map(sev => `<li><strong>${capitalize(sev)}</strong><br>${counts[sev] || 0} ${window.t('kpi.alertCount')}</li>`).join('');
+      const list = severities.map(sev => `<li><strong>${tSeverity(sev)}</strong><br>${counts[sev] || 0} ${window.t('kpi.alertCount')}</li>`).join('');
       eventsSection.innerHTML = `<div class="panel__meta" data-i18n="section.pilotEvents">Events summary</div><ul>${list}</ul>`;
+      state.eventCounts = {
+        critical: counts.critical || 0,
+        warning: counts.warning || 0,
+        info: counts.info || 0
+      };
       window.I18N?.translate?.();
     }
 
@@ -254,6 +287,48 @@
       return delta > 0 ? 'kpi-card__delta--up' : 'kpi-card__delta--down';
     }
 
+    function buildSummaryEntry(labelKey, value, previous, target, unit, options={}){
+      const val = Number.isFinite(value) ? Math.round(value) : null;
+      const prev = Number.isFinite(previous) ? Math.round(previous) : null;
+      const delta = !options.skipDelta && val != null && prev != null ? val - prev : null;
+      const valueText = formatSummaryValue(val, unit);
+      const targetText = target != null ? formatSummaryTarget(unit, target) : '';
+      const statusText = target != null && val != null
+        ? (val >= target ? window.t('status.onTarget') : window.t('status.belowTarget'))
+        : '';
+      const deltaText = options.skipDelta
+        ? ''
+        : delta != null
+          ? `${delta >= 0 ? '+' : '−'}${Math.abs(delta)}${deltaUnitSuffix(unit)} (${deltaLabel(delta)})`
+          : window.t('delta.equal');
+      return {
+        label: window.t(labelKey),
+        valueText,
+        targetText,
+        statusText,
+        deltaText
+      };
+    }
+
+    function formatSummaryValue(value, unit){
+      if (value == null) return '—';
+      if (unit === '%') return `${value}%`;
+      if (unit === 'nps') return `${value > 0 ? '+' : ''}${value}`;
+      return String(value);
+    }
+
+    function formatSummaryTarget(unit, target){
+      const rounded = Math.round(target);
+      if (unit === '%') return `≥${rounded}%`;
+      if (unit === 'nps') return `≥${rounded > 0 ? '+' : ''}${rounded}`;
+      return `≥${rounded}`;
+    }
+
+    function deltaUnitSuffix(unit){
+      if (unit === '%') return '%';
+      return '';
+    }
+
     function sparkline(values){
       if (!Array.isArray(values) || !values.length) return '';
       const max = Math.max(...values);
@@ -277,12 +352,26 @@
       return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
     }
 
+    function tSeverity(key){
+      const translations = {
+        critical: window.t('events.severity.critical') || 'Critical',
+        warning: window.t('events.severity.warning') || 'Warning',
+        info: window.t('events.severity.info') || 'Info'
+      };
+      return translations[key] || capitalize(key);
+    }
+
     function teamMap(){
       try {
         return JSON.parse(localStorage.getItem('hr:team:names') || 'null') || {};
       } catch (e) {
         return {};
       }
+    }
+
+    function teamLabel(team){
+      if (!team || team === 'all') return window.t('caption.teamAll') || 'All Teams';
+      return teamMap()[team] || team;
     }
 
     function buildCaption(range, team){
@@ -311,13 +400,38 @@
       const team = readTeam();
       const preset = presetForRange(range);
       try {
-        const sections = [
-          {element: kpiSection, caption: window.t('section.engagementOverview')},
-          {element: heatmapSection, caption: window.t('section.pilotHeatmap')},
-          {element: eventsSection, caption: window.t('section.pilotEvents')}
-        ];
         const teamSlug = team === 'all' ? 'all-teams' : team;
-        await window.exporter.exportPilotSummary(sections, `pilot_${teamSlug}_${preset}.pdf`);
+        const gdprHeading = (() => {
+          const text = window.t('pilot.gdpr') || '';
+          return text.includes(':') ? text.split(':')[0] : text;
+        })();
+        const payload = {
+          filename: `pilot_${teamSlug}_${preset}.pdf`,
+          meta: {
+            title: window.t('header.pilot') || 'Pilot Dashboard',
+            team: `${window.t('label.teamFilter') || 'Team'}: ${teamLabel(team)}`,
+            range: `${window.t('label.range') || 'Range'}: ${rangeLabel(range)}`,
+            generated: window.t('label.generatedAt', {date: new Date().toLocaleString()}),
+            kpiTitle: window.t('section.engagementOverview') || 'Engagement KPIs',
+            heatmapTitle: window.t('section.pilotHeatmap') || 'Heatmap snapshot',
+            eventsTitle: window.t('section.pilotEvents') || 'Events summary',
+            noteTitle: gdprHeading
+          },
+          kpis: state.kpiSummary.map(entry => ({
+            label: entry.label,
+            valueText: entry.valueText,
+            targetText: entry.targetText,
+            statusText: entry.statusText,
+            deltaText: entry.deltaText
+          })),
+          heatmapEl: heatmapSection,
+          events: ['critical', 'warning', 'info'].map(sev => ({
+            label: tSeverity(sev),
+            count: state.eventCounts[sev] || 0
+          })),
+          note: document.querySelector('.pilot-note')?.textContent?.trim() || ''
+        };
+        await window.exporter.exportPilotSummary(payload);
       } catch (e) {
         console.error('Pilot export failed', e);
         alert('Export failed. Please try again.');

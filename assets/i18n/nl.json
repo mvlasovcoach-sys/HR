@@ -57,9 +57,9 @@
   "caption.range": "{range}",
   "caption.scenarioPrefix": "Nachtdienstscenario · ",
   "caption.teamAll": "Alle teams",
-  "delta.up": "Verbeterd t.o.v. vorige",
-  "delta.down": "Achteruit t.o.v. vorige",
-  "delta.equal": "Geen wijziging t.o.v. vorige",
+  "delta.up": "Verbeterd",
+  "delta.down": "Verslechterd",
+  "delta.equal": "Geen wijziging",
   "delta.header": "Δ t.o.v. vorige periode",
   "about.title": "Over dit platform",
   "about.bullet1": "Alleen aggregaten; geen ruwe ECG/HRV; vaste drempels; geen ML",
@@ -104,5 +104,9 @@
   "drawer.metaTeam": "Team",
   "drawer.metaTime": "Gedetecteerd",
   "drawer.noThresholds": "Geen drempelgegevens beschikbaar.",
-  "nps.target": "Doel ≥ +25"
+  "nps.target": "Doel ≥ +25",
+  "events.severity.critical": "Kritiek",
+  "events.severity.warning": "Waarschuwing",
+  "events.severity.info": "Info",
+  "label.generatedAt": "Gegenereerd op {date}"
 }
