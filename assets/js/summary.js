@@ -1,7 +1,102 @@
 (function(){
   console.info('Summary init');
-  const ver = ()=> window.APP_VERSION || '';
   const MIN_N = 5;
+  const TILE_COUNT = 4;
+
+  const state = {
+    loading: false
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const start = () => {
+      renderSkeleton();
+      loadAndRender();
+    };
+    if (window.I18N?.onReady) {
+      window.I18N.onReady(start);
+    } else {
+      start();
+    }
+    window.addEventListener('storage', evt => {
+      if (!evt) return;
+      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
+        renderSkeleton();
+        if (evt.key === 'hr:scenario') updateScenarioButtons();
+        loadAndRender();
+      }
+    });
+    document.addEventListener('i18n:change', () => {
+      renderCaption();
+      if (!state.loading) {
+        loadAndRender();
+      }
+    });
+    bindTileNavigation();
+    bindScenarioControls();
+  });
+
+  function bindTileNavigation(){
+    document.getElementById('sum-kpi-grid')?.addEventListener('click', evt => {
+      const tile = evt.target.closest('.tile');
+      if (!tile) return;
+      window.location.href = './Analytics.html';
+    });
+  }
+
+  function bindScenarioControls(){
+    const loadBtn = document.getElementById('btn-night-scenario');
+    const resetBtn = document.getElementById('btn-night-reset');
+    if (loadBtn) {
+      loadBtn.addEventListener('click', () => {
+        setScenario('night');
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        setScenario('live');
+      });
+    }
+    updateScenarioButtons();
+  }
+
+  function setScenario(mode){
+    try {
+      const prev = localStorage.getItem('hr:scenario') || 'live';
+      const next = mode === 'night' ? 'night' : 'live';
+      if (prev === next) return;
+      localStorage.setItem('hr:scenario', next);
+      window.dataLoader?.clear?.();
+      dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
+    } catch (err) {
+      console.warn('scenario set failed', err);
+    }
+    updateScenarioButtons();
+    renderSkeleton();
+    loadAndRender();
+  }
+
+  function readScenario(){
+    try {
+      return localStorage.getItem('hr:scenario') || 'live';
+    } catch (err) {
+      return 'live';
+    }
+  }
+
+  function updateScenarioButtons(){
+    const scenario = readScenario();
+    const loadBtn = document.getElementById('btn-night-scenario');
+    const resetBtn = document.getElementById('btn-night-reset');
+    loadBtn?.setAttribute('aria-pressed', String(scenario === 'night'));
+    resetBtn?.setAttribute('aria-pressed', String(scenario !== 'night'));
+    if (scenario === 'night') {
+      loadBtn?.classList.add('is-active');
+      resetBtn?.classList.remove('is-active');
+    } else {
+      resetBtn?.classList.add('is-active');
+      loadBtn?.classList.remove('is-active');
+    }
+  }
 
   function getRangeKey(){
     try{
@@ -38,12 +133,6 @@
     return id;
   }
 
-  async function fetchJSON(path){
-    const res = await fetch(`${path}?v=${ver()}`);
-    if(!res.ok) throw new Error('Fetch failed: '+path);
-    return await res.json();
-  }
-
   function kGuard(n, host){
     if(n>=MIN_N){
       host.removeAttribute('data-guard');
@@ -64,59 +153,157 @@
     return map[key] || map['7d'];
   }
 
+  function scenarioPrefix(){
+    const scenario = readScenario();
+    if (scenario !== 'night') return '';
+    return window.I18N?.t('caption.scenarioPrefix') || 'Night-Shift Scenario · ';
+  }
+
   function renderCaption(){
     const el = document.getElementById('sum-caption');
     if(!el) return;
     const prefix = window.I18N?.t('caption.orgAverage') || 'Org avg';
     const sep = window.I18N?.t('caption.separator') || ' · ';
-    el.textContent = `${prefix}${sep}${rangeLabel()}${sep}${teamLabel(getTeamId())}`;
+    el.textContent = `${scenarioPrefix()}${prefix}${sep}${rangeLabel()}${sep}${teamLabel(getTeamId())}`;
   }
 
-  function renderKpis(kpi, delta, n){
+  function renderSkeleton(){
+    const grid = document.getElementById('sum-kpi-grid');
+    if (!grid) return;
+    const skeleton = [];
+    for (let i = 0; i < TILE_COUNT; i++) {
+      skeleton.push(`<div class="tile tile--skeleton" aria-hidden="true">
+        <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
+        <div class="tile__meta"><span class="skeleton skeleton--pill"></span></div>
+        <div class="tile__kpi"><span class="skeleton skeleton--value"></span></div>
+        <div class="spark"><span class="skeleton skeleton--spark"></span></div>
+      </div>`);
+    }
+    grid.innerHTML = skeleton.join('');
+  }
+
+  async function loadAndRender(){
+    state.loading = true;
+    renderCaption();
+    const grid = document.getElementById('sum-kpi-grid');
+    if (!grid) return;
+    try{
+      const [metrics, trend] = await Promise.all([
+        window.dataLoader.fetch(`./data/org/metrics_${getRangeKey()}.json`),
+        window.dataLoader.fetch('./data/org/metrics_7d.json')
+      ]);
+      renderKpis(metrics, trend);
+    }catch(err){
+      console.error('Summary metrics failed', err);
+      grid.innerHTML = '';
+      toast(window.I18N?.t('status.noData') || 'Unable to load data');
+    } finally {
+      state.loading = false;
+    }
+  }
+
+  function renderKpis(metrics, trend){
     const grid = document.getElementById('sum-kpi-grid');
     if(!grid) return;
+    const kpi = metrics?.kpi || {};
+    const delta = metrics?.delta || {};
+    const n = metrics?.n || 0;
     if (kGuard(Number(n||0), grid)) return;
+
+    const updatedDate = lastDate(metrics?.heatmap?.dates);
+    const updatedLabel = updatedDate ? `${window.I18N?.t('label.updated') || 'Updated'} ${formatDate(updatedDate)}` : '';
+    const sparkSeries = buildSparkSeries(trend?.heatmap);
 
     const defs = [
       { key:'wellbeing_avg',         label:()=>window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',     unit:'/100', fmt:v=>Math.round(v) },
       { key:'high_stress_pct',       label:()=>window.I18N?.t('metric.highStress') || 'High Stress',   unit:'%',    fmt:v=>Math.round(v) },
       { key:'fatigue_elevated_pct',  label:()=>window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue',  unit:'%',    fmt:v=>Math.round(v) },
-      { key:'engagement_active_pct', label:()=>window.I18N?.t('metric.activeEngagement') || 'Active Engagement', unit:'%',    fmt:v=>Math.round(v) },
+      { key:'engagement_active_pct', label:()=>window.I18N?.t('metric.activeEngagement') || 'Active Engagement', unit:'%',    fmt:v=>Math.round(v) }
     ];
-    grid.innerHTML = defs.map(d=>{
+
+    grid.innerHTML = defs.map((d, index)=>{
       const raw = Number(kpi?.[d.key]);
       const val = Number.isFinite(raw) ? d.fmt(raw) : '—';
       const dRaw = Number(delta?.[d.key]);
       const del  = Number.isFinite(dRaw) ? dRaw : null;
-      return `<div class="tile kpi">
-        <div class="tile__head">${d.label()}
-          ${del!==null ? `<span class="pill ${del>=0?'green':'red'}">${del>=0?'▲':'▼'} ${Math.abs(Math.round(del))}</span>`:''}
-        </div>
+      const badge = del!==null ? `<span class="pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${Math.abs(Math.round(del))}</span>`:'';
+      const spark = sparkline(sparkSeries);
+      return `<div class="tile tile--interactive kpi" data-index="${index}">
+        <div class="tile__head">${d.label()} ${badge}</div>
+        <div class="tile__meta">${updatedLabel}</div>
         <div class="tile__kpi">${val}<small>${d.unit}</small></div>
+        <div class="spark">${spark}</div>
       </div>`;
     }).join('');
   }
 
-  async function loadAndRender(){
-    renderCaption();
-    try{
-      const m = await fetchJSON(`./data/org/metrics_${getRangeKey()}.json`);
-      renderKpis(m.kpi, m.delta||{}, m.n||0);
-    }catch(err){
-      console.error('Summary metrics failed', err);
+  function buildSparkSeries(heatmap){
+    if (!heatmap || !heatmap.value || !heatmap.cols) return [];
+    const cols = heatmap.cols.length;
+    if (!cols) return [];
+    const series = new Array(cols).fill(0);
+    const counts = new Array(cols).fill(0);
+    Object.values(heatmap.value).forEach(arr => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((value, index) => {
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          series[index] += num;
+          counts[index] += 1;
+        }
+      });
+    });
+    return series.map((sum, index) => counts[index] ? sum / counts[index] : null);
+  }
+
+  function sparkline(values){
+    const points = Array.isArray(values) ? values.filter(v => Number.isFinite(v)) : [];
+    if (!points.length) return '';
+    const width = 64;
+    const height = 24;
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const span = max - min || 1;
+    const path = points.map((val, idx) => {
+      const x = (idx / (points.length - 1 || 1)) * width;
+      const y = height - ((val - min) / span) * height;
+      return `${idx === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+  }
+
+  function formatDate(dateStr){
+    try {
+      const lang = window.I18N?.getLang?.() || 'en';
+      const formatter = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'});
+      return formatter.format(new Date(dateStr));
+    } catch (err) {
+      return dateStr;
     }
   }
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const ready = ()=> loadAndRender();
-    if (window.I18N?.onReady){
-      window.I18N.onReady(ready);
-    }else{
-      ready();
+  function lastDate(dates){
+    if (!Array.isArray(dates) || !dates.length) return null;
+    return dates[dates.length - 1];
+  }
+
+  function toast(message){
+    if (!message) return;
+    let stack = document.querySelector('.toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'toast-stack';
+      document.body.appendChild(stack);
     }
-    window.addEventListener('storage', (e)=>{
-      if(e && (e.key==='hr:range' || e.key==='hr:team')) loadAndRender();
-    });
-    document.addEventListener('i18n:change', loadAndRender);
-  });
+    const el = document.createElement('div');
+    el.className = 'toast toast--quiet';
+    el.setAttribute('role', 'status');
+    el.textContent = message;
+    stack.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('is-visible'));
+    setTimeout(() => {
+      el.classList.remove('is-visible');
+      setTimeout(() => el.remove(), 400);
+    }, 3200);
+  }
 })();

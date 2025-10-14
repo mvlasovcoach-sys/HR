@@ -21,7 +21,7 @@
     exportBtn?.addEventListener('click', handleExport);
     window.addEventListener('storage', evt => {
       if (!evt) return;
-      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
         render();
       }
     });
@@ -377,7 +377,7 @@
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = team === 'all' ? window.t('caption.teamAll') : teamMap()[team] || team;
-      return `${window.t('caption.orgAverage')}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
+      return `${scenarioPrefix()}${window.t('caption.orgAverage')}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
     }
 
     function rangeLabel(range){
@@ -393,6 +393,18 @@
       }
       if (range.start && range.end) return `${range.start} → ${range.end}`;
       return window.t('range.7d');
+    }
+
+    function readScenario(){
+      try {
+        return localStorage.getItem('hr:scenario') || 'live';
+      } catch (err) {
+        return 'live';
+      }
+    }
+
+    function scenarioPrefix(){
+      return readScenario() === 'night' ? window.t('caption.scenarioPrefix') : '';
     }
 
     async function handleExport(){

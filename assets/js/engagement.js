@@ -22,7 +22,7 @@ function initPage(){
       render();
       window.addEventListener('storage', evt => {
         if (!evt) return;
-        if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+        if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
           render();
         }
       });
@@ -302,7 +302,7 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
@@ -329,6 +329,18 @@ function initPage(){
         if (map && map[team]) return map[team];
       } catch (e) {}
       return team;
+    }
+
+    function readScenario(){
+      try {
+        return localStorage.getItem('hr:scenario') || 'live';
+      } catch (err) {
+        return 'live';
+      }
+    }
+
+    function scenarioPrefix(){
+      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
     }
 
     function toggleInsufficient(active){

@@ -13,7 +13,7 @@ function initPage(){
     render();
     window.addEventListener('storage', evt => {
       if (!evt) return;
-      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
         render();
       }
     });
@@ -124,6 +124,18 @@ function initPage(){
       return team;
     }
 
+    function readScenario(){
+      try {
+        return localStorage.getItem('hr:scenario') || 'live';
+      } catch (err) {
+        return 'live';
+      }
+    }
+
+    function scenarioPrefix(){
+      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
+    }
+
     async function ensureTeamNames(){
       if (localStorage.getItem('hr:team:names')) return;
       try {
@@ -149,7 +161,7 @@ function initPage(){
       toggleInsufficient(insufficient);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+        if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
         toggleInsufficient(false);
         return;
       }
@@ -175,7 +187,7 @@ function initPage(){
       }).join('');
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
-      if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+      if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
     }
 
     function toggleInsufficient(active){

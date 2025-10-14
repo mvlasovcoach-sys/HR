@@ -2,24 +2,24 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Summary</title>
-<link rel="stylesheet" href="./assets/css/app-shell.css?v=20251020">
-<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251020">
-<link rel="stylesheet" href="./assets/css/ui.components.css?v=20251020">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=20251020a">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251020a">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20251020a">
 <!-- optional page CSS -->
-<link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=20251020">
-<script defer src="./assets/js/i18n.js?v=20251020"></script>
-<script defer src="./assets/js/version.js?v=20251020"></script>
-<script defer src="./assets/js/app-shell.js?v=20251020"></script>
-<script defer src="./assets/js/date-controls.js?v=20251020"></script>
-<script defer src="./assets/js/team-filter.js?v=20251020"></script>
-<script defer src="./assets/js/summary.js?v=20251020"></script>
-<script defer src="./assets/js/about.js?v=20251020"></script>
-<script defer src="./assets/js/exporter.js?v=20251020"></script>
-<script defer src="./assets/js/data-loader.js?v=20251020"></script>
-<script defer src="./assets/js/auth.js?v=20251020"></script>
-<script defer src="./assets/js/guards.js?v=20251020"></script>
-<script defer src="./assets/js/theme.js?v=20251020"></script>
-<script defer src="./assets/js/hr-board.neon.js?v=20251020"></script>
+<link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=20251020a">
+<script defer src="./assets/js/i18n.js?v=20251020a"></script>
+<script defer src="./assets/js/version.js?v=20251020a"></script>
+<script defer src="./assets/js/app-shell.js?v=20251020a"></script>
+<script defer src="./assets/js/date-controls.js?v=20251020a"></script>
+<script defer src="./assets/js/team-filter.js?v=20251020a"></script>
+<script defer src="./assets/js/summary.js?v=20251020a"></script>
+<script defer src="./assets/js/about.js?v=20251020a"></script>
+<script defer src="./assets/js/exporter.js?v=20251020a"></script>
+<script defer src="./assets/js/data-loader.js?v=20251020a"></script>
+<script defer src="./assets/js/auth.js?v=20251020a"></script>
+<script defer src="./assets/js/guards.js?v=20251020a"></script>
+<script defer src="./assets/js/theme.js?v=20251020a"></script>
+<script defer src="./assets/js/hr-board.neon.js?v=20251020a"></script>
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
@@ -39,7 +39,11 @@
       </div>
     </div>
     <p id="global-caption" class="header__caption" aria-live="polite"></p>
-    <p id="sum-caption" class="caption"></p>
+    <p id="sum-caption" class="caption" aria-live="polite"></p>
+    <div class="scenario-controls" role="group" aria-label="Scenario toggles">
+      <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="btn.loadScenario">Load Night-Shift Scenario</button>
+      <button type="button" id="btn-night-reset" class="btn btn--ghost" data-i18n="btn.liveView">Return to Live View</button>
+    </div>
     <div id="sum-kpi-grid" class="grid grid-4"></div>
     <section id="hr-board" class="panel" aria-live="polite"></section>
   </main>

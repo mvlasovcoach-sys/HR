@@ -45,7 +45,7 @@ function initPage(){
     render();
     window.addEventListener('storage', evt => {
       if (!evt) return;
-      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
         render();
       }
       if (evt.key === MA_KEY && maToggle) {
@@ -169,9 +169,10 @@ function initPage(){
 
       if (deltaBadgeEl) {
         const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
-        deltaBadgeEl.textContent = `${t('delta.header')} ${magnitude}`;
+        const text = Number.isFinite(delta) ? `${badge.label} ${magnitude}` : badge.label;
+        deltaBadgeEl.textContent = text;
         deltaBadgeEl.className = `delta-badge ${badge.className}`.trim();
-        deltaBadgeEl.setAttribute('aria-label', `${t('delta.header')} ${magnitude}`);
+        deltaBadgeEl.setAttribute('aria-label', `${t('delta.header')}: ${text}`);
       }
 
       chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
@@ -279,10 +280,11 @@ function initPage(){
         const delta = info.delta != null ? info.delta : (info.previous != null ? value - info.previous : 0);
         const badge = deltaBadge(delta, !cfg.inverse);
         const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
+        const summary = Number.isFinite(delta) ? `${badge.label} ${magnitude}` : badge.label;
         return `<div class="mini-kpis__item">
           <span class="mini-kpis__label">${t(cfg.label)}</span>
           <strong class="mini-kpis__value">${Math.round(value)}${cfg.unit}</strong>
-          <span class="mini-kpis__delta ${badge.className}">${magnitude}</span>
+          <span class="mini-kpis__delta ${badge.className}" aria-label="${summary}">${summary}</span>
         </div>`;
       }).join('');
       miniGrid.innerHTML = items;
@@ -446,19 +448,46 @@ function initPage(){
       if (Array.isArray(direct) && direct.length) return direct;
       const trend = metrics?.kpi_trend?.[key];
       if (Array.isArray(trend) && trend.length) return trend;
+      if (key === 'wellbeing_avg' && metrics?.heatmap) {
+        const hmSeries = heatmapSeries(metrics.heatmap, team);
+        if (hmSeries.length) return hmSeries;
+      }
       return [];
+    }
+
+    function heatmapSeries(heatmap, team){
+      if (!heatmap) return [];
+      if (team && team !== 'all') {
+        const slice = heatmap.value?.[team];
+        if (Array.isArray(slice)) {
+          return slice.map(val => Number(val));
+        }
+      }
+      const cols = Array.isArray(heatmap.cols) ? heatmap.cols.length : 0;
+      if (!cols) return [];
+      const sums = new Array(cols).fill(0);
+      const counts = new Array(cols).fill(0);
+      Object.values(heatmap.value || {}).forEach(arr => {
+        if (!Array.isArray(arr)) return;
+        arr.forEach((val, idx) => {
+          const num = Number(val);
+          if (Number.isFinite(num)) {
+            sums[idx] += num;
+            counts[idx] += 1;
+          }
+        });
+      });
+      return sums.map((sum, idx) => counts[idx] ? sum / counts[idx] : NaN);
     }
 
     function computeWindowStats(series, rangeKey){
       if (!Array.isArray(series) || series.length === 0) return null;
       const windowSize = windowSizeForRange(rangeKey, series.length);
       if (!windowSize) return null;
-      if (series.length < windowSize * 2) return null;
       const numeric = series.map(value => Number(value));
-      const currentSlice = numeric.slice(-windowSize);
-      const previousSlice = numeric.slice(-windowSize * 2, -windowSize);
-      if (!previousSlice.length || previousSlice.some(v => !Number.isFinite(v))) return null;
-      if (currentSlice.some(v => !Number.isFinite(v))) return null;
+      const currentSlice = numeric.slice(-windowSize).filter(Number.isFinite);
+      const previousSlice = numeric.slice(-windowSize * 2, -windowSize).filter(Number.isFinite);
+      if (!previousSlice.length || !currentSlice.length) return null;
       const currentAvg = average(currentSlice);
       const previousAvg = average(previousSlice);
       if (!Number.isFinite(currentAvg) || !Number.isFinite(previousAvg)) return null;
@@ -474,7 +503,7 @@ function initPage(){
         size = Math.floor(length / 2);
       }
       if (size < 1) return null;
-      return length >= size * 2 ? size : null;
+      return size;
     }
 
     function average(values){
@@ -496,7 +525,7 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
@@ -524,7 +553,19 @@ function initPage(){
       } catch (e) {}
       return team;
     }
-}
+
+    function readScenario(){
+      try {
+        return localStorage.getItem('hr:scenario') || 'live';
+      } catch (err) {
+        return 'live';
+      }
+    }
+
+    function scenarioPrefix(){
+      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
+    }
+  }
 
 document.addEventListener('DOMContentLoaded', () => {
   window.I18N.onReady(initPage);

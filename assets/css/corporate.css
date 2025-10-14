@@ -74,6 +74,68 @@
   letter-spacing: 0.28px;
 }
 
+.panel__head > span {
+  flex: 1 1 auto;
+}
+
+.event-badges {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.event-badges .pill {
+  margin: 0;
+  font-size: 0.7rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-3);
+}
+
+.table th,
+.table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid rgba(39, 224, 255, 0.18);
+  text-align: left;
+}
+
+.table th {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 0.78rem;
+}
+
+.table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.table-sort:hover,
+.table-sort:focus-visible {
+  color: var(--txt);
+  outline: none;
+}
+
+.table-sort.is-active {
+  color: var(--txt);
+}
+
+.table-sort__icon {
+  font-size: 0.7rem;
+}
+
 .grid {
   display: grid;
   gap: var(--space-4);

@@ -14,10 +14,12 @@
         </button>
       </header>
       <ul class="about__list">
-        <li data-i18n="about.bullet1">Aggregates only; no raw ECG/HRV; fixed thresholds; no ML</li>
-        <li data-i18n="about.bullet2">EU cloud hosting with encryption in transit and at rest; role-based access</li>
-        <li data-i18n="about.bullet3">Device battery lasts 12+ hours for a typical day</li>
-        <li data-i18n="about.bullet4">ECG software accuracy validated at 2.4–4.7% intervals</li>
+        <li data-i18n="about.bullet1">Aggregates only</li>
+        <li data-i18n="about.bullet2">No ML</li>
+        <li data-i18n="about.bullet3">EU cloud</li>
+        <li data-i18n="about.bullet4">Encryption in transit & at rest</li>
+        <li data-i18n="about.bullet5">Wearables last 12+ hours</li>
+        <li data-i18n="about.bullet6">Accuracy 2.4–4.7%</li>
       </ul>
       <footer class="about__footer">
         <div class="lang-toggle" role="group" aria-label="Language switcher">
