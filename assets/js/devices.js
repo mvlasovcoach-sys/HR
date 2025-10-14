@@ -1,10 +1,12 @@
 function initPage(){
-    const cardsEl = document.getElementById('devices-cards');
+    const cardsEl = document.getElementById('fleet-cards');
     if (!cardsEl) return;
-    const tableEl = document.getElementById('devices-table');
+    const tableEl = document.getElementById('fleet-table');
     const histogramEl = document.getElementById('devices-histogram');
     const captionEl = document.getElementById('devices-caption');
-    const exportBtn = document.getElementById('devices-export');
+    const exportBtn = document.getElementById('export-fleet');
+    const summaryPanel = document.getElementById('fleet-summary-panel');
+    const tablePanel = document.getElementById('fleet-table-panel');
 
     exportBtn?.addEventListener('click', exportCsv);
     window.addEventListener('storage', evt => {
@@ -62,19 +64,28 @@ function initPage(){
       const team = readTeam();
       const preset = presetForRange(range);
       const data = await loadFleet(preset, range, team);
+      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
+      toggleInsufficient(insufficient);
+      if (exportBtn) {
+        exportBtn.disabled = insufficient;
+      }
       if (!data) {
         const emptyText = t('status.noData');
         cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
         tableEl.innerHTML = '';
         histogramEl.innerHTML = '';
         if (captionEl) captionEl.textContent = '';
+        if (exportBtn) exportBtn.disabled = true;
         return;
       }
       renderCards(data, team);
-      renderTable(data, team);
+      const hasRows = renderTable(data, team);
       renderHistogram(data);
       if (captionEl) captionEl.textContent = buildCaption(range, team);
-      exportBtn?.setAttribute('aria-label', `${t('label.export.csv')} (${preset})`);
+      if (exportBtn) {
+        exportBtn.setAttribute('aria-label', `${t('label.export.csv')} (${preset})`);
+        exportBtn.disabled = insufficient || !hasRows;
+      }
     }
 
     async function loadFleet(preset, range, team){
@@ -118,7 +129,7 @@ function initPage(){
       if (!filtered.length) {
         const emptyText = t('devices.empty');
         tableEl.innerHTML = `<p role="status">${emptyText}</p>`;
-        return;
+        return false;
       }
       const headers = [
         {key: 'team', label: t('devices.table.team')},
@@ -140,6 +151,7 @@ function initPage(){
         </tr>`;
       }).join('');
       tableEl.innerHTML = `<table><thead><tr>${headers.map(h => `<th>${h.label}</th>`).join('')}</tr></thead><tbody>${rowsMarkup}</tbody></table>`;
+      return true;
     }
 
     function renderHistogram(data){
@@ -171,12 +183,23 @@ function initPage(){
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const teamSlug = team === 'all' ? 'all-teams' : team;
-      link.download = `devices_${teamSlug}_${preset}.csv`;
+      const teamSlug = team === 'all' ? 'all' : team;
+      link.download = `fleet_${teamSlug}_${preset}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+    }
+
+    function toggleInsufficient(active){
+      [summaryPanel, tablePanel].forEach(panel => {
+        if (!panel) return;
+        if (active) {
+          panel.setAttribute('data-insufficient', 'true');
+        } else {
+          panel.removeAttribute('data-insufficient');
+        }
+      });
     }
 
     function toneForValue(value){

@@ -1,8 +1,9 @@
 function initPage(){
-    const grid = document.getElementById('engagement-kpis');
+    const grid = document.getElementById('eng-kpi-grid');
     if (!grid) return;
     const caption = document.getElementById('engagement-caption');
     const updatedEl = document.getElementById('engagement-updated');
+    const panel = document.getElementById('engagement-panel');
 
     const KPI_KEYS = [
       {key: 'onboarding_pct', label: 'kpi.onboarding', targetKey: 'onboarding_pct', unit: '%', decimals: 0},
@@ -94,6 +95,8 @@ function initPage(){
       const team = readTeam();
       const preset = presetForRange(range);
       const data = await loadEngagement(preset, range, team);
+      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
+      toggleInsufficient(insufficient);
       if (!data) {
         grid.innerHTML = `<p role="status">${t('status.noData')}</p>`;
         if (caption) caption.textContent = buildCaption(range, team);
@@ -120,7 +123,7 @@ function initPage(){
     }
 
     function buildCard(cfg, data, preset, team, range){
-      const target = data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 0 : null);
+      const target = data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 3 : null);
       const value = resolveValue(cfg.key, data, preset, team, range);
       const previous = resolvePrevious(cfg.key, data, preset, team);
       const delta = previous != null ? value - previous : 0;
@@ -128,14 +131,20 @@ function initPage(){
       const badge = deltaBadge(delta);
       const unit = cfg.unit || '';
       const formatted = value != null ? value.toFixed(cfg.decimals ?? 0) : '–';
-      const targetLabel = target != null ? `${t('status.target')}: ${target}${unit}` : '';
+      const targetLabel = target != null
+        ? (cfg.key === 'alert_count'
+          ? `${t('status.target')}: ≥${target}`
+          : `${t('status.target')}: ${target}${unit}`)
+        : '';
       const deltaClass = deltaClassName(delta);
       const targetMarkup = targetLabel ? `<div class="kpi-card__target">${targetLabel}</div>` : '<div class="kpi-card__target" aria-hidden="true"></div>';
       const badgeMarkup = cfg.key === 'alert_count' ? '' : `<span class="kpi-card__delta ${deltaClass}">${badge}</span>`;
+      const status = targetStatus(cfg.key, value, target);
+      const statusMarkup = status ? `<span class="status-chip ${status.className}">${status.label}</span>` : '';
       return `<article class="tile">
         <header class="tile__head">
           <span class="tile__title">${t(cfg.label)}</span>
-          ${badgeMarkup}
+          <span class="tile__status">${statusMarkup}${badgeMarkup}</span>
         </header>
         <div class="tile__kpi">${formatted}<span>${unit}</span></div>
         <div class="spark kpi-card__spark">${sparkline(spark)}</div>
@@ -203,7 +212,7 @@ function initPage(){
       const {start, end} = resolveRangeWindow(range);
       return events.filter(ev => {
         if (team !== 'all' && ev.team !== team) return false;
-        const ts = new Date(ev.timestamp);
+        const ts = new Date(ev.ts || ev.timestamp);
         if (Number.isNaN(ts)) return false;
         if (start && ts < start) return false;
         if (end && ts > end) return false;
@@ -258,8 +267,16 @@ function initPage(){
     }
 
     function deltaClassName(delta){
-      if (delta == null || isNaN(delta) || Math.abs(delta) < 0.1) return 'delta-neutral';
-      return delta > 0 ? 'delta-up' : 'delta-down';
+      if (delta == null || isNaN(delta) || Math.abs(delta) < 0.1) return 'kpi-card__delta--neutral';
+      return delta > 0 ? 'kpi-card__delta--up' : 'kpi-card__delta--down';
+    }
+
+    function targetStatus(key, value, target){
+      if (target == null || value == null || isNaN(value)) return null;
+      const met = value >= target;
+      return met
+        ? {label: t('status.onTarget'), className: 'status-chip--green'}
+        : {label: t('status.belowTarget'), className: 'status-chip--red'};
     }
 
     function buildCaption(range, team){
@@ -292,6 +309,15 @@ function initPage(){
         if (map && map[team]) return map[team];
       } catch (e) {}
       return team;
+    }
+
+    function toggleInsufficient(active){
+      if (!panel) return;
+      if (active) {
+        panel.setAttribute('data-insufficient', 'true');
+      } else {
+        panel.removeAttribute('data-insufficient');
+      }
     }
 
     function sparkline(values){
