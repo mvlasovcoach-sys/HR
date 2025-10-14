@@ -1,89 +1,22 @@
 {
   "range": "7d",
-  "updated": "2025-10-13T09:00:00Z",
-  "timeline": [
-    "2025-10-07",
-    "2025-10-08",
-    "2025-10-09",
-    "2025-10-10",
-    "2025-10-11",
-    "2025-10-12",
-    "2025-10-13"
-  ],
+  "n": 128,
   "kpi": {
     "wellbeing_avg": 68,
     "high_stress_pct": 22,
     "fatigue_elevated_pct": 28,
     "engagement_active_pct": 76
   },
-  "previous": {
-    "wellbeing_avg": 66,
-    "high_stress_pct": 24,
-    "fatigue_elevated_pct": 30,
-    "engagement_active_pct": 74
-  },
-  "series": {
-    "wellbeing_avg": [66, 67, 66, 64, 65, 67, 68],
-    "high_stress_pct": [24, 23, 22, 21, 22, 23, 22],
-    "fatigue_elevated_pct": [30, 29, 28, 27, 27, 28, 28],
-    "engagement_active_pct": [72, 73, 74, 75, 75, 76, 76]
-  },
-  "kpi_trend": {
-    "wellbeing_avg": [66, 67, 66, 64, 65, 67, 68],
-    "high_stress_pct": [24, 23, 22, 21, 22, 23, 22],
-    "fatigue_elevated_pct": [30, 29, 28, 27, 27, 28, 28],
-    "engagement_active_pct": [72, 73, 74, 75, 75, 76, 76]
-  },
-  "teams": {
-    "ops": {
-      "wellbeing_avg": 62,
-      "high_stress_pct": 26,
-      "fatigue_elevated_pct": 32,
-      "engagement_active_pct": 72
-    },
-    "cs": {
-      "wellbeing_avg": 64,
-      "high_stress_pct": 28,
-      "fatigue_elevated_pct": 30,
-      "engagement_active_pct": 69
-    },
-    "it": {
-      "wellbeing_avg": 74,
-      "high_stress_pct": 18,
-      "fatigue_elevated_pct": 22,
-      "engagement_active_pct": 82
-    },
-    "lab": {
-      "wellbeing_avg": 71,
-      "high_stress_pct": 20,
-      "fatigue_elevated_pct": 25,
-      "engagement_active_pct": 79
-    }
-  },
-  "breakdown": {
-    "high_stress_pct": [
-      {"label": "Operations", "team": "ops", "value": 26, "previous": 28, "series": [28, 27, 26, 26, 25, 26, 26]},
-      {"label": "Customer Service", "team": "cs", "value": 28, "previous": 30, "series": [30, 29, 28, 27, 28, 29, 28]},
-      {"label": "IT", "team": "it", "value": 18, "previous": 19, "series": [19, 18, 18, 17, 18, 18, 18]},
-      {"label": "Lab", "team": "lab", "value": 20, "previous": 21, "series": [21, 21, 20, 19, 20, 20, 20]}
-    ],
-    "fatigue_elevated_pct": [
-      {"label": "Operations", "team": "ops", "value": 32, "previous": 34, "series": [34, 33, 32, 31, 32, 32, 32]},
-      {"label": "Customer Service", "team": "cs", "value": 30, "previous": 32, "series": [32, 31, 30, 29, 30, 30, 30]},
-      {"label": "IT", "team": "it", "value": 22, "previous": 24, "series": [24, 23, 22, 22, 22, 22, 22]},
-      {"label": "Lab", "team": "lab", "value": 25, "previous": 27, "series": [27, 26, 25, 24, 25, 25, 25]}
-    ],
-    "engagement_active_pct": [
-      {"label": "Operations", "team": "ops", "value": 72, "previous": 70, "series": [70, 71, 72, 72, 73, 73, 72]},
-      {"label": "Customer Service", "team": "cs", "value": 69, "previous": 67, "series": [67, 68, 69, 69, 70, 70, 69]},
-      {"label": "IT", "team": "it", "value": 82, "previous": 79, "series": [79, 80, 81, 82, 83, 83, 82]},
-      {"label": "Lab", "team": "lab", "value": 79, "previous": 77, "series": [77, 78, 78, 79, 80, 80, 79]}
-    ]
+  "delta": {
+    "wellbeing_avg": 2,
+    "high_stress_pct": -3,
+    "fatigue_elevated_pct": -2,
+    "engagement_active_pct": 4
   },
   "heatmap": {
     "rows": ["ops", "cs", "it", "lab"],
     "cols": ["D-6", "D-5", "D-4", "D-3", "D-2", "D-1", "D"],
-    "colDates": [
+    "dates": [
       "2025-10-07",
       "2025-10-08",
       "2025-10-09",
@@ -100,33 +33,13 @@
     }
   },
   "activity": [
-    {"date": "2025-10-07", "team": "ops", "hydration_logs": 42, "caffeine_logs": 36, "meds_logs": 18, "steps_active_pct": 71},
-    {"date": "2025-10-07", "team": "cs",  "hydration_logs": 38, "caffeine_logs": 48, "meds_logs": 14, "steps_active_pct": 68},
-    {"date": "2025-10-07", "team": "it",  "hydration_logs": 34, "caffeine_logs": 26, "meds_logs": 12, "steps_active_pct": 74},
-    {"date": "2025-10-07", "team": "lab", "hydration_logs": 29, "caffeine_logs": 22, "meds_logs": 10, "steps_active_pct": 69},
-    {"date": "2025-10-08", "team": "ops", "hydration_logs": 45, "caffeine_logs": 35, "meds_logs": 17, "steps_active_pct": 72},
-    {"date": "2025-10-08", "team": "cs",  "hydration_logs": 36, "caffeine_logs": 47, "meds_logs": 15, "steps_active_pct": 67},
-    {"date": "2025-10-08", "team": "it",  "hydration_logs": 32, "caffeine_logs": 25, "meds_logs": 11, "steps_active_pct": 73},
-    {"date": "2025-10-08", "team": "lab", "hydration_logs": 31, "caffeine_logs": 24, "meds_logs": 9,  "steps_active_pct": 68},
-    {"date": "2025-10-09", "team": "ops", "hydration_logs": 40, "caffeine_logs": 37, "meds_logs": 19, "steps_active_pct": 69},
-    {"date": "2025-10-09", "team": "cs",  "hydration_logs": 35, "caffeine_logs": 50, "meds_logs": 16, "steps_active_pct": 66},
-    {"date": "2025-10-09", "team": "it",  "hydration_logs": 33, "caffeine_logs": 27, "meds_logs": 12, "steps_active_pct": 72},
-    {"date": "2025-10-09", "team": "lab", "hydration_logs": 30, "caffeine_logs": 23, "meds_logs": 11, "steps_active_pct": 67},
-    {"date": "2025-10-10", "team": "ops", "hydration_logs": 37, "caffeine_logs": 39, "meds_logs": 21, "steps_active_pct": 66},
-    {"date": "2025-10-10", "team": "cs",  "hydration_logs": 33, "caffeine_logs": 52, "meds_logs": 18, "steps_active_pct": 64},
-    {"date": "2025-10-10", "team": "it",  "hydration_logs": 31, "caffeine_logs": 29, "meds_logs": 13, "steps_active_pct": 71},
-    {"date": "2025-10-10", "team": "lab", "hydration_logs": 28, "caffeine_logs": 25, "meds_logs": 12, "steps_active_pct": 66},
-    {"date": "2025-10-11", "team": "ops", "hydration_logs": 39, "caffeine_logs": 38, "meds_logs": 20, "steps_active_pct": 67},
-    {"date": "2025-10-11", "team": "cs",  "hydration_logs": 34, "caffeine_logs": 49, "meds_logs": 17, "steps_active_pct": 65},
-    {"date": "2025-10-11", "team": "it",  "hydration_logs": 30, "caffeine_logs": 28, "meds_logs": 13, "steps_active_pct": 70},
-    {"date": "2025-10-11", "team": "lab", "hydration_logs": 27, "caffeine_logs": 24, "meds_logs": 11, "steps_active_pct": 65},
-    {"date": "2025-10-12", "team": "ops", "hydration_logs": 41, "caffeine_logs": 36, "meds_logs": 19, "steps_active_pct": 68},
-    {"date": "2025-10-12", "team": "cs",  "hydration_logs": 37, "caffeine_logs": 46, "meds_logs": 15, "steps_active_pct": 66},
-    {"date": "2025-10-12", "team": "it",  "hydration_logs": 35, "caffeine_logs": 26, "meds_logs": 12, "steps_active_pct": 72},
-    {"date": "2025-10-12", "team": "lab", "hydration_logs": 29, "caffeine_logs": 22, "meds_logs": 10, "steps_active_pct": 68},
-    {"date": "2025-10-13", "team": "ops", "hydration_logs": 43, "caffeine_logs": 34, "meds_logs": 18, "steps_active_pct": 70},
-    {"date": "2025-10-13", "team": "cs",  "hydration_logs": 39, "caffeine_logs": 45, "meds_logs": 14, "steps_active_pct": 67},
-    {"date": "2025-10-13", "team": "it",  "hydration_logs": 36, "caffeine_logs": 24, "meds_logs": 11, "steps_active_pct": 73},
-    {"date": "2025-10-13", "team": "lab", "hydration_logs": 30, "caffeine_logs": 21, "meds_logs": 9,  "steps_active_pct": 69}
+    {"date": "2025-10-12", "team": "ops", "hydration": 60, "caffeine": 42, "meds": 6, "steps_active_pct": 70},
+    {"date": "2025-10-12", "team": "cs", "hydration": 54, "caffeine": 48, "meds": 5, "steps_active_pct": 65},
+    {"date": "2025-10-12", "team": "it", "hydration": 52, "caffeine": 30, "meds": 4, "steps_active_pct": 74},
+    {"date": "2025-10-12", "team": "lab", "hydration": 48, "caffeine": 26, "meds": 4, "steps_active_pct": 69},
+    {"date": "2025-10-13", "team": "ops", "hydration": 62, "caffeine": 44, "meds": 5, "steps_active_pct": 71},
+    {"date": "2025-10-13", "team": "cs", "hydration": 55, "caffeine": 51, "meds": 4, "steps_active_pct": 66},
+    {"date": "2025-10-13", "team": "it", "hydration": 49, "caffeine": 28, "meds": 4, "steps_active_pct": 75},
+    {"date": "2025-10-13", "team": "lab", "hydration": 46, "caffeine": 24, "meds": 3, "steps_active_pct": 70}
   ]
 }
