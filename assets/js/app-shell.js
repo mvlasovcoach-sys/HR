@@ -2,8 +2,22 @@
   const slot = document.getElementById('sidebar-slot');
   if (!slot) return;
 
+  async function resolveVersion(){
+    if (typeof window.APP_VERSION !== 'undefined') {
+      return window.APP_VERSION || '';
+    }
+    return new Promise(resolve => {
+      const handler = () => {
+        window.removeEventListener('app:version', handler);
+        resolve(window.APP_VERSION || '');
+      };
+      window.addEventListener('app:version', handler, {once: true});
+    });
+  }
+
   try {
-    const response = await fetch('./partials/sidebar.html', {cache: 'no-store'});
+    const version = await resolveVersion();
+    const response = await fetch(`./partials/sidebar.html?v=${encodeURIComponent(version)}`, {cache: 'no-store'});
     if (!response.ok) {
       throw new Error('sidebar fetch failed');
     }

@@ -25,8 +25,8 @@
   }
 
   function waitForVersion(){
-    if (window.APP_VERSION) {
-      return Promise.resolve(window.APP_VERSION);
+    if (typeof window.APP_VERSION !== 'undefined') {
+      return Promise.resolve(window.APP_VERSION || '');
     }
     if (!versionWait) {
       versionWait = new Promise(resolve => {

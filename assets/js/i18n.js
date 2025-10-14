@@ -4,17 +4,22 @@
   let queue = [];
   let currentLang = 'en';
 
-  function interpolate(template, vars){
-    return template.replace(/\{(\w+)\}/g, (_, key) => (vars && key in vars ? vars[key] : `{${key}}`));
+  function safeCall(fn){
+    try {
+      fn();
+    } catch (err) {
+      console.error('i18n:onReady handler', err);
+    }
+  }
+
+  function format(template, vars){
+    return template.replace(/\{(\w+)\}/g, (_, key) => (vars && key in vars) ? vars[key] : `{${key}}`);
   }
 
   function translateElement(el){
     const key = el.getAttribute('data-i18n');
     if (!key) return;
-    const text = window.I18N?.t(key);
-    if (typeof text === 'string') {
-      el.textContent = text;
-    }
+    el.textContent = t(key);
   }
 
   function translateDocument(){
@@ -23,26 +28,42 @@
   }
 
   function flushQueue(){
-    const pending = queue.slice();
-    queue = [];
-    pending.forEach(fn => {
-      try { fn(); } catch (e) { console.error(e); }
-    });
+    const pending = queue.splice(0);
+    pending.forEach(safeCall);
   }
 
   function storeLang(lang){
     try {
       localStorage.setItem('lang', lang);
       localStorage.setItem('hr:lang', lang);
-    } catch (e) {}
+    } catch (err) {
+      // ignore storage failures
+    }
+  }
+
+  function t(key, vars){
+    let template = dict[key];
+    if (typeof template !== 'string') {
+      template = key.replace(/^label\.|^range\./, '');
+    }
+    return format(String(template), vars);
+  }
+
+  function onReady(fn){
+    if (typeof fn !== 'function') return;
+    if (ready) {
+      safeCall(fn);
+    } else {
+      queue.push(fn);
+    }
   }
 
   async function init(lang){
     const target = (lang || 'en').toLowerCase();
-    const versionSuffix = window.APP_VERSION ? `?v=${encodeURIComponent(window.APP_VERSION)}` : '';
-
+    const ver = window.APP_VERSION || '';
+    ready = false;
     try {
-      const response = await fetch(`./assets/i18n/${target}.json${versionSuffix}`);
+      const response = await fetch(`./assets/i18n/${target}.json?v=${ver}`);
       if (!response.ok) {
         throw new Error(`i18n: failed ${target}`);
       }
@@ -52,7 +73,7 @@
       if (target !== 'en') {
         return init('en');
       }
-      console.warn('i18n fallback to keys');
+      console.warn('i18n: fallback to keys');
       dict = {};
       currentLang = 'en';
     }
@@ -61,31 +82,16 @@
     storeLang(currentLang);
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('lang', currentLang);
+      translateDocument();
     }
-    translateDocument();
     flushQueue();
     window.dispatchEvent(new Event('i18n:ready'));
     window.dispatchEvent(new CustomEvent('i18n:change', {detail: {lang: currentLang}}));
-  }
-
-  function t(key, vars){
-    let template = dict[key];
-    if (typeof template !== 'string') {
-      template = key;
-    }
-    return interpolate(template, vars);
-  }
-
-  function onReady(fn){
-    if (typeof fn !== 'function') return;
-    if (ready) {
-      try { fn(); } catch (e) { console.error(e); }
-    } else {
-      queue.push(fn);
-    }
+    return currentLang;
   }
 
   function setLang(lang){
+    queue = [];
     return init(lang);
   }
 
@@ -93,6 +99,6 @@
     return currentLang;
   }
 
-  window.I18N = {init, t, onReady, setLang, getLang, translate: translateDocument};
-  window.t = (key, vars) => window.I18N.t(key, vars);
+  window.I18N = { t, onReady, init, setLang, getLang, translate: translateDocument };
+  window.t = (key, vars) => t(key, vars);
 })();
