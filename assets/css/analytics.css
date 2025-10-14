@@ -3,28 +3,35 @@
   flex-direction:column;
   gap:var(--space-6);
 }
-.analytics-tracker .panel__meta{
-  align-items:center;
-}
-.tracker-controls{
-  display:flex;
-  align-items:center;
-  gap:var(--space-3);
-}
-.tracker-chart{
-  width:100%;
-  min-height:260px;
-}
-.tracker-chart svg{
-  width:100%;
-  height:100%;
-}
 .tracker-legend{
   display:flex;
   gap:var(--space-3);
   font-size:0.85rem;
   color:var(--muted);
   flex-wrap:wrap;
+}
+.analytics-tracker__body{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-4);
+}
+.analytics-chart{
+  width:100%;
+  height:clamp(260px,38vh,460px);
+  overflow:hidden;
+  position:relative;
+}
+.analytics-chart svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.analytics-chart path{
+  vector-effect:non-scaling-stroke;
+  stroke-width:2;
+}
+@media (max-width: 640px){
+  .analytics-chart{height:260px;}
 }
 .breakdown-grid{
   display:grid;
