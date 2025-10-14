@@ -123,36 +123,56 @@ function initPage(){
     }
 
     function buildCard(cfg, data, preset, team, range){
-      const target = data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 3 : null);
-      const value = resolveValue(cfg.key, data, preset, team, range);
-      const previous = resolvePrevious(cfg.key, data, preset, team);
-      const delta = previous != null ? value - previous : 0;
-      const spark = buildSpark(cfg.key, data, preset, team, range);
-      const badge = deltaBadge(delta);
+      const metrics = resolveKpiMetrics(cfg, data, preset, team, range);
       const unit = cfg.unit || '';
-      const formatted = value != null ? value.toFixed(cfg.decimals ?? 0) : '–';
-      const targetLabel = target != null
-        ? (cfg.key === 'alert_count'
-          ? `${t('status.target')}: ≥${target}`
-          : `${t('status.target')}: ${target}${unit}`)
-        : '';
-      const deltaClass = deltaClassName(delta);
+      const formatted = formatKpiValue(cfg, metrics.value);
+      const targetLabel = formatTargetLabel(cfg, metrics.target);
+      const deltaClass = deltaClassName(metrics.delta);
       const targetMarkup = targetLabel ? `<div class="kpi-card__target">${targetLabel}</div>` : '<div class="kpi-card__target" aria-hidden="true"></div>';
-      const badgeMarkup = cfg.key === 'alert_count' ? '' : `<span class="kpi-card__delta ${deltaClass}">${badge}</span>`;
-      const status = targetStatus(cfg.key, value, target);
-      const statusMarkup = status ? `<span class="status-chip ${status.className}">${status.label}</span>` : '';
+      const badgeMarkup = cfg.key === 'alert_count' ? '' : `<span class="kpi-card__delta ${deltaClass}">${deltaBadge(metrics.delta)}</span>`;
+      const status = metrics.status ? `<span class="status-chip ${metrics.status.className}">${metrics.status.label}</span>` : '';
       return `<article class="tile">
         <header class="tile__head">
           <span class="tile__title">${t(cfg.label)}</span>
-          <span class="tile__status">${statusMarkup}${badgeMarkup}</span>
+          <span class="tile__status">${status}${badgeMarkup}</span>
         </header>
         <div class="tile__kpi">${formatted}<span>${unit}</span></div>
-        <div class="spark kpi-card__spark">${sparkline(spark)}</div>
+        <div class="spark kpi-card__spark">${sparkline(metrics.spark)}</div>
         <footer class="tile__foot kpi-card__meta">
           ${targetMarkup}
           <strong>${t('status.value')}: ${formatted}${unit}</strong>
         </footer>
       </article>`;
+    }
+
+    function resolveKpiMetrics(cfg, data, preset, team, range){
+      const target = data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 3 : null);
+      const value = resolveValue(cfg.key, data, preset, team, range);
+      const previous = resolvePrevious(cfg.key, data, preset, team);
+      const delta = previous != null && value != null ? value - previous : null;
+      const spark = buildSpark(cfg.key, data, preset, team, range);
+      const status = targetStatus(cfg.key, value, target);
+      return {target, value, previous, delta, spark, status};
+    }
+
+    function formatKpiValue(cfg, value){
+      if (value == null || isNaN(value)) return '–';
+      if (cfg.key === 'nps') {
+        const rounded = Math.round(value);
+        return `${rounded > 0 ? '+' : ''}${rounded}`;
+      }
+      if (cfg.key === 'alert_count') {
+        return String(Math.round(value));
+      }
+      return Number(value).toFixed(cfg.decimals ?? 0);
+    }
+
+    function formatTargetLabel(cfg, target){
+      if (target == null) return '';
+      const unit = cfg.unit || '';
+      const rounded = Math.round(target);
+      const sign = cfg.key === 'nps' && rounded > 0 ? `+${rounded}` : `${rounded}`;
+      return `${t('status.target')}: ≥${sign}${unit}`;
     }
 
     function resolveValue(key, data, preset, team, range){
@@ -273,10 +293,10 @@ function initPage(){
 
     function targetStatus(key, value, target){
       if (target == null || value == null || isNaN(value)) return null;
-      const met = value >= target;
+      const met = Number(value) >= Number(target);
       return met
-        ? {label: t('status.onTarget'), className: 'status-chip--green'}
-        : {label: t('status.belowTarget'), className: 'status-chip--red'};
+        ? {label: t('status.onTarget'), className: 'status-chip--green', met: true}
+        : {label: t('status.belowTarget'), className: 'status-chip--amber', met: false};
     }
 
     function buildCaption(range, team){

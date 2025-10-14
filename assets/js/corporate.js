@@ -746,18 +746,22 @@ function initCorporatePage(){
 }
 
 function renderKpis(kpi, delta={}){
+  const grid=document.getElementById('corp-kpi-grid');
+  if(!grid) return;
   const defs=[
-    {key:'wellbeing_avg',label:'Org Wellbeing',unit:'/100',fmt:v=>Math.round(v)},
-    {key:'high_stress_pct',label:'High Stress',unit:'%',fmt:v=>Math.round(v)},
-    {key:'fatigue_elevated_pct',label:'Elevated Fatigue',unit:'%',fmt:v=>Math.round(v)},
-    {key:'engagement_active_pct',label:'Active Engagement',unit:'%',fmt:v=>Math.round(v)},
+    {key:'wellbeing_avg',label:()=>window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',unit:'/100',fmt:v=>Math.round(v)},
+    {key:'high_stress_pct',label:()=>window.I18N?.t('metric.highStress') || 'High Stress',unit:'%',fmt:v=>Math.round(v)},
+    {key:'fatigue_elevated_pct',label:()=>window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue',unit:'%',fmt:v=>Math.round(v)},
+    {key:'engagement_active_pct',label:()=>window.I18N?.t('metric.activeEngagement') || 'Active Engagement',unit:'%',fmt:v=>Math.round(v)},
   ];
-  const grid=document.getElementById('corp-kpi-grid'); if(!grid) return;
   grid.innerHTML = defs.map(d=>{
-    const raw = Number(kpi?.[d.key]);  const val = Number.isFinite(raw)?d.fmt(raw):'—';
-    const dRaw = Number(delta?.[d.key]); const dl = Number.isFinite(dRaw)?dRaw:null;
+    const raw = Number(kpi?.[d.key]);
+    const val = Number.isFinite(raw)?d.fmt(raw):'—';
+    const dRaw = Number(delta?.[d.key]);
+    const dl = Number.isFinite(dRaw)?dRaw:null;
+    const badge = dl!==null ? `<span class="pill ${dl>=0?'green':'red'}">${dl>=0?'▲':'▼'} ${Math.abs(Math.round(dl))}</span>` : '';
     return `<div class="tile kpi">
-      <div class="tile__head">${d.label}${dl!==null?`<span class="pill ${dl>=0?'green':'red'}">${dl>=0?'▲':'▼'} ${Math.abs(Math.round(dl))}</span>`:''}</div>
+      <div class="tile__head">${d.label()}${badge}</div>
       <div class="tile__kpi">${val}<small>${d.unit}</small></div>
       <div class="spark"></div>
     </div>`;
