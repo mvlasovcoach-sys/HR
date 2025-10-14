@@ -6,6 +6,23 @@
   box-shadow: var(--shadow-panel);
   backdrop-filter: blur(18px);
 }
+.panel[data-insufficient="true"] {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.65;
+}
+.panel[data-insufficient="true"]::after {
+  content: "Insufficient group size";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 23, 32, 0.8);
+  border-radius: inherit;
+  font-weight: 600;
+  letter-spacing: 0.32px;
+}
 
 .panel--flush {
   padding: var(--space-5);

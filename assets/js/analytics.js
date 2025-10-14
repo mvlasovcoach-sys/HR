@@ -5,6 +5,10 @@ function initPage(){
     const breakdownEl = document.getElementById('analytics-breakdown');
     const captionEl = document.getElementById('analytics-caption');
     const maToggle = document.getElementById('maToggle');
+    const deltaBadgeEl = document.getElementById('wellbeing-delta');
+    const miniGrid = document.getElementById('analytics-mini-kpis');
+    const trackerPanel = document.getElementById('analytics-tracker-panel');
+    const breakdownPanel = document.querySelector('.analytics-breakdown');
 
     const BREAKDOWN_KEYS = [
       {key: 'high_stress_pct', label: 'metric.highStress', inverse: true, unit: '%'},
@@ -112,17 +116,25 @@ function initPage(){
       const team = readTeam();
       const preset = presetForRange(range);
       const metrics = await loadMetrics(preset, range, team);
+      const insufficient = Number(metrics?.n) > 0 && Number(metrics.n) < 5;
+      toggleInsufficient(insufficient);
       if (!metrics) {
         currentSeries = [];
         renderWellbeingChart(currentSeries);
         if (legendEl) legendEl.innerHTML = `<span>${t('status.noData')}</span>`;
         if (breakdownEl) breakdownEl.innerHTML = '';
+        if (miniGrid) miniGrid.innerHTML = '';
+        if (deltaBadgeEl) {
+          deltaBadgeEl.textContent = '';
+          deltaBadgeEl.className = 'delta-badge';
+        }
         if (captionEl) captionEl.textContent = buildCaption(range, team);
         return;
       }
 
       renderTracker(metrics, team);
       renderBreakdown(metrics, team);
+      renderMiniKpis(metrics, team);
       if (captionEl) captionEl.textContent = buildCaption(range, team);
     }
 
@@ -151,6 +163,13 @@ function initPage(){
           `<span>${t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>`,
           `<span class="delta-badge ${badge.className}">${badge.label}</span>`
         ].join('');
+      }
+
+      if (deltaBadgeEl) {
+        const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
+        deltaBadgeEl.textContent = `${t('delta.header')} ${magnitude}`;
+        deltaBadgeEl.className = `delta-badge ${badge.className}`.trim();
+        deltaBadgeEl.setAttribute('aria-label', `${t('delta.header')} ${magnitude}`);
       }
 
       chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
@@ -248,6 +267,23 @@ function initPage(){
       breakdownEl.innerHTML = cards;
     }
 
+    function renderMiniKpis(metrics, team){
+      if (!miniGrid) return;
+      const items = BREAKDOWN_KEYS.map(cfg => {
+        const value = teamValue(metrics.kpi, cfg.key, team) ?? metrics.kpi?.[cfg.key] ?? 0;
+        const previous = teamValue(metrics.previous, cfg.key, team) ?? metrics.previous?.[cfg.key] ?? value;
+        const delta = value - previous;
+        const badge = deltaBadge(delta, !cfg.inverse);
+        const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
+        return `<div class="mini-kpis__item">
+          <span class="mini-kpis__label">${t(cfg.label)}</span>
+          <strong class="mini-kpis__value">${Math.round(value)}${cfg.unit}</strong>
+          <span class="mini-kpis__delta ${badge.className}">${magnitude}</span>
+        </div>`;
+      }).join('');
+      miniGrid.innerHTML = items;
+    }
+
     function aggregateEntry(list){
       if (!Array.isArray(list) || list.length === 0) return null;
       const total = list.reduce((acc, item) => acc + (item.value || 0), 0);
@@ -281,6 +317,17 @@ function initPage(){
       }
       if (key in source) return source[key];
       return null;
+    }
+
+    function toggleInsufficient(active){
+      [trackerPanel, breakdownPanel].forEach(panel => {
+        if (!panel) return;
+        if (active) {
+          panel.setAttribute('data-insufficient', 'true');
+        } else {
+          panel.removeAttribute('data-insufficient');
+        }
+      });
     }
 
     function movingAverage(values, window){

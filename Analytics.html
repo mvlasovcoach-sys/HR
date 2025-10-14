@@ -2,12 +2,24 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Analytics</title>
-<link rel="stylesheet" href="./assets/css/app-shell.css?v=20251019">
-<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251019">
-<link rel="stylesheet" href="./assets/css/ui.components.css?v=20251019">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025-10-19">
 <!-- optional page CSS -->
-<link rel="stylesheet" href="./assets/css/corporate.css?v=20251019">
-<link rel="stylesheet" href="./assets/css/analytics.css?v=20251019">
+<link rel="stylesheet" href="./assets/css/corporate.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/analytics.css?v=2025-10-19">
+<script defer src="./assets/js/i18n.js?v=2025-10-19"></script>
+<script defer src="./assets/js/version.js?v=2025-10-19"></script>
+<script defer src="./assets/js/app-shell.js?v=2025-10-19"></script>
+<script defer src="./assets/js/date-controls.js?v=2025-10-19"></script>
+<script defer src="./assets/js/team-filter.js?v=2025-10-19"></script>
+<script defer src="./assets/js/data-loader.js?v=2025-10-19"></script>
+<script defer src="./assets/js/auth.js?v=2025-10-19"></script>
+<script defer src="./assets/js/guards.js?v=2025-10-19"></script>
+<script defer src="./assets/js/theme.js?v=2025-10-19"></script>
+<script defer src="./assets/js/analytics.js?v=2025-10-19"></script>
+<script defer src="./assets/js/about.js?v=2025-10-19"></script>
+<script defer src="./assets/js/exporter.js?v=2025-10-19"></script>
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
@@ -22,9 +34,10 @@
     </div>
     <p id="analytics-caption" class="header__caption" aria-live="polite"></p>
     <section class="analytics-tracker">
-      <div class="panel">
+      <div class="panel" id="analytics-tracker-panel">
         <div class="panel__head">
           <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
+          <span id="wellbeing-delta" class="delta-badge" aria-live="polite"></span>
           <label class="switch">
             <input id="maToggle" type="checkbox">
             <span data-i18n="label.movingAverage">MA(3)</span>
@@ -34,6 +47,7 @@
           <div class="tracker-legend" id="wellbeing-legend"></div>
           <div id="wlb-chart" class="analytics-chart" role="img" aria-live="polite"></div>
         </div>
+        <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
       </div>
     </section>
     <section class="panel analytics-breakdown">
@@ -42,16 +56,4 @@
     </section>
   </main>
 </div>
-<script defer src="./assets/js/i18n.js"></script>
-<script defer src="./assets/js/version.js"></script>
-<script defer src="./assets/js/app-shell.js"></script>
-<script defer src="./assets/js/date-controls.js"></script>
-<script defer src="./assets/js/team-filter.js"></script>
-<!-- page script last -->
-<script defer src="./assets/js/data-loader.js?v=20251019"></script>
-<script defer src="./assets/js/auth.js?v=20251019"></script>
-<script defer src="./assets/js/guards.js?v=20251019"></script>
-<script defer src="./assets/js/theme.js?v=20251019"></script>
-<script defer src="./assets/js/about.js?v=20251019"></script>
-<script defer src="./assets/js/analytics.js?v=20251019"></script>
 </body></html>

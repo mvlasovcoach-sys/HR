@@ -145,9 +145,12 @@ function initPage(){
       const range = readRange();
       const team = readTeam();
       const data = await loadMetrics(range);
+      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
+      toggleInsufficient(insufficient);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
         if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+        toggleInsufficient(false);
         return;
       }
 
@@ -173,6 +176,15 @@ function initPage(){
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
       if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+    }
+
+    function toggleInsufficient(active){
+      if (!mount) return;
+      if (active) {
+        mount.setAttribute('data-insufficient', 'true');
+      } else {
+        mount.removeAttribute('data-insufficient');
+      }
     }
 
     function resolveValue(data, key, team){

@@ -2,11 +2,23 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Pilot Dashboard</title>
-<link rel="stylesheet" href="./assets/css/ui.tokens.css">
-<link rel="stylesheet" href="./assets/css/ui.components.css">
-<link rel="stylesheet" href="./assets/css/app-shell.css">
-<link rel="stylesheet" href="./assets/css/engagement.css">
-<link rel="stylesheet" href="./assets/css/pilot.css">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/engagement.css?v=2025-10-19">
+<link rel="stylesheet" href="./assets/css/pilot.css?v=2025-10-19">
+<script defer src="./assets/js/i18n.js?v=2025-10-19"></script>
+<script defer src="./assets/js/version.js?v=2025-10-19"></script>
+<script defer src="./assets/js/app-shell.js?v=2025-10-19"></script>
+<script defer src="./assets/js/date-controls.js?v=2025-10-19"></script>
+<script defer src="./assets/js/team-filter.js?v=2025-10-19"></script>
+<script defer src="./assets/js/data-loader.js?v=2025-10-19"></script>
+<script defer src="./assets/js/auth.js?v=2025-10-19"></script>
+<script defer src="./assets/js/guards.js?v=2025-10-19"></script>
+<script defer src="./assets/js/theme.js?v=2025-10-19"></script>
+<script defer src="./assets/js/pilot.js?v=2025-10-19"></script>
+<script defer src="./assets/js/about.js?v=2025-10-19"></script>
+<script defer src="./assets/js/exporter.js?v=2025-10-19"></script>
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
@@ -14,7 +26,7 @@
     <div class="header header--pilot">
       <div class="header__title" data-i18n="header.pilot">Pilot Dashboard</div>
       <div class="header__actions">
-        <button class="btn btn--ghost" type="button" id="pilot-export" data-i18n="label.export.pdf">Export Pilot Summary</button>
+        <button class="btn btn--ghost" type="button" id="pilot-export" data-i18n="label.export.pdf">Export Pilot Summary (PDF)</button>
         <div id="team-filter" class="team-filter"></div>
         <div id="date-controls"></div>
         <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
@@ -28,16 +40,4 @@
     <p class="pilot-note" data-i18n="pilot.gdpr">GDPR note: dashboards expose only aggregates with no personal data.</p>
   </main>
 </div>
-<script defer src="./assets/js/data-loader.js"></script>
-<script defer src="./assets/js/auth.js"></script>
-<script defer src="./assets/js/guards.js"></script>
-<script defer src="./assets/js/theme.js"></script>
-<script defer src="./assets/js/i18n.js"></script>
-<script defer src="./assets/js/version.js"></script>
-<script defer src="./assets/js/app-shell.js"></script>
-<script defer src="./assets/js/date-controls.js"></script>
-<script defer src="./assets/js/team-filter.js"></script>
-<script defer src="./assets/js/about.js"></script>
-<script defer src="./assets/js/exporter.js"></script>
-<script defer src="./assets/js/pilot.js"></script>
 </body></html>

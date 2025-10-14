@@ -51,3 +51,19 @@
 .kpi-card__delta--up{background:rgba(15,247,177,.16);color:#7fffd4;}
 .kpi-card__delta--down{background:rgba(255,111,111,.2);color:#ff9b9b;}
 .kpi-card__delta--neutral{background:rgba(39,224,255,.16);color:#9feaff;}
+.tile__status{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+}
+.status-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:0.75rem;
+  font-weight:600;
+}
+.status-chip--green{background:rgba(15,247,177,.16);color:#7fffd4;}
+.status-chip--red{background:rgba(255,111,111,.2);color:#ff9b9b;}
