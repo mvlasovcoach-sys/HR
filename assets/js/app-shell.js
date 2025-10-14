@@ -17,6 +17,9 @@
         <li><a href="./Settings.html" data-key="settings">Settings</a></li>\
       </ul></nav>';
   }
+  const event = new CustomEvent('sidebar:ready', {detail: {root: slot}});
+  document.dispatchEvent(event);
+
   const here = location.pathname.split('/').pop().toLowerCase();
   slot.querySelectorAll('.side__nav a').forEach(a => {
     const fname = a.getAttribute('href').split('/').pop().toLowerCase();
