@@ -21,17 +21,20 @@
       </div>
     </div>
     <p id="analytics-caption" class="header__caption" aria-live="polite"></p>
-    <section class="panel analytics-tracker">
-      <div class="panel__meta">
-        <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
-        <div class="tracker-controls">
-          <label class="toggle" id="ma-toggle">
-            <input type="checkbox" id="tracker-ma">
+    <section class="analytics-tracker">
+      <div class="panel">
+        <div class="panel__head">
+          <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
+          <label class="switch">
+            <input id="maToggle" type="checkbox">
             <span data-i18n="label.movingAverage">MA(3)</span>
           </label>
         </div>
+        <div class="panel__body analytics-tracker__body">
+          <div class="tracker-legend" id="wellbeing-legend"></div>
+          <div id="wlb-chart" class="analytics-chart" role="img" aria-live="polite"></div>
+        </div>
       </div>
-      <div class="tracker-chart" id="wellbeing-tracker" role="img" aria-live="polite"></div>
     </section>
     <section class="panel analytics-breakdown">
       <div class="panel__meta" data-i18n="section.breakdowns">Risk Breakdown</div>

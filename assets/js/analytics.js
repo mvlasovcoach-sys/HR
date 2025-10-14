@@ -1,9 +1,10 @@
 function initPage(){
-    const trackerEl = document.getElementById('wellbeing-tracker');
-    if (!trackerEl) return;
+    const chartEl = document.getElementById('wlb-chart');
+    if (!chartEl) return;
+    const legendEl = document.getElementById('wellbeing-legend');
     const breakdownEl = document.getElementById('analytics-breakdown');
     const captionEl = document.getElementById('analytics-caption');
-    const maToggle = document.getElementById('tracker-ma');
+    const maToggle = document.getElementById('maToggle');
 
     const BREAKDOWN_KEYS = [
       {key: 'high_stress_pct', label: 'metric.highStress', inverse: true, unit: '%'},
@@ -13,6 +14,21 @@ function initPage(){
 
     const MA_KEY = 'hr:analytics:ma';
     let useMA = readStoredMA();
+    let currentSeries = null;
+    if (typeof ResizeObserver === 'function') {
+      const resizeObserver = new ResizeObserver(() => {
+        if (currentSeries) {
+          renderWellbeingChart(currentSeries);
+        }
+      });
+      resizeObserver.observe(chartEl);
+    } else {
+      window.addEventListener('resize', () => {
+        if (currentSeries) {
+          renderWellbeingChart(currentSeries);
+        }
+      });
+    }
     if (maToggle) {
       maToggle.checked = useMA;
       maToggle.addEventListener('change', () => {
@@ -97,7 +113,9 @@ function initPage(){
       const preset = presetForRange(range);
       const metrics = await loadMetrics(preset, range, team);
       if (!metrics) {
-        trackerEl.innerHTML = `<p role="status">${t('status.noData')}</p>`;
+        currentSeries = [];
+        renderWellbeingChart(currentSeries);
+        if (legendEl) legendEl.innerHTML = `<span>${t('status.noData')}</span>`;
         if (breakdownEl) breakdownEl.innerHTML = '';
         if (captionEl) captionEl.textContent = buildCaption(range, team);
         return;
@@ -120,19 +138,85 @@ function initPage(){
 
     function renderTracker(metrics, team){
       const values = metrics.series?.wellbeing_avg || [];
-      const timeline = metrics.timeline || values.map((_, i) => `${i + 1}`);
       const maValues = useMA ? movingAverage(values, 3) : values;
       const previous = teamValue(metrics.previous, 'wellbeing_avg', team) ?? metrics.previous?.wellbeing_avg;
       const current = teamValue(metrics.kpi, 'wellbeing_avg', team) ?? metrics.kpi?.wellbeing_avg;
       const delta = current != null && previous != null ? current - previous : 0;
       const badge = deltaBadge(delta, true);
       const modeLabel = useMA ? t('label.movingAverage') : t('label.actual');
-      trackerEl.innerHTML = `<div class="tracker-legend">
-        <span>${t('kpi.wellbeing')} (${modeLabel})</span>
-        <span>${t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>
-        <span class="delta-badge ${badge.className}">${badge.label}</span>
-      </div>
-      ${lineChart(timeline, maValues)}`;
+
+      if (legendEl) {
+        legendEl.innerHTML = [
+          `<span>${t('kpi.wellbeing')} (${modeLabel})</span>`,
+          `<span>${t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>`,
+          `<span class="delta-badge ${badge.className}">${badge.label}</span>`
+        ].join('');
+      }
+
+      chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
+
+      currentSeries = maValues.reduce((acc, value, index) => {
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          acc.push(num);
+        } else {
+          const fallback = index > 0 ? acc[index - 1] : 0;
+          acc.push(fallback ?? 0);
+        }
+        return acc;
+      }, []);
+
+      renderWellbeingChart(currentSeries);
+    }
+
+    function renderWellbeingChart(series){
+      const host = document.getElementById('wlb-chart');
+      if (!host) return;
+
+      if (!Array.isArray(series) || series.length === 0) {
+        host.setAttribute('aria-label', t('status.noData'));
+        host.innerHTML = `<p role="status">${t('status.noData')}</p>`;
+        return;
+      }
+
+      const { width } = host.getBoundingClientRect();
+      const height = host.clientHeight;
+      const pad = 28;
+      const W = Math.max(320, Math.floor(width));
+      const H = Math.max(200, Math.floor(height));
+
+      host.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('role', 'presentation');
+      svg.setAttribute('aria-hidden', 'true');
+      host.appendChild(svg);
+
+      const xs = (i) => pad + i * ((W - 2 * pad) / Math.max(1, series.length - 1));
+      const min = Math.min(...series);
+      const max = Math.max(...series);
+      const ys = (v) => {
+        if (max === min) return H / 2;
+        return pad + (H - 2 * pad) * (1 - (v - min) / (max - min));
+      };
+
+      let d = `M ${xs(0)} ${ys(series[0])}`;
+      if (series.length === 1) {
+        d += ` L ${xs(0)} ${ys(series[0])}`;
+      } else {
+        for (let i = 1; i < series.length; i += 1) {
+          d += ` L ${xs(i)} ${ys(series[i])}`;
+        }
+      }
+      const path = document.createElementNS(svg.namespaceURI, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'var(--cyan, #27E0FF)');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('vector-effect', 'non-scaling-stroke');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
     }
 
     function renderBreakdown(metrics, team){
@@ -216,23 +300,6 @@ function initPage(){
       return result;
     }
 
-    function lineChart(timeline, values){
-      if (!Array.isArray(values) || values.length === 0) return '';
-      const clean = values.map(Number).filter(v => !Number.isNaN(v));
-      const max = Math.max(...clean);
-      const min = Math.min(...clean);
-      const span = max - min || 1;
-      const step = values.length > 1 ? 100 / (values.length - 1) : 100;
-      const points = values.map((v, i) => {
-        const x = (step * i).toFixed(2);
-        const norm = (Number(v) - min) / span;
-        const y = (100 - norm * 100).toFixed(2);
-        return `${x},${y}`;
-      }).join(' ');
-      const labels = timeline.map((label, i) => `<text x="${(step * i).toFixed(2)}" y="110" font-size="10" fill="rgba(255,255,255,0.45)" text-anchor="middle">${label}</text>`).join('');
-      return `<svg viewBox="0 0 100 120" preserveAspectRatio="none">${labels}<polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
-    }
-
     function sparkline(values){
       if (!Array.isArray(values) || values.length === 0) return '';
       const max = Math.max(...values);
@@ -244,7 +311,7 @@ function initPage(){
         const y = (100 - ((v - min) / span) * 100).toFixed(2);
         return `${x},${y}`;
       }).join(' ');
-      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
+      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke" points="${points}" /></svg>`;
     }
 
     function deltaBadge(delta, positive){
