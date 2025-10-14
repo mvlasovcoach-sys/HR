@@ -2,25 +2,22 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Corporate</title>
-<link rel="stylesheet" href="./assets/css/ui.tokens.css">
-<link rel="stylesheet" href="./assets/css/ui.components.css">
-<link rel="stylesheet" href="./assets/css/app-shell.css">
-<link rel="stylesheet" href="./assets/css/corporate.css">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=20251014">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251014">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20251014">
+<!-- страничные стили (если есть) -->
+<link rel="stylesheet" href="./assets/css/corporate.css?v=20251014">
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
   <main class="main main--corporate">
     <div class="header header--corporate">
-      <div class="header__title">
-        <span data-i18n="header.corporate">Corporate</span>
-        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-corp">
-          Aggregates only · No raw biosignals
-          <span class="tooltip" id="tooltip-agg-corp" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
-        </span>
-        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-ml-corp">
-          Fixed thresholds · No ML
-          <span class="tooltip" id="tooltip-ml-corp" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
-        </span>
+      <div class="header__title" data-i18n="header.corporate">Corporate</div>
+      <div class="header__badges" aria-hidden="true">
+        <span class="pill pill--neutral">AGGREGATES ONLY</span>
+        <span class="pill pill--neutral">NO RAW BIOSIGNALS</span>
+        <span class="pill pill--neutral">FIXED THRESHOLDS</span>
+        <span class="pill pill--neutral">NO ML</span>
       </div>
       <div class="header__actions">
         <button class="btn btn--ghost" type="button" id="scenario-trigger" data-i18n="btn.loadScenario">Load Night-Shift Scenario</button>
@@ -113,15 +110,16 @@
     </aside>
   </main>
 </div>
-<script defer src="./assets/js/data-loader.js"></script>
-<script defer src="./assets/js/auth.js"></script>
-<script defer src="./assets/js/guards.js"></script>
-<script defer src="./assets/js/theme.js"></script>
 <script defer src="./assets/js/i18n.js"></script>
 <script defer src="./assets/js/version.js"></script>
 <script defer src="./assets/js/app-shell.js"></script>
 <script defer src="./assets/js/date-controls.js"></script>
 <script defer src="./assets/js/team-filter.js"></script>
+<!-- страничные скрипты -->
+<script defer src="./assets/js/data-loader.js"></script>
+<script defer src="./assets/js/auth.js"></script>
+<script defer src="./assets/js/guards.js"></script>
+<script defer src="./assets/js/theme.js"></script>
 <script defer src="./assets/js/about.js"></script>
 <script defer src="./assets/js/corporate.js"></script>
 </body></html>

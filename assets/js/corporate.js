@@ -1,5 +1,4 @@
-(function(){
-  function initPage(){
+function initPage(){
     const page = document.querySelector('.main--corporate');
     if (!page) return;
 
@@ -65,6 +64,17 @@
       {key: 'engagement_active_pct', label: 'Active Engagement', unitLabel: '% of staff', suffix: '%', description: '≥1 daily log action', format: v => Math.round(v)}
     ];
 
+    const t = (key, vars) => {
+      const value = window.I18N?.t?.(key, vars);
+      return value && value !== key ? value : key;
+    };
+
+    const withFallback = (key, fallback, vars) => {
+      const value = window.I18N?.t?.(key, vars);
+      if (value && value !== key) return value;
+      return typeof fallback === 'function' ? fallback() : (fallback ?? key);
+    };
+
     const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
     async function loadJson(path) {
@@ -74,7 +84,7 @@
     function updateScenarioButton(){
       if (!els.scenarioBtn) return;
       const key = state.scenario ? 'btn.liveView' : 'btn.loadScenario';
-      const label = typeof window.t === 'function' ? window.t(key) : (state.scenario ? 'Return to Live View' : 'Load Night-Shift Scenario');
+      const label = withFallback(key, state.scenario ? 'Return to Live View' : 'Load Night-Shift Scenario');
       els.scenarioBtn.textContent = label;
     }
 
@@ -166,21 +176,21 @@
         els.teamFilter,
         state.teams.map(t => ({value: t.id, label: state.teamMap.get(t.id) || t.id})),
         state.filters.team,
-        typeof window.t === 'function' ? window.t('events.filter.teamAll') : 'All teams'
+        withFallback('events.filter.teamAll', 'All teams')
       );
       const severities = Array.from(new Set(state.events.map(ev => ev.severity)));
       buildFilterGroup(
         els.severityFilter,
         severities.map(v => ({value: v, label: capitalize(v)})),
         state.filters.severity,
-        typeof window.t === 'function' ? window.t('events.filter.severityAll') : 'All severities'
+        withFallback('events.filter.severityAll', 'All severities')
       );
       const types = Array.from(new Set(state.events.map(ev => ev.type)));
       buildFilterGroup(
         els.typeFilter,
         types.map(v => ({value: v, label: splitCamel(v)})),
         state.filters.type,
-        typeof window.t === 'function' ? window.t('events.filter.typeAll') : 'All types'
+        withFallback('events.filter.typeAll', 'All types')
       );
     }
 
@@ -198,9 +208,7 @@
     function handleI18nChange(){
       updateScenarioButton();
       buildFilterControls();
-      if (els.drawerClose && typeof window.t === 'function') {
-        els.drawerClose.setAttribute('aria-label', window.t('drawer.close'));
-      }
+      els.drawerClose?.setAttribute('aria-label', withFallback('drawer.close', 'Close drawer'));
       renderRangeCaption();
       renderKpis();
       renderHeatmap();
@@ -213,7 +221,7 @@
       els.drawer.setAttribute('aria-hidden', 'true');
       els.drawerOverlay.setAttribute('aria-hidden', 'true');
       if (els.drawerClose) {
-        const label = typeof window.t === 'function' ? window.t('drawer.close') : 'Close drawer';
+        const label = withFallback('drawer.close', 'Close drawer');
         els.drawerClose.setAttribute('aria-label', label);
       }
       els.drawerClose?.addEventListener('click', closeDrawer);
@@ -396,10 +404,10 @@
 
     function renderRangeCaption(){
       if (!els.rangeCaption) return;
-      const scenarioPrefix = state.scenario ? ((typeof window.t === 'function' ? window.t('caption.scenarioPrefix') : 'Night-Shift Scenario · ') || 'Night-Shift Scenario · ') : '';
+      const scenarioPrefix = state.scenario ? (withFallback('caption.scenarioPrefix', 'Night-Shift Scenario · ') || 'Night-Shift Scenario · ') : '';
       const rangeText = captionRangeLabel();
       const teamText = teamLabel(state.activeTeam);
-      const base = `${typeof window.t === 'function' ? window.t('caption.orgAverage') : 'Org avg'}${typeof window.t === 'function' ? window.t('caption.separator') : ' · '}${rangeText}${typeof window.t === 'function' ? window.t('caption.separator') : ' · '}${teamText}`;
+      const base = `${withFallback('caption.orgAverage', 'Org average')} · ${rangeText} · ${teamText}`;
       els.rangeCaption.textContent = `${scenarioPrefix}${base}`;
     }
 
@@ -407,22 +415,18 @@
       if (state.rangeWindow) {
         const {start, end} = state.rangeWindow;
         const label = `${formatDateLabel(start)} – ${formatDateLabel(end)}`;
-        if (typeof window.t === 'function') {
-          return window.t('caption.range', {range: label});
-        }
-        return label;
+        const translated = window.I18N?.t?.('caption.range', {range: label});
+        return translated && translated !== 'caption.range' ? translated : label;
       }
       const key = `range.${state.rangePreset}`;
-      if (typeof window.t === 'function') {
-        const translated = window.t(key);
-        if (translated && translated !== key) return translated;
-      }
+      const translated = window.I18N?.t?.(key);
+      if (translated && translated !== key) return translated;
       return rangePresetDescription();
     }
 
     function teamLabel(team){
       if (!team || team === 'all') {
-        return typeof window.t === 'function' ? window.t('caption.teamAll') : 'All Teams';
+        return withFallback('caption.teamAll', 'All Teams');
       }
       return state.teamMap.get(team) || team;
     }
@@ -564,7 +568,7 @@
         : rows;
       const displayRows = filteredRows.length ? filteredRows : rows;
       if (!displayRows.length || !cols.length) {
-        els.heatmap.innerHTML = `<p role="status">${typeof window.t === 'function' ? window.t('status.noData') : 'No data available'}</p>`;
+        els.heatmap.innerHTML = `<p role="status">${withFallback('status.noData', 'No data available')}</p>`;
         return;
       }
       els.heatmap.style.gridTemplateColumns = `repeat(${cols.length + 1}, minmax(0, 1fr))`;
@@ -737,7 +741,7 @@
         els.drawerDetail.textContent = event.detail || event.rule || '';
       }
       if (els.drawerRule) {
-        els.drawerRule.textContent = event.rule || event.detail || (typeof window.t === 'function' ? window.t('drawer.noThresholds') : 'No threshold details provided.');
+        els.drawerRule.textContent = event.rule || event.detail || withFallback('drawer.noThresholds', 'No threshold details provided.');
       }
       if (els.drawerThresholds) {
         els.drawerThresholds.innerHTML = '';
@@ -745,7 +749,7 @@
         const entries = Object.entries(thresholds);
         if (!entries.length) {
           const dd = document.createElement('dd');
-          dd.textContent = typeof window.t === 'function' ? window.t('drawer.noThresholds') : 'No threshold details provided.';
+          dd.textContent = withFallback('drawer.noThresholds', 'No threshold details provided.');
           els.drawerThresholds.appendChild(dd);
         } else {
           entries.forEach(([key, value]) => {
@@ -823,7 +827,7 @@
       els.events.innerHTML = '';
       if (!Array.isArray(state.events) || state.events.length === 0 || !state.rangeWindow) {
         const empty = document.createElement('p');
-        empty.textContent = typeof window.t === 'function' ? window.t('events.empty') : 'No detection events in this range.';
+        empty.textContent = withFallback('events.empty', 'No detection events in this range.');
         els.events.appendChild(empty);
         return;
       }
@@ -846,7 +850,7 @@
 
       if (filtered.length === 0) {
         const empty = document.createElement('p');
-        empty.textContent = typeof window.t === 'function' ? window.t('events.emptyFiltered') : 'Filters returned no events.';
+        empty.textContent = withFallback('events.emptyFiltered', 'Filters returned no events.');
         els.events.appendChild(empty);
         return;
       }
@@ -907,7 +911,7 @@
           const rulePill = document.createElement('span');
           rulePill.className = 'pill pill--neutral has-tooltip';
           rulePill.tabIndex = 0;
-          rulePill.textContent = typeof window.t === 'function' ? window.t('events.trigger') : 'Trigger';
+          rulePill.textContent = withFallback('events.trigger', 'Trigger');
           const tooltip = document.createElement('span');
           tooltip.className = 'tooltip';
           tooltip.textContent = ev.rule || ev.detail || 'Threshold triggered';
@@ -990,7 +994,7 @@
       const granularity = activityGranularity();
       const filteredRows = state.metrics.activity.filter(row => !state.activeTeam || state.activeTeam === 'all' || row.team === state.activeTeam);
       if (!filteredRows.length) {
-        els.activity.innerHTML = `<p role="status">${typeof window.t === 'function' ? window.t('status.noData') : 'No data available'}</p>`;
+        els.activity.innerHTML = `<p role="status">${withFallback('status.noData', 'No data available')}</p>`;
         return;
       }
 
@@ -1173,21 +1177,8 @@
       return `${year}-${month}-${day}`;
     }
 
-  }
+}
 
-  function boot(){
-    Promise.resolve().then(() => {
-      if (window.I18N?.onReady) {
-        window.I18N.onReady(initPage);
-      } else {
-        initPage();
-      }
-    });
-  }
-
-  if (document.readyState !== 'loading') {
-    boot();
-  } else {
-    window.addEventListener('DOMContentLoaded', boot);
-  }
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  window.I18N?.onReady ? window.I18N.onReady(initPage) : initPage();
+});
