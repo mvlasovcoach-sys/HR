@@ -1,287 +1,309 @@
 (function(){
-  const trackerEl = document.getElementById('wellbeing-tracker');
-  if (!trackerEl) return;
-  const breakdownEl = document.getElementById('analytics-breakdown');
-  const captionEl = document.getElementById('analytics-caption');
-  const maToggle = document.getElementById('tracker-ma');
+  function initPage(){
+    const trackerEl = document.getElementById('wellbeing-tracker');
+    if (!trackerEl) return;
+    const breakdownEl = document.getElementById('analytics-breakdown');
+    const captionEl = document.getElementById('analytics-caption');
+    const maToggle = document.getElementById('tracker-ma');
 
-  const BREAKDOWN_KEYS = [
-    {key: 'high_stress_pct', label: 'metric.highStress', inverse: true, unit: '%'},
-    {key: 'fatigue_elevated_pct', label: 'metric.elevatedFatigue', inverse: true, unit: '%'},
-    {key: 'engagement_active_pct', label: 'metric.activeEngagement', inverse: false, unit: '%'}
-  ];
+    const BREAKDOWN_KEYS = [
+      {key: 'high_stress_pct', label: 'metric.highStress', inverse: true, unit: '%'},
+      {key: 'fatigue_elevated_pct', label: 'metric.elevatedFatigue', inverse: true, unit: '%'},
+      {key: 'engagement_active_pct', label: 'metric.activeEngagement', inverse: false, unit: '%'}
+    ];
 
-  const MA_KEY = 'hr:analytics:ma';
-  let useMA = readStoredMA();
-  if (maToggle) {
-    maToggle.checked = useMA;
-    maToggle.addEventListener('change', () => {
-      useMA = maToggle.checked;
-      storeMA(useMA);
-      render();
+    const MA_KEY = 'hr:analytics:ma';
+    let useMA = readStoredMA();
+    if (maToggle) {
+      maToggle.checked = useMA;
+      maToggle.addEventListener('change', () => {
+        useMA = maToggle.checked;
+        storeMA(useMA);
+        render();
+      });
+    }
+
+    render();
+    window.addEventListener('storage', evt => {
+      if (!evt) return;
+      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+        render();
+      }
+      if (evt.key === MA_KEY && maToggle) {
+        useMA = readStoredMA();
+        maToggle.checked = useMA;
+        render();
+      }
+    });
+    document.addEventListener('i18n:change', render);
+
+    function t(key, vars){
+      return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
+    }
+
+    function readRange(){
+      try {
+        const raw = localStorage.getItem('hr:range');
+        if (!raw) return {preset: '7d'};
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.preset) return parsed;
+        if (parsed && parsed.start && parsed.end) return parsed;
+      } catch (e) {}
+      return {preset: '7d'};
+    }
+
+    function readTeam(){
+      try {
+        return localStorage.getItem('hr:team') || 'all';
+      } catch (e) {
+        return 'all';
+      }
+    }
+
+    function presetForRange(range){
+      if (range.preset) {
+        if (range.preset === 'month' || range.preset === 'year') return range.preset;
+        return '7d';
+      }
+      if (range.start && range.end) {
+        const start = new Date(range.start);
+        const end = new Date(range.end);
+        if (!isNaN(start) && !isNaN(end)) {
+          const diff = (end - start) / (1000 * 60 * 60 * 24);
+          if (diff > 120) return 'year';
+          if (diff > 21) return 'month';
+        }
+      }
+      return '7d';
+    }
+
+    function readStoredMA(){
+      try {
+        return localStorage.getItem(MA_KEY) === '1';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function storeMA(value){
+      try {
+        localStorage.setItem(MA_KEY, value ? '1' : '0');
+        dispatchEvent(new StorageEvent('storage', {key: MA_KEY}));
+      } catch (e) {}
+    }
+
+    async function render(){
+      const range = readRange();
+      const team = readTeam();
+      const preset = presetForRange(range);
+      const metrics = await loadMetrics(preset, range, team);
+      if (!metrics) {
+        trackerEl.innerHTML = `<p role="status">${t('status.noData')}</p>`;
+        if (breakdownEl) breakdownEl.innerHTML = '';
+        if (captionEl) captionEl.textContent = buildCaption(range, team);
+        return;
+      }
+
+      renderTracker(metrics, team);
+      renderBreakdown(metrics, team);
+      if (captionEl) captionEl.textContent = buildCaption(range, team);
+    }
+
+    async function loadMetrics(preset, range, team){
+      try {
+        const path = `./data/org/metrics_${preset}.json`;
+        return await window.dataLoader.fetch(path, {range, team});
+      } catch (e) {
+        console.error('Analytics metrics failed', e);
+        return null;
+      }
+    }
+
+    function renderTracker(metrics, team){
+      const values = metrics.series?.wellbeing_avg || [];
+      const timeline = metrics.timeline || values.map((_, i) => `${i + 1}`);
+      const maValues = useMA ? movingAverage(values, 3) : values;
+      const previous = teamValue(metrics.previous, 'wellbeing_avg', team) ?? metrics.previous?.wellbeing_avg;
+      const current = teamValue(metrics.kpi, 'wellbeing_avg', team) ?? metrics.kpi?.wellbeing_avg;
+      const delta = current != null && previous != null ? current - previous : 0;
+      const badge = deltaBadge(delta, true);
+      const modeLabel = useMA ? t('label.movingAverage') : t('label.actual');
+      trackerEl.innerHTML = `<div class="tracker-legend">
+        <span>${t('kpi.wellbeing')} (${modeLabel})</span>
+        <span>${t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>
+        <span class="delta-badge ${badge.className}">${badge.label}</span>
+      </div>
+      ${lineChart(timeline, maValues)}`;
+    }
+
+    function renderBreakdown(metrics, team){
+      if (!breakdownEl) return;
+      if (!metrics.breakdown) {
+        breakdownEl.innerHTML = '';
+        return;
+      }
+      const cards = BREAKDOWN_KEYS.map(cfg => {
+        const list = metrics.breakdown[cfg.key] || [];
+        const entry = team !== 'all' ? list.find(item => item.team === team) : aggregateEntry(list);
+        const value = entry?.value ?? metrics.kpi?.[cfg.key] ?? 0;
+        const previous = entry?.previous ?? metrics.previous?.[cfg.key] ?? value;
+        const series = entry?.series || metrics.series?.[cfg.key] || [];
+        const badge = deltaBadge(value - previous, !cfg.inverse);
+        return `<article class="tile breakdown-card">
+          <header class="tile__head">
+            <span class="tile__title">${t(cfg.label)}</span>
+            <span class="delta-badge ${badge.className}">${badge.label}</span>
+          </header>
+          <div class="tile__kpi">${Math.round(value)}<span>${cfg.unit}</span></div>
+          <div class="spark">${sparkline(series)}</div>
+          <footer class="breakdown-meta">
+            <span>${t('status.value')} ${Math.round(value)}${cfg.unit}</span>
+            <span>${t('status.target')}: ${Math.round(previous)}${cfg.unit}</span>
+          </footer>
+        </article>`;
+      }).join('');
+      breakdownEl.innerHTML = cards;
+    }
+
+    function aggregateEntry(list){
+      if (!Array.isArray(list) || list.length === 0) return null;
+      const total = list.reduce((acc, item) => acc + (item.value || 0), 0);
+      const prev = list.reduce((acc, item) => acc + (item.previous || 0), 0);
+      const avgSeries = averageSeries(list.map(item => item.series));
+      return {value: total / list.length, previous: prev / list.length, series: avgSeries};
+    }
+
+    function averageSeries(seriesList){
+      const length = Math.max(...seriesList.map(arr => arr?.length || 0));
+      if (!length) return [];
+      const result = [];
+      for (let i = 0; i < length; i += 1) {
+        let sum = 0;
+        let count = 0;
+        seriesList.forEach(arr => {
+          if (Array.isArray(arr) && typeof arr[i] === 'number') {
+            sum += arr[i];
+            count += 1;
+          }
+        });
+        result.push(count ? sum / count : 0);
+      }
+      return result;
+    }
+
+    function teamValue(source, key, team){
+      if (!source) return null;
+      if (team !== 'all' && source.teams && source.teams[team] && key in source.teams[team]) {
+        return source.teams[team][key];
+      }
+      if (key in source) return source[key];
+      return null;
+    }
+
+    function movingAverage(values, window){
+      if (!Array.isArray(values) || values.length === 0) return [];
+      const result = [];
+      for (let i = 0; i < values.length; i += 1) {
+        let sum = 0;
+        let count = 0;
+        for (let j = i - window + 1; j <= i; j += 1) {
+          if (j >= 0 && typeof values[j] === 'number') {
+            sum += values[j];
+            count += 1;
+          }
+        }
+        result.push(count ? sum / count : values[i]);
+      }
+      return result;
+    }
+
+    function lineChart(timeline, values){
+      if (!Array.isArray(values) || values.length === 0) return '';
+      const clean = values.map(Number).filter(v => !Number.isNaN(v));
+      const max = Math.max(...clean);
+      const min = Math.min(...clean);
+      const span = max - min || 1;
+      const step = values.length > 1 ? 100 / (values.length - 1) : 100;
+      const points = values.map((v, i) => {
+        const x = (step * i).toFixed(2);
+        const norm = (Number(v) - min) / span;
+        const y = (100 - norm * 100).toFixed(2);
+        return `${x},${y}`;
+      }).join(' ');
+      const labels = timeline.map((label, i) => `<text x="${(step * i).toFixed(2)}" y="110" font-size="10" fill="rgba(255,255,255,0.45)" text-anchor="middle">${label}</text>`).join('');
+      return `<svg viewBox="0 0 100 120" preserveAspectRatio="none">${labels}<polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
+    }
+
+    function sparkline(values){
+      if (!Array.isArray(values) || values.length === 0) return '';
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      const span = max - min || 1;
+      const step = values.length > 1 ? 100 / (values.length - 1) : 100;
+      const points = values.map((v, i) => {
+        const x = (step * i).toFixed(2);
+        const y = (100 - ((v - min) / span) * 100).toFixed(2);
+        return `${x},${y}`;
+      }).join(' ');
+      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
+    }
+
+    function deltaBadge(delta, positive){
+      if (delta == null || isNaN(delta) || Math.abs(delta) < 0.1) {
+        return {label: t('delta.equal'), className: 'delta-badge--neutral'};
+      }
+      const improved = positive ? delta >= 0 : delta <= 0;
+      return improved
+        ? {label: t('delta.up'), className: 'delta-badge--up'}
+        : {label: t('delta.down'), className: 'delta-badge--down'};
+    }
+
+    function buildCaption(range, team){
+      const rangeText = rangeLabel(range);
+      const teamText = teamLabel(team);
+      return `${t('caption.orgAverage')}${t('caption.separator')}${rangeText}${t('caption.separator')}${teamText}`;
+    }
+
+    function rangeLabel(range){
+      if (!range) return t('range.7d');
+      if (range.preset) {
+        const map = {
+          day: t('range.day'),
+          '7d': t('range.7d'),
+          month: t('range.month'),
+          year: t('range.year')
+        };
+        return map[range.preset] || t('range.7d');
+      }
+      if (range.start && range.end) {
+        return `${range.start} → ${range.end}`;
+      }
+      return t('range.7d');
+    }
+
+    function teamLabel(team){
+      if (!team || team === 'all') return t('caption.teamAll');
+      try {
+        const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
+        if (map && map[team]) return map[team];
+      } catch (e) {}
+      return team;
+    }
+  }
+
+  function boot(){
+    Promise.resolve().then(() => {
+      if (window.I18N?.onReady) {
+        window.I18N.onReady(initPage);
+      } else {
+        initPage();
+      }
     });
   }
 
-  render();
-  window.addEventListener('storage', evt => {
-    if (!evt) return;
-    if (evt.key === 'hr:range' || evt.key === 'hr:team') {
-      render();
-    }
-    if (evt.key === MA_KEY && maToggle) {
-      useMA = readStoredMA();
-      maToggle.checked = useMA;
-      render();
-    }
-  });
-  document.addEventListener('i18n:change', render);
-
-  function readRange(){
-    try {
-      const raw = localStorage.getItem('hr:range');
-      if (!raw) return {preset: '7d'};
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.preset) return parsed;
-      if (parsed && parsed.start && parsed.end) return parsed;
-    } catch (e) {}
-    return {preset: '7d'};
-  }
-
-  function readTeam(){
-    try {
-      return localStorage.getItem('hr:team') || 'all';
-    } catch (e) {
-      return 'all';
-    }
-  }
-
-  function presetForRange(range){
-    if (range.preset) {
-      if (range.preset === 'month' || range.preset === 'year') return range.preset;
-      return '7d';
-    }
-    if (range.start && range.end) {
-      const start = new Date(range.start);
-      const end = new Date(range.end);
-      if (!isNaN(start) && !isNaN(end)) {
-        const diff = (end - start) / (1000 * 60 * 60 * 24);
-        if (diff > 120) return 'year';
-        if (diff > 21) return 'month';
-      }
-    }
-    return '7d';
-  }
-
-  function readStoredMA(){
-    try {
-      return localStorage.getItem(MA_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function storeMA(value){
-    try {
-      localStorage.setItem(MA_KEY, value ? '1' : '0');
-      dispatchEvent(new StorageEvent('storage', {key: MA_KEY}));
-    } catch (e) {}
-  }
-
-  async function render(){
-    const range = readRange();
-    const team = readTeam();
-    const preset = presetForRange(range);
-    const metrics = await loadMetrics(preset, range, team);
-    if (!metrics) {
-      trackerEl.innerHTML = '<p role="status">No data</p>';
-      if (breakdownEl) breakdownEl.innerHTML = '';
-      if (captionEl) captionEl.textContent = buildCaption(range, team);
-      return;
-    }
-
-    renderTracker(metrics, team);
-    renderBreakdown(metrics, team);
-    if (captionEl) captionEl.textContent = buildCaption(range, team);
-  }
-
-  async function loadMetrics(preset, range, team){
-    try {
-      const path = `./data/org/metrics_${preset}.json`;
-      return await window.dataLoader.fetch(path, {range, team});
-    } catch (e) {
-      console.error('Analytics metrics failed', e);
-      return null;
-    }
-  }
-
-  function renderTracker(metrics, team){
-    const values = metrics.series?.wellbeing_avg || [];
-    const timeline = metrics.timeline || values.map((_, i) => `${i + 1}`);
-    const maValues = useMA ? movingAverage(values, 3) : values;
-    const previous = teamValue(metrics.previous, 'wellbeing_avg', team) ?? metrics.previous?.wellbeing_avg;
-    const current = teamValue(metrics.kpi, 'wellbeing_avg', team) ?? metrics.kpi?.wellbeing_avg;
-    const delta = current != null && previous != null ? current - previous : 0;
-    const badge = deltaBadge(delta, true);
-    const modeLabel = useMA ? window.t('label.movingAverage') : window.t('label.actual');
-    trackerEl.innerHTML = `<div class="tracker-legend">
-      <span>${window.t('kpi.wellbeing') || 'Wellbeing'} (${modeLabel})</span>
-      <span>${window.t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>
-      <span class="delta-badge ${badge.className}">${badge.label}</span>
-    </div>
-    ${lineChart(timeline, maValues)}`;
-  }
-
-  function renderBreakdown(metrics, team){
-    if (!breakdownEl) return;
-    if (!metrics.breakdown) {
-      breakdownEl.innerHTML = '';
-      return;
-    }
-    const cards = BREAKDOWN_KEYS.map(cfg => {
-      const list = metrics.breakdown[cfg.key] || [];
-      const entry = team !== 'all' ? list.find(item => item.team === team) : aggregateEntry(list);
-      const value = entry?.value ?? metrics.kpi?.[cfg.key] ?? 0;
-      const previous = entry?.previous ?? metrics.previous?.[cfg.key] ?? value;
-      const series = entry?.series || metrics.series?.[cfg.key] || [];
-      const badge = deltaBadge(value - previous, !cfg.inverse);
-      return `<article class="tile breakdown-card">
-        <header class="tile__head">
-          <span class="tile__title">${window.t(cfg.label)}</span>
-          <span class="delta-badge ${badge.className}">${badge.label}</span>
-        </header>
-        <div class="tile__kpi">${Math.round(value)}<span>${cfg.unit}</span></div>
-        <div class="spark">${sparkline(series)}</div>
-        <footer class="breakdown-meta">
-          <span>${window.t('status.value')} ${Math.round(value)}${cfg.unit}</span>
-          <span>${window.t('status.target')}: ${Math.round(previous)}${cfg.unit}</span>
-        </footer>
-      </article>`;
-    }).join('');
-    breakdownEl.innerHTML = cards;
-  }
-
-  function aggregateEntry(list){
-    if (!Array.isArray(list) || list.length === 0) return null;
-    const total = list.reduce((acc, item) => acc + (item.value || 0), 0);
-    const prev = list.reduce((acc, item) => acc + (item.previous || 0), 0);
-    const avgSeries = averageSeries(list.map(item => item.series));
-    return {value: total / list.length, previous: prev / list.length, series: avgSeries};
-  }
-
-  function averageSeries(seriesList){
-    const length = Math.max(...seriesList.map(arr => arr?.length || 0));
-    if (!length) return [];
-    const result = [];
-    for (let i = 0; i < length; i += 1) {
-      let sum = 0;
-      let count = 0;
-      seriesList.forEach(arr => {
-        if (Array.isArray(arr) && typeof arr[i] === 'number') {
-          sum += arr[i];
-          count += 1;
-        }
-      });
-      result.push(count ? sum / count : 0);
-    }
-    return result;
-  }
-
-  function teamValue(source, key, team){
-    if (!source) return null;
-    if (team !== 'all' && source.teams && source.teams[team] && key in source.teams[team]) {
-      return source.teams[team][key];
-    }
-    if (key in source) return source[key];
-    return null;
-  }
-
-  function movingAverage(values, window){
-    if (!Array.isArray(values) || values.length === 0) return [];
-    const result = [];
-    for (let i = 0; i < values.length; i += 1) {
-      let sum = 0;
-      let count = 0;
-      for (let j = i - window + 1; j <= i; j += 1) {
-        if (j >= 0 && typeof values[j] === 'number') {
-          sum += values[j];
-          count += 1;
-        }
-      }
-      result.push(count ? sum / count : values[i]);
-    }
-    return result;
-  }
-
-  function lineChart(timeline, values){
-    if (!Array.isArray(values) || values.length === 0) return '';
-    const clean = values.map(Number).filter(v => !Number.isNaN(v));
-    const max = Math.max(...clean);
-    const min = Math.min(...clean);
-    const span = max - min || 1;
-    const step = values.length > 1 ? 100 / (values.length - 1) : 100;
-    const points = values.map((v, i) => {
-      const x = (step * i).toFixed(2);
-      const norm = (Number(v) - min) / span;
-      const y = (100 - norm * 100).toFixed(2);
-      return `${x},${y}`;
-    }).join(' ');
-    const labels = timeline.map((label, i) => `<text x="${(step * i).toFixed(2)}" y="110" font-size="10" fill="rgba(255,255,255,0.45)" text-anchor="middle">${label}</text>`).join('');
-    return `<svg viewBox="0 0 100 120" preserveAspectRatio="none">${labels}<polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
-  }
-
-  function sparkline(values){
-    if (!Array.isArray(values) || values.length === 0) return '';
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const span = max - min || 1;
-    const step = values.length > 1 ? 100 / (values.length - 1) : 100;
-    const points = values.map((v, i) => {
-      const x = (step * i).toFixed(2);
-      const y = (100 - ((v - min) / span) * 100).toFixed(2);
-      return `${x},${y}`;
-    }).join(' ');
-    return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
-  }
-
-  function deltaBadge(delta, positive){
-    if (delta == null || isNaN(delta) || Math.abs(delta) < 0.1) {
-      return {label: window.t('delta.equal'), className: 'delta-badge--neutral'};
-    }
-    const improved = positive ? delta >= 0 : delta <= 0;
-    return improved
-      ? {label: window.t('delta.up'), className: 'delta-badge--up'}
-      : {label: window.t('delta.down'), className: 'delta-badge--down'};
-  }
-
-  function buildCaption(range, team){
-    const rangeText = rangeLabel(range);
-    const teamText = teamLabel(team);
-    return `${window.t('caption.orgAverage')}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
-  }
-
-  function rangeLabel(range){
-    if (!range) return window.t('range.7d');
-    if (range.preset) {
-      const map = {
-        day: window.t('range.day'),
-        '7d': window.t('range.7d'),
-        month: window.t('range.month'),
-        year: window.t('range.year')
-      };
-      return map[range.preset] || window.t('range.7d');
-    }
-    if (range.start && range.end) {
-      return `${range.start} → ${range.end}`;
-    }
-    return window.t('range.7d');
-  }
-
-  function teamLabel(team){
-    if (!team || team === 'all') return window.t('caption.teamAll');
-    try {
-      const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
-      if (map && map[team]) return map[team];
-    } catch (e) {}
-    return team;
+  if (document.readyState !== 'loading') {
+    boot();
+  } else {
+    window.addEventListener('DOMContentLoaded', boot);
   }
 })();

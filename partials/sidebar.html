@@ -1,9 +1,12 @@
 <nav class="side">
-  <div class="side__brand" data-i18n="app.title">
+  <div class="side__brand">
     <img class="side__brand-logo" data-theme-logo alt="" hidden />
-    <span class="side__brand-name">SPA2099 HR Health</span>
+    <span class="side__brand-name" data-i18n="app.title">SPA2099 HR Health</span>
   </div>
-  <div class="side__role" aria-live="polite">Role: <span data-role-label>HR</span></div>
+  <div class="side__role" aria-live="polite">
+    <span data-i18n="sidebar.roleLabel">Role:</span>
+    <span data-role-label>HR</span>
+  </div>
   <ul class="side__nav">
     <li data-role-key="summary"><a href="./Summary.html"   data-key="summary" data-i18n="nav.summary">Summary</a></li>
     <li data-role-key="wellness"><a href="./User.html"      data-key="wellness" data-i18n="nav.wellness">Wellness</a></li>

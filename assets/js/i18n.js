@@ -1,14 +1,15 @@
 (function(){
-  const LANG_KEY = 'hr:lang';
+  const STORAGE_KEY = 'hr:lang';
   const SUPPORTED = ['en', 'nl'];
-  const dictionaries = new Map();
+  const cache = new Map();
   let currentLang = readStoredLang();
-  const readyCallbacks = [];
-  let isReady = false;
+  let ready = false;
+  let hasDispatchedReady = false;
+  const queue = [];
 
   function readStoredLang(){
     try {
-      const stored = localStorage.getItem(LANG_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (stored && SUPPORTED.includes(stored)) {
         return stored;
       }
@@ -18,22 +19,36 @@
     return 'en';
   }
 
-  function writeLang(lang){
+  function writeStoredLang(lang){
     try {
-      localStorage.setItem(LANG_KEY, lang);
+      localStorage.setItem(STORAGE_KEY, lang);
     } catch (e) {
-      // ignore
+      // ignore storage errors
     }
   }
 
-  function template(str, vars){
-    if (!vars) return str;
-    return str.replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
+  function normalizeLang(lang){
+    if (!lang || !SUPPORTED.includes(lang)) return 'en';
+    return lang;
   }
 
-  function getDict(lang){
-    if (dictionaries.has(lang)) return dictionaries.get(lang);
-    return {};
+  function interpolate(template, vars){
+    if (!vars) return template;
+    return template.replace(/\{(\w+)\}/g, (_, key) => (key in vars ? vars[key] : `{${key}}`));
+  }
+
+  async function loadDictionary(lang){
+    if (cache.has(lang)) {
+      return cache.get(lang);
+    }
+    const version = window.APP_VERSION ? `?v=${encodeURIComponent(window.APP_VERSION)}` : '';
+    const resp = await fetch(`./assets/i18n/${lang}.json${version}`, {cache: 'no-store'});
+    if (!resp.ok) {
+      throw new Error(`i18n: failed to load ${lang}`);
+    }
+    const data = await resp.json();
+    cache.set(lang, data);
+    return data;
   }
 
   function translateElement(el){
@@ -46,69 +61,94 @@
     document.querySelectorAll('[data-i18n]').forEach(translateElement);
   }
 
-  function t(key, vars){
-    const dict = getDict(currentLang);
-    if (key in dict) {
-      return template(dict[key], vars);
-    }
-    const fallback = getDict('en');
-    if (key in fallback) {
-      return template(fallback[key], vars);
-    }
-    return key;
-  }
-
-  function setLang(lang){
-    if (!SUPPORTED.includes(lang)) lang = 'en';
-    if (lang === currentLang) return;
-    currentLang = lang;
-    writeLang(lang);
-    document.documentElement.setAttribute('lang', lang);
-    if (isReady) {
-      translateAll();
-      document.dispatchEvent(new CustomEvent('i18n:change', {detail: {lang}}));
+  function flushQueue(){
+    while (queue.length) {
+      const fn = queue.shift();
+      try { fn(); } catch (e) { console.error(e); }
     }
   }
 
-  function onReady(cb){
-    if (typeof cb !== 'function') return;
-    if (isReady) {
-      cb();
-    } else {
-      readyCallbacks.push(cb);
-    }
-  }
-
-  async function loadLang(lang){
-    if (dictionaries.has(lang)) return;
+  async function init(lang){
+    const target = normalizeLang(lang || currentLang);
+    ready = false;
+    let dict = null;
     try {
-      const data = await window.dataLoader.fetch(`./assets/i18n/${lang}.json`, {team: null, range: null});
-      if (data && typeof data === 'object') {
-        dictionaries.set(lang, data);
-      } else {
-        dictionaries.set(lang, {});
+      dict = await loadDictionary(target);
+      currentLang = target;
+      writeStoredLang(currentLang);
+      document.documentElement.setAttribute('lang', currentLang);
+    } catch (err) {
+      if (target !== 'en') {
+        return init('en');
       }
-    } catch (e) {
-      console.error('i18n: failed to load language', lang, e);
-      dictionaries.set(lang, {});
+      console.warn('i18n: fallback to keys', err);
+      dict = {};
+      cache.set('en', dict);
+      currentLang = 'en';
+      document.documentElement.setAttribute('lang', currentLang);
     }
-  }
 
-  async function init(){
-    await Promise.all(SUPPORTED.map(loadLang));
-    if (!dictionaries.has('en')) {
-      dictionaries.set('en', {});
+    // Ensure English fallback is cached for lookups
+    if (currentLang !== 'en' && !cache.has('en')) {
+      try {
+        await loadDictionary('en');
+      } catch (err) {
+        cache.set('en', {});
+      }
     }
-    document.documentElement.setAttribute('lang', currentLang);
+
+    ready = true;
     translateAll();
-    isReady = true;
-    readyCallbacks.splice(0).forEach(cb => {
-      try { cb(); } catch (e) { console.error(e); }
-    });
+    flushQueue();
+
+    if (!hasDispatchedReady) {
+      hasDispatchedReady = true;
+      window.dispatchEvent(new Event('i18n:ready'));
+    }
+    window.dispatchEvent(new CustomEvent('i18n:change', {detail: {lang: currentLang}}));
+    return dict;
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  function t(key, vars){
+    const active = cache.get(currentLang) || {};
+    let value = active[key];
+    if (typeof value !== 'string') {
+      const fallback = cache.get('en') || {};
+      value = fallback[key];
+    }
+    if (typeof value !== 'string') {
+      value = key.replace(/^label\.|^range\./, '');
+    }
+    return interpolate(value, vars);
+  }
 
-  window.i18n = {t, setLang, getLang: () => currentLang, onReady, translate: translateAll, supported: SUPPORTED.slice()};
-  window.t = t;
+  function onReady(fn){
+    if (typeof fn !== 'function') return;
+    if (ready) {
+      try { fn(); } catch (e) { console.error(e); }
+    } else {
+      queue.push(fn);
+    }
+  }
+
+  async function setLang(lang){
+    const target = normalizeLang(lang);
+    if (target === currentLang && ready) return;
+    await init(target);
+  }
+
+  function getLang(){
+    return currentLang;
+  }
+
+  window.I18N = {
+    init,
+    t,
+    onReady,
+    setLang,
+    getLang,
+    translate: translateAll,
+    supported: SUPPORTED.slice()
+  };
+  window.t = (key, vars) => window.I18N.t(key, vars);
 })();
