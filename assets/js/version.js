@@ -1,17 +1,27 @@
 (async function(){
+  let version = '';
   try {
     const response = await fetch(`./data/version.json?ts=${Date.now()}`);
-    const payload = await response.json();
-    window.APP_VERSION = payload.v || '';
-  } catch (e) {
-    window.APP_VERSION = '';
-  }
-  const storedLang = (() => {
-    try {
-      return localStorage.getItem('lang') || localStorage.getItem('hr:lang') || 'en';
-    } catch (e) {
-      return 'en';
+    if (!response.ok) {
+      throw new Error('version fetch failed');
     }
-  })();
-  window.I18N?.init(storedLang || 'en');
+    const payload = await response.json();
+    version = payload?.v || '';
+  } catch (err) {
+    version = '';
+  }
+
+  window.APP_VERSION = version;
+  window.dispatchEvent(new CustomEvent('app:version', {detail: {version}}));
+
+  let preferredLang = 'en';
+  try {
+    preferredLang = localStorage.getItem('lang') || localStorage.getItem('hr:lang') || 'en';
+  } catch (err) {
+    preferredLang = 'en';
+  }
+
+  if (window.I18N?.init) {
+    window.I18N.init(preferredLang);
+  }
 })();

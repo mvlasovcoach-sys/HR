@@ -7,7 +7,7 @@ function initPage(){
     const SCENARIO_ROOT = `./data/scenario/${SCENARIO_ID}`;
 
     const els = {
-      kpis: document.getElementById('corporate-kpis'),
+      kpiGrid: document.getElementById('corp-kpi-grid'),
       heatmap: document.getElementById('corporate-heatmap'),
       events: document.getElementById('corporate-events'),
       rangeCaption: document.getElementById('corporate-range-caption'),
@@ -57,11 +57,11 @@ function initPage(){
       lastFocus: null
     };
 
-    const KPI_CONFIG = [
-      {key: 'wellbeing_avg', label: 'Org Wellbeing', unitLabel: '/100', suffix: '', description: 'Rolling average', format: v => Math.round(v)},
-      {key: 'high_stress_pct', label: 'High Stress', unitLabel: '% of staff', suffix: '%', description: 'Stress ≥70', format: v => Math.round(v)},
-      {key: 'fatigue_elevated_pct', label: 'Elevated Fatigue', unitLabel: '% of staff', suffix: '%', description: 'Fatigue ≥60', format: v => Math.round(v)},
-      {key: 'engagement_active_pct', label: 'Active Engagement', unitLabel: '% of staff', suffix: '%', description: '≥1 daily log action', format: v => Math.round(v)}
+    const KPI_DEFS = [
+      {key: 'wellbeing_avg', label: 'Org Wellbeing', labelKey: 'kpi.wellbeing', unit: '/100', fmt: v => Math.round(v)},
+      {key: 'high_stress_pct', label: 'High Stress', labelKey: 'metric.highStress', unit: '%', fmt: v => Math.round(v)},
+      {key: 'fatigue_elevated_pct', label: 'Elevated Fatigue', labelKey: 'metric.elevatedFatigue', unit: '%', fmt: v => Math.round(v)},
+      {key: 'engagement_active_pct', label: 'Active Engagement', labelKey: 'metric.activeEngagement', unit: '%', fmt: v => Math.round(v)}
     ];
 
     const t = (key, vars) => {
@@ -210,7 +210,7 @@ function initPage(){
       buildFilterControls();
       els.drawerClose?.setAttribute('aria-label', withFallback('drawer.close', 'Close drawer'));
       renderRangeCaption();
-      renderKpis();
+      renderKpis(currentKpiView());
       renderHeatmap();
       renderEvents();
       renderActivity();
@@ -324,41 +324,36 @@ function initPage(){
     }
 
     async function loadMetricsForSelection(selection){
-      const path = metricsPathForSelection(selection, state.scenario);
+      const loadFor = async scenarioKey => {
+        const path = metricsPathForSelection(selection, scenarioKey);
+        return loadJson(path);
+      };
+
       try {
-        state.metrics = await loadJson(path);
-      } catch (e) {
+        state.metrics = await loadFor(state.scenario);
+      } catch (err) {
         if (state.scenario) {
-          console.warn('Scenario metrics missing, falling back to baseline', e);
+          console.warn('Scenario metrics missing, falling back to baseline', err);
           try {
-            state.metrics = await loadJson(metricsPathForSelection(selection, null));
+            state.metrics = await loadFor(null);
           } catch (fallbackError) {
             console.error('Failed to load metrics', fallbackError);
             state.metrics = null;
-            renderRangeCaption();
-            renderKpis();
-            renderHeatmap();
-            renderActivity();
-            renderEvents();
-            return;
           }
         } else {
-          console.error('Failed to load metrics', e);
+          console.error('Failed to load metrics', err);
           state.metrics = null;
-          renderRangeCaption();
-          renderKpis();
-          renderHeatmap();
-          renderActivity();
-          renderEvents();
-          return;
         }
       }
+
       updateRangeWindow();
       renderRangeCaption();
-      renderKpis();
-      renderHeatmap();
-      renderActivity();
-      renderEvents();
+
+      const snapshot = currentKpiView();
+      try { renderKpis(snapshot); } catch (err) { console.error('KPI', err); }
+      try { renderHeatmap(); } catch (err) { console.error('Heatmap', err); }
+      try { renderActivity(); } catch (err) { console.error('Activity', err); }
+      try { renderEvents(); } catch (err) { console.error('Events', err); }
     }
 
     function metricsPathForSelection(selection, scenarioKey){
@@ -444,113 +439,106 @@ function initPage(){
       }
     }
 
-    function renderKpis(){
-      if (!els.kpis) return;
-      els.kpis.innerHTML = '';
-      if (!state.metrics || !state.metrics.kpi) return;
+    function renderKpis(kpi){
+      const grid = els.kpiGrid || document.querySelector('#corp-kpi-grid');
+      if (!grid) return;
 
-      KPI_CONFIG.forEach(cfg => {
-        const value = metricValue(cfg.key);
-        if (value == null) return;
-        const previous = metricPrevious(cfg.key);
-        const formatted = typeof cfg.format === 'function' ? cfg.format(value) : value;
-        const sparkValues = metricSeries(cfg.key);
+      const defs = KPI_DEFS;
 
-        const tile = document.createElement('article');
-        tile.className = 'tile tile--muted';
-        tile.setAttribute('role', 'group');
-        tile.setAttribute('aria-label', `${cfg.label} KPI`);
+      const tpl = ({label, value, unit = '', delta = null}) => `
+        <div class="tile kpi">
+          <div class="tile__head">
+            <span>${label}</span>
+            ${Number.isFinite(delta) ? `<span class="pill ${delta >= 0 ? 'green' : 'red'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(Math.round(delta))}</span>` : ''}
+          </div>
+          <div class="tile__kpi">${value}<small>${unit}</small></div>
+          <div class="spark" data-key="${label}"></div>
+        </div>`;
 
-        const head = document.createElement('div');
-        head.className = 'tile__head';
-        const title = document.createElement('span');
-        title.className = 'tile__title';
-        title.textContent = cfg.label;
-        head.appendChild(title);
-        tile.appendChild(head);
+      grid.innerHTML = defs.map(def => {
+        const raw = Number(kpi?.[def.key]);
+        const value = Number.isFinite(raw) ? def.fmt(raw) : '—';
+        const dRaw = Number(kpi?.delta?.[def.key]);
+        const delta = Number.isFinite(dRaw) ? dRaw : null;
+        const labelText = withFallback(def.labelKey || '', def.label);
+        return tpl({label: labelText, value, unit: def.unit, delta});
+      }).join('');
+    }
 
-        const metricRow = document.createElement('div');
-        metricRow.className = 'kpi-metric';
-        const ring = document.createElement('div');
-        ring.className = 'ring kpi-ring';
-        ring.setAttribute('aria-hidden', 'true');
-        const ringValue = Math.max(0, Math.min(100, formatted));
-        ring.style.setProperty('--value', `${ringValue}%`);
-        metricRow.appendChild(ring);
+    function currentKpiView(){
+      return buildKpiSnapshot(state.metrics, state.activeTeam);
+    }
 
-        const metricValue = document.createElement('div');
-        metricValue.className = 'tile__kpi';
-        metricValue.innerHTML = `${formatted}${cfg.suffix || ''}<span>${cfg.unitLabel || ''}</span>`;
-        metricRow.appendChild(metricValue);
-        tile.appendChild(metricRow);
+    function buildKpiSnapshot(metrics, team){
+      const source = resolveKpiSource(metrics, team);
+      if (!source) return null;
 
-        const spark = document.createElement('div');
-        spark.className = 'spark';
-        spark.innerHTML = createSparklineSvg(sparkValues);
-        tile.appendChild(spark);
-
-        const foot = document.createElement('footer');
-        foot.className = 'tile__foot';
-        const deltaLabel = previous != null ? `${Math.round(value - previous)} Δ` : '';
-        foot.innerHTML = `<span>${cfg.description}</span><span>${deltaLabel}</span>`;
-        tile.appendChild(foot);
-
-        els.kpis.appendChild(tile);
+      const snapshot = {};
+      KPI_DEFS.forEach(def => {
+        const value = Number(source?.[def.key]);
+        if (Number.isFinite(value)) {
+          snapshot[def.key] = value;
+          return;
+        }
+        const fallback = Number(metrics?.kpi?.[def.key]);
+        if (Number.isFinite(fallback)) {
+          snapshot[def.key] = fallback;
+        }
       });
-    }
 
-    function metricValue(key){
-      if (!state.metrics) return null;
-      if (state.activeTeam && state.activeTeam !== 'all') {
-        const teamData = state.metrics.teams?.[state.activeTeam];
-        if (teamData && key in teamData) return teamData[key];
-        const breakdownEntry = Array.isArray(state.metrics.breakdown?.[key])
-          ? state.metrics.breakdown[key].find(item => item.team === state.activeTeam)
-          : null;
-        if (breakdownEntry && breakdownEntry.value != null) return breakdownEntry.value;
+      const delta = {};
+      KPI_DEFS.forEach(def => {
+        const current = Number(snapshot?.[def.key]);
+        const previous = previousValueForKey(metrics, def.key, team);
+        if (Number.isFinite(current) && Number.isFinite(previous)) {
+          delta[def.key] = current - previous;
+        }
+      });
+
+      if (Object.keys(delta).length) {
+        snapshot.delta = delta;
       }
-      return state.metrics.kpi?.[key] ?? null;
+
+      return snapshot;
     }
 
-    function metricPrevious(key){
-      if (!state.metrics) return null;
-      if (state.activeTeam && state.activeTeam !== 'all') {
-        const breakdownEntry = Array.isArray(state.metrics.breakdown?.[key])
-          ? state.metrics.breakdown[key].find(item => item.team === state.activeTeam)
-          : null;
-        if (breakdownEntry && breakdownEntry.previous != null) return breakdownEntry.previous;
+    function resolveKpiSource(metrics, team){
+      if (!metrics) return null;
+      if (team && team !== 'all') {
+        if (metrics.teams?.[team]) {
+          return metrics.teams[team];
+        }
+        const fallback = {};
+        KPI_DEFS.forEach(def => {
+          const list = metrics.breakdown?.[def.key];
+          if (!Array.isArray(list)) return;
+          const entry = list.find(item => item.team === team);
+          const value = Number(entry?.value);
+          if (Number.isFinite(value)) {
+            fallback[def.key] = value;
+          }
+        });
+        if (Object.keys(fallback).length) {
+          return fallback;
+        }
       }
-      return state.metrics.previous?.[key] ?? null;
+      return metrics.kpi || null;
     }
 
-    function metricSeries(key){
-      if (!state.metrics) return [];
-      if (state.activeTeam && state.activeTeam !== 'all') {
-        const breakdownEntry = Array.isArray(state.metrics.breakdown?.[key])
-          ? state.metrics.breakdown[key].find(item => item.team === state.activeTeam)
-          : null;
-        if (breakdownEntry && Array.isArray(breakdownEntry.series)) return breakdownEntry.series;
+    function previousValueForKey(metrics, key, team){
+      if (!metrics) return null;
+      if (team && team !== 'all') {
+        const list = metrics.breakdown?.[key];
+        if (Array.isArray(list)) {
+          const entry = list.find(item => item.team === team);
+          const value = Number(entry?.previous);
+          if (Number.isFinite(value)) {
+            return value;
+          }
+        }
       }
-      if (Array.isArray(state.metrics.series?.[key])) return state.metrics.series[key];
-      if (Array.isArray(state.metrics.kpi_trend?.[key])) return state.metrics.kpi_trend[key];
-      return [];
-    }
-
-    function createSparklineSvg(values){
-      const clean = values.filter(v => typeof v === 'number' && !Number.isNaN(v));
-      if (clean.length === 0) return '';
-      const width = 100;
-      const height = 30;
-      const min = Math.min(...clean);
-      const max = Math.max(...clean);
-      const range = max - min || 1;
-      const points = clean.map((v, idx) => {
-        const x = (idx / (clean.length - 1 || 1)) * width;
-        const y = height - ((v - min) / range) * height;
-        return `${x.toFixed(2)},${y.toFixed(2)}`;
-      }).join(' ');
-      const areaPoints = `0,${height} ${points} ${width},${height}`;
-      return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><polygon points="${areaPoints}" fill="rgba(39, 224, 255, 0.12)"></polygon><polyline points="${points}" fill="none" stroke="rgba(39, 224, 255, 0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline></svg>`;
+      const fallback = Number(metrics.previous?.[key]);
+      return Number.isFinite(fallback) ? fallback : null;
     }
 
     function renderHeatmap(){
@@ -1180,5 +1168,5 @@ function initPage(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  window.I18N?.onReady ? window.I18N.onReady(initPage) : initPage();
+  window.I18N.onReady(initPage);
 });

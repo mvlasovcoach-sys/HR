@@ -291,5 +291,5 @@ function initPage(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  window.I18N?.onReady ? window.I18N.onReady(initPage) : initPage();
+  window.I18N.onReady(initPage);
 });
