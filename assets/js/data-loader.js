@@ -1,7 +1,7 @@
 (function(){
   const TTL = 60000;
   const cache = new Map();
-  let versionPromise = null;
+  let versionWait = null;
 
   function normalizeRange(range){
     if (!range) return null;
@@ -20,24 +20,24 @@
     }
   }
 
-  async function loadVersion(){
-    if (!versionPromise) {
-      versionPromise = fetch('./data/version.json', {cache: 'no-store'})
-        .then(resp => {
-          if (!resp.ok) throw new Error('version fetch failed');
-          return resp.json();
-        })
-        .then(payload => (payload && payload.v) || '')
-        .catch(err => {
-          console.warn('dataLoader: version fallback', err);
-          return '';
-        });
-    }
-    return versionPromise;
-  }
-
   function buildKey(path, range, team, mode){
     return JSON.stringify({path, range: range || null, team: team || 'all', mode: mode || 'json'});
+  }
+
+  function waitForVersion(){
+    if (window.APP_VERSION) {
+      return Promise.resolve(window.APP_VERSION);
+    }
+    if (!versionWait) {
+      versionWait = new Promise(resolve => {
+        const handler = () => {
+          window.removeEventListener('app:version', handler);
+          resolve(window.APP_VERSION || '');
+        };
+        window.addEventListener('app:version', handler, {once: true});
+      });
+    }
+    return versionWait;
   }
 
   async function fetchJson(path, options={}){
@@ -54,7 +54,7 @@
       cache.delete(key);
     }
 
-    const version = await loadVersion();
+    const version = await waitForVersion();
     const url = new URL(path, document.baseURI);
     if (version) {
       url.searchParams.set('v', version);

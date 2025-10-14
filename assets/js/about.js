@@ -83,10 +83,14 @@
   }
 
   document.addEventListener('i18n:change', updateLangButtons);
-  updateLangButtons();
+  if (window.I18N?.onReady) {
+    window.I18N.onReady(updateLangButtons);
+  } else {
+    updateLangButtons();
+  }
 
   function updateLangButtons(){
-    const lang = window.i18n?.getLang?.() || 'en';
+    const lang = window.I18N?.getLang?.() || 'en';
     document.querySelectorAll('[data-lang]').forEach(btn => {
       const isActive = btn.getAttribute('data-lang') === lang;
       btn.classList.toggle('is-active', isActive);
@@ -98,7 +102,9 @@
     scope.querySelectorAll('[data-lang]').forEach(btn => {
       btn.addEventListener('click', () => {
         const lang = btn.getAttribute('data-lang');
-        window.i18n?.setLang(lang);
+        if (lang) {
+          window.I18N?.setLang?.(lang);
+        }
         updateLangButtons();
         if (scope === modal) closeModal();
         dispatchEvent(new StorageEvent('storage', {key: 'hr:lang'}));

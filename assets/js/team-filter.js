@@ -1,18 +1,18 @@
 (function(){
-  const mount = document.getElementById('team-filter');
-  if (!mount) return;
-
   const STORAGE_KEY = 'hr:team';
   let selectEl = null;
+  let mount = null;
   let teams = [];
 
-  init();
-
   async function init(){
+    mount = document.getElementById('team-filter');
+    if (!mount) return;
+
     mount.classList.add('team-filter--loading');
     await loadTeams();
     render();
     mount.classList.remove('team-filter--loading');
+
     window.addEventListener('storage', evt => {
       if (!evt || evt.key !== STORAGE_KEY) return;
       syncFromStorage();
@@ -65,12 +65,13 @@
   }
 
   function render(){
+    if (!mount) return;
     const current = readTeam();
     mount.innerHTML = '';
     const label = document.createElement('label');
     label.className = 'team-filter__label';
     label.setAttribute('for', 'team-filter-select');
-    label.textContent = window.t('label.teamFilter');
+    label.textContent = window.I18N?.t('label.teamFilter') || 'Team';
 
     selectEl = document.createElement('select');
     selectEl.id = 'team-filter-select';
@@ -79,7 +80,7 @@
 
     const allOption = document.createElement('option');
     allOption.value = 'all';
-    allOption.textContent = window.t('label.team.all');
+    allOption.textContent = window.I18N?.t('label.team.all') || 'All teams';
     selectEl.appendChild(allOption);
 
     teams.forEach(team => {
@@ -98,5 +99,21 @@
 
     mount.appendChild(label);
     mount.appendChild(selectEl);
+  }
+
+  function boot(){
+    Promise.resolve().then(() => {
+      if (window.I18N?.onReady) {
+        window.I18N.onReady(init);
+      } else {
+        init();
+      }
+    });
+  }
+
+  if (document.readyState !== 'loading') {
+    boot();
+  } else {
+    window.addEventListener('DOMContentLoaded', boot);
   }
 })();
