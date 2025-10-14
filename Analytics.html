@@ -2,18 +2,47 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Analytics</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/corporate.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/analytics.css?v=20240920">
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
-  <main class="main">
-    <div class="header">
-      <div class="header__title">Analytics</div>
-      <div id="date-controls"></div>
+  <main class="main main--analytics">
+    <div class="header header--analytics">
+      <div class="header__title" data-i18n="header.analytics">Analytics</div>
+      <div class="header__actions">
+        <div id="team-filter" class="team-filter"></div>
+        <div id="date-controls"></div>
+        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      </div>
     </div>
-    <p style="opacity:.7">Coming soon.</p>
+    <p id="analytics-caption" class="header__caption" aria-live="polite"></p>
+    <section class="panel analytics-tracker">
+      <div class="panel__meta">
+        <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
+        <div class="tracker-controls">
+          <label class="toggle" id="ma-toggle">
+            <input type="checkbox" id="tracker-ma">
+            <span data-i18n="label.movingAverage">MA(3)</span>
+          </label>
+        </div>
+      </div>
+      <div class="tracker-chart" id="wellbeing-tracker" role="img" aria-live="polite"></div>
+    </section>
+    <section class="panel analytics-breakdown">
+      <div class="panel__meta" data-i18n="section.breakdowns">Risk Breakdown</div>
+      <div class="breakdown-grid" id="analytics-breakdown" aria-live="polite"></div>
+    </section>
   </main>
 </div>
+<script defer src="./assets/js/data-loader.js?v=20240920"></script>
+<script defer src="./assets/js/i18n.js?v=20240920"></script>
 <script defer src="./assets/js/app-shell.js?v=20240920"></script>
 <script defer src="./assets/js/date-controls.js?v=20240920"></script>
+<script defer src="./assets/js/team-filter.js?v=20240920"></script>
+<script defer src="./assets/js/about.js?v=20240920"></script>
+<script defer src="./assets/js/analytics.js?v=20240920"></script>
 </body></html>

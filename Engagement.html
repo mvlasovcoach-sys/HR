@@ -2,18 +2,38 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Engagement</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/corporate.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/engagement.css?v=20240920">
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
-  <main class="main">
-    <div class="header">
-      <div class="header__title">Engagement</div>
-      <div id="date-controls"></div>
+  <main class="main main--engagement">
+    <div class="header header--engagement">
+      <div class="header__title" data-i18n="header.engagement">Engagement</div>
+      <div class="header__actions">
+        <div id="team-filter" class="team-filter"></div>
+        <div id="date-controls"></div>
+        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      </div>
     </div>
-    <p style="opacity:.7">Coming soon.</p>
+    <p id="engagement-caption" class="header__caption" aria-live="polite"></p>
+    <section class="panel">
+      <div class="panel__meta">
+        <span data-i18n="section.engagementOverview">Engagement KPIs</span>
+        <span id="engagement-updated" aria-live="polite"></span>
+      </div>
+      <div class="kpi-grid" id="engagement-kpis" aria-live="polite"></div>
+    </section>
   </main>
 </div>
+<script defer src="./assets/js/data-loader.js?v=20240920"></script>
+<script defer src="./assets/js/i18n.js?v=20240920"></script>
 <script defer src="./assets/js/app-shell.js?v=20240920"></script>
 <script defer src="./assets/js/date-controls.js?v=20240920"></script>
+<script defer src="./assets/js/team-filter.js?v=20240920"></script>
+<script defer src="./assets/js/about.js?v=20240920"></script>
+<script defer src="./assets/js/engagement.js?v=20240920"></script>
 </body></html>

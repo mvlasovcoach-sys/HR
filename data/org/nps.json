@@ -1,0 +1,43 @@
+{
+  "targets": {
+    "nps": 25
+  },
+  "series": {
+    "7d": {
+      "timeline": ["2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-11", "2025-10-12", "2025-10-13"],
+      "values": [22, 23, 24, 26, 27, 28, 27],
+      "current": 27,
+      "previous": 24,
+      "teams": {
+        "ops": {"current": 29, "previous": 26},
+        "cs": {"current": 24, "previous": 21},
+        "it": {"current": 32, "previous": 28},
+        "lab": {"current": 26, "previous": 23}
+      }
+    },
+    "month": {
+      "timeline": ["2025-07", "2025-08", "2025-09", "2025-10"],
+      "values": [20, 22, 25, 27],
+      "current": 27,
+      "previous": 23,
+      "teams": {
+        "ops": {"current": 30, "previous": 26},
+        "cs": {"current": 23, "previous": 20},
+        "it": {"current": 33, "previous": 29},
+        "lab": {"current": 26, "previous": 22}
+      }
+    },
+    "year": {
+      "timeline": ["2024", "2025"],
+      "values": [18, 28],
+      "current": 28,
+      "previous": 20,
+      "teams": {
+        "ops": {"current": 31, "previous": 24},
+        "cs": {"current": 24, "previous": 18},
+        "it": {"current": 35, "previous": 26},
+        "lab": {"current": 27, "previous": 20}
+      }
+    }
+  }
+}

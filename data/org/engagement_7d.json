@@ -1,0 +1,48 @@
+{
+  "range": "7d",
+  "updated": "2025-10-13T08:00:00Z",
+  "timeline": [
+    "2025-10-07",
+    "2025-10-08",
+    "2025-10-09",
+    "2025-10-10",
+    "2025-10-11",
+    "2025-10-12",
+    "2025-10-13"
+  ],
+  "targets": {
+    "onboarding_pct": 80,
+    "weekly_active_pct": 75,
+    "nps": 25
+  },
+  "kpi": {
+    "onboarding_pct": 78,
+    "weekly_active_pct": 74
+  },
+  "previous": {
+    "onboarding_pct": 76,
+    "weekly_active_pct": 72
+  },
+  "series": {
+    "onboarding_pct": [75, 76, 77, 78, 78, 79, 78],
+    "weekly_active_pct": [72, 72, 73, 74, 74, 75, 74]
+  },
+  "teams": {
+    "ops": {
+      "onboarding_pct": 82,
+      "weekly_active_pct": 76
+    },
+    "cs": {
+      "onboarding_pct": 75,
+      "weekly_active_pct": 70
+    },
+    "it": {
+      "onboarding_pct": 80,
+      "weekly_active_pct": 79
+    },
+    "lab": {
+      "onboarding_pct": 77,
+      "weekly_active_pct": 73
+    }
+  }
+}
