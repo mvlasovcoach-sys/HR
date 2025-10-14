@@ -1,1172 +1,765 @@
-function initPage(){
-    const page = document.querySelector('.main--corporate');
-    if (!page) return;
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.I18N?.onReady) {
+    window.I18N.onReady(initCorporatePage);
+  } else {
+    initCorporatePage();
+  }
+});
 
-    const DATA_ROOT = './data/org';
-    const SCENARIO_ID = 'night_shift';
-    const SCENARIO_ROOT = `./data/scenario/${SCENARIO_ID}`;
+function initCorporatePage(){
+  const DATA_ROOT = './data/org';
 
-    const els = {
-      kpiGrid: document.getElementById('corp-kpi-grid'),
-      heatmap: document.getElementById('corporate-heatmap'),
-      events: document.getElementById('corporate-events'),
-      rangeCaption: document.getElementById('corporate-range-caption'),
-      activity: document.getElementById('corporate-activity'),
-      exportBtn: document.getElementById('activity-export'),
-      tabButtons: Array.from(document.querySelectorAll('.corp-tab')),
-      panels: Array.from(document.querySelectorAll('.corp-panel')),
-      teamFilter: document.getElementById('event-team-filter'),
-      severityFilter: document.getElementById('event-severity-filter'),
-      typeFilter: document.getElementById('event-type-filter'),
-      scenarioBtn: document.getElementById('scenario-trigger'),
-      drawerOverlay: document.getElementById('event-drawer-overlay'),
-      drawer: document.getElementById('event-drawer'),
-      drawerClose: document.getElementById('event-drawer-close'),
-      drawerSeverity: document.getElementById('event-drawer-severity'),
-      drawerTeam: document.getElementById('event-drawer-team'),
-      drawerTimestamp: document.getElementById('event-drawer-ts'),
-      drawerDetail: document.getElementById('event-drawer-detail'),
-      drawerRule: document.getElementById('event-drawer-rule'),
-      drawerThresholds: document.getElementById('event-drawer-thresholds'),
-      drawerHeatmapBtn: document.getElementById('drawer-link-heatmap'),
-      drawerActivityBtn: document.getElementById('drawer-link-activity')
-    };
+  const els = {
+    caption: document.getElementById('corp-caption'),
+    kpiPanel: document.getElementById('corp-kpis'),
+    kpiGrid: document.getElementById('corp-kpi-grid'),
+    heatmapPanel: document.getElementById('corp-heatmap'),
+    heatmapGrid: document.getElementById('heatmap-grid'),
+    eventsPanel: document.getElementById('corp-events'),
+    eventsList: document.getElementById('events-list'),
+    eventTeam: document.getElementById('f-team'),
+    eventSeverity: document.getElementById('f-sev'),
+    eventType: document.getElementById('f-type'),
+    activityPanel: document.getElementById('corp-activity'),
+    activityTable: document.getElementById('activity-table'),
+    exportBtn: document.getElementById('export-activity')
+  };
 
-    const state = {
-      teams: [],
-      teamMap: new Map(),
-      metrics: null,
-      rangeSelection: null,
-      rangePreset: '7d',
-      rangeWindow: null,
-      events: [],
-      filters: {
-        team: new Set(),
-        severity: new Set(),
-        type: new Set()
-      },
-      activeTab: 'overview',
-      heatmapCells: [],
-      pendingHighlight: null,
-      highlightTimer: null,
-      activitySort: {key: 'date', direction: 'desc'},
-      scenario: null,
-      activeTeam: 'all',
-      drawerOpen: false,
-      selectedEvent: null,
-      lastFocus: null
-    };
+  if (!els.kpiGrid || !els.heatmapGrid || !els.eventsList || !els.activityTable) {
+    return;
+  }
 
-    const KPI_DEFS = [
-      {key: 'wellbeing_avg', label: 'Org Wellbeing', labelKey: 'kpi.wellbeing', unit: '/100', fmt: v => Math.round(v)},
-      {key: 'high_stress_pct', label: 'High Stress', labelKey: 'metric.highStress', unit: '%', fmt: v => Math.round(v)},
-      {key: 'fatigue_elevated_pct', label: 'Elevated Fatigue', labelKey: 'metric.elevatedFatigue', unit: '%', fmt: v => Math.round(v)},
-      {key: 'engagement_active_pct', label: 'Active Engagement', labelKey: 'metric.activeEngagement', unit: '%', fmt: v => Math.round(v)}
-    ];
+  const state = {
+    teams: [],
+    teamMap: new Map(),
+    teamSelection: readTeamSelection(),
+    rangeSelection: readRangeSelection(),
+    rangeKey: null,
+    rangeLabel: '',
+    dataRangeKey: '7d',
+    rangeWindow: null,
+    metrics: null,
+    events: [],
+    eventFilterTeams: new Set(),
+    eventFilterSeverity: '',
+    eventFilterType: '',
+    eventsDateFilter: null,
+    heatmapCells: [],
+    heatmapColumns: [],
+    heatmapDates: [],
+    selectedColumn: null,
+    activityCsvRows: [],
+    insufficient: false
+  };
 
-    const t = (key, vars) => {
-      const value = window.I18N?.t?.(key, vars);
-      return value && value !== key ? value : key;
-    };
+  boot().catch(err => console.error('Corporate init failed', err));
 
-    const withFallback = (key, fallback, vars) => {
-      const value = window.I18N?.t?.(key, vars);
-      if (value && value !== key) return value;
-      return typeof fallback === 'function' ? fallback() : (fallback ?? key);
-    };
+  async function boot(){
+    await loadTeams();
+    setupEventFilters();
+    await loadEvents();
+    await loadMetrics();
+    bindEvents();
+    updateCaption();
+    renderAll();
+  }
 
-    const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-
-    async function loadJson(path) {
-      return await window.dataLoader.fetch(path, {range: state.rangeSelection, team: state.activeTeam});
-    }
-
-    function updateScenarioButton(){
-      if (!els.scenarioBtn) return;
-      const key = state.scenario ? 'btn.liveView' : 'btn.loadScenario';
-      const label = withFallback(key, state.scenario ? 'Return to Live View' : 'Load Night-Shift Scenario');
-      els.scenarioBtn.textContent = label;
-    }
-
-    function restoreScenarioFromStorage(){
-      try {
-        const stored = localStorage.getItem('hr:scenario');
-        if (stored === SCENARIO_ID) {
-          state.scenario = SCENARIO_ID;
-        }
-      } catch (e) {
-        state.scenario = null;
-      }
-      updateScenarioButton();
-    }
-
-    function setupScenarioButton(){
-      if (!els.scenarioBtn) return;
-      els.scenarioBtn.addEventListener('click', async () => {
-        state.scenario = state.scenario ? null : SCENARIO_ID;
-        if (state.scenario) {
-          localStorage.setItem('hr:scenario', state.scenario);
-        } else {
-          localStorage.removeItem('hr:scenario');
-        }
-        updateScenarioButton();
-        closeDrawer();
-        state.filters.team.clear();
-        state.filters.severity.clear();
-        state.filters.type.clear();
-        await loadEvents();
-        buildFilterControls();
-        await loadMetricsForSelection(state.rangeSelection);
-      });
-    }
-
-    function severityPillClass(severity){
-      switch (severity) {
-        case 'critical':
-          return 'pill pill--critical';
-        case 'warning':
-          return 'pill pill--caution';
-        default:
-          return 'pill pill--neutral';
-      }
-    }
-
-    init();
-
-    async function init(){
-      restoreScenarioFromStorage();
-      state.activeTeam = readTeamSelection();
-      await loadTeams();
-      await loadEvents();
-      buildFilterControls();
-      setupScenarioButton();
-      setupTabs();
-      setupDrawer();
-      els.exportBtn?.addEventListener('click', exportActivityToCsv);
-      window.addEventListener('storage', handleStorageEvent);
-      document.addEventListener('i18n:change', handleI18nChange);
-      onRangeChange();
-    }
-
-    async function loadTeams(){
-      try {
-        const data = await loadJson(`${DATA_ROOT}/teams.json`);
-        state.teams = Array.isArray(data.depts) ? data.depts : [];
-        state.teamMap = new Map(state.teams.map(d => [d.id, d.name]));
-      } catch (e) {
-        console.error('Failed to load teams', e);
-        state.teams = [];
-        state.teamMap = new Map();
-      }
-    }
-
-    async function loadEvents(){
-      const path = state.scenario ? `${SCENARIO_ROOT}/events.json` : `${DATA_ROOT}/events.json`;
-      try {
-        const data = await loadJson(path);
-        state.events = Array.isArray(data) ? data : Array.isArray(data?.events) ? data.events : [];
-      } catch (e) {
-        console.error('Failed to load events', e);
-        state.events = [];
-      }
-    }
-
-    function buildFilterControls(){
-      buildFilterGroup(
-        els.teamFilter,
-        state.teams.map(t => ({value: t.id, label: state.teamMap.get(t.id) || t.id})),
-        state.filters.team,
-        withFallback('events.filter.teamAll', 'All teams')
-      );
-      const severities = Array.from(new Set(state.events.map(ev => ev.severity)));
-      buildFilterGroup(
-        els.severityFilter,
-        severities.map(v => ({value: v, label: capitalize(v)})),
-        state.filters.severity,
-        withFallback('events.filter.severityAll', 'All severities')
-      );
-      const types = Array.from(new Set(state.events.map(ev => ev.type)));
-      buildFilterGroup(
-        els.typeFilter,
-        types.map(v => ({value: v, label: splitCamel(v)})),
-        state.filters.type,
-        withFallback('events.filter.typeAll', 'All types')
-      );
-    }
-
-    function setupTabs(){
-      els.tabButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (btn.classList.contains('is-active')) return;
-          const target = btn.dataset.tab;
-          setActiveTab(target);
-        });
-      });
-      setActiveTab(state.activeTab);
-    }
-
-    function handleI18nChange(){
-      updateScenarioButton();
-      buildFilterControls();
-      els.drawerClose?.setAttribute('aria-label', withFallback('drawer.close', 'Close drawer'));
-      renderRangeCaption();
-      renderKpis(currentKpiView());
-      renderHeatmap();
+  function bindEvents(){
+    els.eventTeam?.addEventListener('change', () => {
+      const selected = Array.from(els.eventTeam.selectedOptions || []).map(opt => opt.value).filter(Boolean);
+      state.eventFilterTeams = new Set(selected);
       renderEvents();
-      renderActivity();
-    }
+    });
 
-    function setupDrawer(){
-      if (!els.drawer || !els.drawerOverlay) return;
-      els.drawer.setAttribute('aria-hidden', 'true');
-      els.drawerOverlay.setAttribute('aria-hidden', 'true');
-      if (els.drawerClose) {
-        const label = withFallback('drawer.close', 'Close drawer');
-        els.drawerClose.setAttribute('aria-label', label);
-      }
-      els.drawerClose?.addEventListener('click', closeDrawer);
-      els.drawerOverlay.addEventListener('click', closeDrawer);
-      els.drawerHeatmapBtn?.addEventListener('click', () => {
-        if (!state.selectedEvent) return;
-        setActiveTab('heatmap');
-        const iso = eventIso(state.selectedEvent);
-        if (iso) highlightHeatmapColumn(iso);
+    els.eventSeverity?.addEventListener('change', () => {
+      state.eventFilterSeverity = els.eventSeverity.value || '';
+      renderEvents();
+    });
+
+    els.eventType?.addEventListener('change', () => {
+      state.eventFilterType = els.eventType.value || '';
+      renderEvents();
+    });
+
+    els.exportBtn?.addEventListener('click', exportActivity);
+
+    window.addEventListener('storage', handleStorageEvent);
+    document.addEventListener('i18n:change', handleI18nChange);
+  }
+
+  async function loadTeams(){
+    try {
+      const data = await fetchJson(`${DATA_ROOT}/teams.json`);
+      const list = Array.isArray(data?.depts) ? data.depts : [];
+      state.teams = list;
+      state.teamMap = new Map(list.map(item => [item.id, item.name || item.id]));
+    } catch (err) {
+      console.error('Teams load failed', err);
+      state.teams = [];
+      state.teamMap = new Map();
+    }
+  }
+
+  function setupEventFilters(){
+    if (els.eventTeam) {
+      els.eventTeam.innerHTML = '';
+      els.eventTeam.setAttribute('aria-label', 'Filter events by team');
+      state.teams.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.name || team.id;
+        if (state.teamSelection !== 'all' && team.id === state.teamSelection) {
+          option.selected = true;
+        }
+        els.eventTeam.appendChild(option);
       });
-      els.drawerActivityBtn?.addEventListener('click', () => {
-        if (!state.selectedEvent) return;
-        setActiveTab('activity');
-        scrollActivityToEvent(state.selectedEvent);
-      });
-      document.addEventListener('keydown', handleDrawerKeydown, true);
-    }
-
-    function setActiveTab(tab){
-      state.activeTab = tab;
-      els.tabButtons.forEach(btn => {
-        const isActive = btn.dataset.tab === tab;
-        btn.classList.toggle('is-active', isActive);
-        btn.setAttribute('aria-selected', String(isActive));
-        btn.setAttribute('tabindex', isActive ? '0' : '-1');
-      });
-      els.panels.forEach(panel => {
-        const isActive = panel.id === `corp-${tab}`;
-        panel.classList.toggle('is-active', isActive);
-        if (isActive) {
-          panel.removeAttribute('hidden');
-        } else {
-          panel.setAttribute('hidden', '');
-        }
-      });
-      if (tab === 'heatmap' && state.pendingHighlight) {
-        highlightHeatmapColumn(state.pendingHighlight);
-        state.pendingHighlight = null;
+      if (state.teamSelection !== 'all') {
+        state.eventFilterTeams = new Set([state.teamSelection]);
       }
     }
-
-    function handleStorageEvent(evt){
-      if (!evt || evt.key === 'hr:range') {
-        onRangeChange();
-      }
-      if (!evt || evt.key === 'hr:team') {
-        onTeamChange();
-      }
+    if (els.eventSeverity) {
+      els.eventSeverity.value = '';
     }
-
-    function onRangeChange(){
-      const selection = getRangeSelection();
-      state.rangeSelection = selection;
-      state.rangePreset = normalizePreset(selection);
-      loadMetricsForSelection(selection);
+    if (els.eventType) {
+      els.eventType.innerHTML = '<option value="">All types</option>';
     }
+  }
 
-    function onTeamChange(){
-      const selected = readTeamSelection();
-      if (selected === state.activeTeam) return;
-      state.activeTeam = selected;
-      if (!state.rangeSelection) {
-        state.rangeSelection = getRangeSelection();
-        state.rangePreset = normalizePreset(state.rangeSelection);
+  async function loadEvents(){
+    try {
+      const data = await fetchJson(`${DATA_ROOT}/events.json`);
+      state.events = Array.isArray(data) ? data.map(event => ({...event})) : [];
+    } catch (err) {
+      console.error('Events load failed', err);
+      state.events = [];
+    }
+  }
+
+  async function loadMetrics(){
+    state.rangeSelection = readRangeSelection();
+    const {dataKey, label, rangeKey} = resolveRangeConfig(state.rangeSelection);
+    state.dataRangeKey = dataKey;
+    state.rangeLabel = label;
+    state.rangeKey = rangeKey;
+    try {
+      const metrics = await fetchJson(`${DATA_ROOT}/metrics_${dataKey}.json`);
+      state.metrics = metrics;
+      const nVal = Number(metrics?.n);
+      state.insufficient = Number.isFinite(nVal) && nVal < 5;
+      const heatmap = metrics?.heatmap || {};
+      state.heatmapColumns = Array.isArray(heatmap.cols) ? heatmap.cols : [];
+      state.heatmapDates = Array.isArray(heatmap.dates) ? heatmap.dates : [];
+      if (state.selectedColumn && state.selectedColumn.index >= state.heatmapColumns.length) {
+        state.selectedColumn = null;
+        state.eventsDateFilter = null;
       }
-      loadMetricsForSelection(state.rangeSelection);
+      state.rangeWindow = resolveRangeWindow(metrics);
+      mapEventsToColumns();
+      buildEventTypeOptions();
+    } catch (err) {
+      console.error('Metrics load failed', err);
+      state.metrics = null;
+      state.insufficient = false;
+      state.heatmapColumns = [];
+      state.heatmapDates = [];
+      state.rangeWindow = null;
+      state.activityCsvRows = [];
+      state.selectedColumn = null;
+      state.eventsDateFilter = null;
     }
+  }
 
-    function getRangeSelection(){
-      const stored = localStorage.getItem('hr:range');
-      if (!stored) return {preset: '7d'};
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.preset) return parsed;
-        if (parsed && parsed.start && parsed.end) return parsed;
-      } catch (e) {
-        console.warn('Invalid range selection, using default');
+  function resolveRangeWindow(metrics){
+    const heatmapDates = Array.isArray(metrics?.heatmap?.dates) ? metrics.heatmap.dates : [];
+    if (heatmapDates.length) {
+      return {start: heatmapDates[0], end: heatmapDates[heatmapDates.length - 1]};
+    }
+    const activity = Array.isArray(metrics?.activity) ? metrics.activity : [];
+    if (!activity.length) return null;
+    const sorted = activity.map(row => row?.date).filter(Boolean).sort();
+    if (!sorted.length) return null;
+    return {start: sorted[0], end: sorted[sorted.length - 1]};
+  }
+
+  function mapEventsToColumns(){
+    const columns = state.heatmapColumns;
+    const dates = state.heatmapDates;
+    state.events.forEach(evt => {
+      const eventDate = toDateString(evt.ts);
+      let colIndex = -1;
+      if (eventDate && dates.length) {
+        colIndex = dates.indexOf(eventDate);
       }
-      return {preset: '7d'};
-    }
-
-    function readTeamSelection(){
-      try {
-        return localStorage.getItem('hr:team') || 'all';
-      } catch (e) {
-        return 'all';
+      if (colIndex < 0 && typeof evt.col === 'number' && evt.col >= 0 && evt.col < columns.length) {
+        colIndex = evt.col;
       }
-    }
+      evt._colIndex = colIndex >= 0 ? colIndex : null;
+      evt._colLabel = colIndex >= 0 ? columns[colIndex] : null;
+      evt._colDate = colIndex >= 0 ? (dates[colIndex] || null) : eventDate;
+    });
+  }
 
-    function normalizePreset(selection){
-      if (selection && selection.preset) {
-        const preset = selection.preset;
-        if (preset === 'day') return '7d';
-        if (['7d', 'month', 'year'].includes(preset)) return preset;
+  function buildEventTypeOptions(){
+    if (!els.eventType) return;
+    const types = new Set();
+    state.events.forEach(evt => {
+      if (evt?.type) types.add(evt.type);
+    });
+    const current = els.eventType.value || '';
+    els.eventType.innerHTML = '<option value="">All types</option>';
+    Array.from(types).sort().forEach(type => {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = type;
+      if (type === current) option.selected = true;
+      els.eventType.appendChild(option);
+    });
+    state.eventFilterType = els.eventType.value || '';
+  }
+
+  function renderAll(){
+    toggleInsufficientOverlays();
+    try { renderKpis(state.metrics?.kpi, state.metrics?.delta); } catch (err) { console.error('KPI', err); }
+    try { renderHeatmap(state.metrics?.heatmap); } catch (err) { console.error('Heatmap', err); }
+    try { renderEvents(state.events); } catch (err) { console.error('Events', err); }
+    try { renderActivity(state.metrics?.activity); } catch (err) { console.error('Activity', err); }
+    updateCaption();
+  }
+
+  function toggleInsufficientOverlays(){
+    const panels = [els.kpiPanel, els.heatmapPanel, els.eventsPanel, els.activityPanel];
+    panels.forEach(panel => {
+      if (!panel) return;
+      if (state.insufficient) {
+        panel.setAttribute('data-insufficient', 'true');
+      } else {
+        panel.removeAttribute('data-insufficient');
       }
-      if (selection && selection.start && selection.end) {
-        return 'custom';
-      }
-      return '7d';
-    }
+    });
+  }
 
-    async function loadMetricsForSelection(selection){
-      const loadFor = async scenarioKey => {
-        const path = metricsPathForSelection(selection, scenarioKey);
-        return loadJson(path);
-      };
-
-      try {
-        state.metrics = await loadFor(state.scenario);
-      } catch (err) {
-        if (state.scenario) {
-          console.warn('Scenario metrics missing, falling back to baseline', err);
-          try {
-            state.metrics = await loadFor(null);
-          } catch (fallbackError) {
-            console.error('Failed to load metrics', fallbackError);
-            state.metrics = null;
-          }
-        } else {
-          console.error('Failed to load metrics', err);
-          state.metrics = null;
-        }
-      }
-
-      updateRangeWindow();
-      renderRangeCaption();
-
-      const snapshot = currentKpiView();
-      try { renderKpis(snapshot); } catch (err) { console.error('KPI', err); }
-      try { renderHeatmap(); } catch (err) { console.error('Heatmap', err); }
-      try { renderActivity(); } catch (err) { console.error('Activity', err); }
-      try { renderEvents(); } catch (err) { console.error('Events', err); }
-    }
-
-    function metricsPathForSelection(selection, scenarioKey){
-      const preset = normalizePreset(selection);
-      const base = scenarioKey ? SCENARIO_ROOT : DATA_ROOT;
-      switch (preset) {
-        case 'day':
-        case '7d':
-          return `${base}/metrics_7d.json`;
-        case 'year':
-          return `${base}/metrics_year.json`;
-        default:
-          return `${base}/metrics_month.json`;
-      }
-    }
-
-    function updateRangeWindow(){
-      if (!state.metrics || !state.metrics.heatmap) {
-        state.rangeWindow = null;
-        return;
-      }
-      const dates = Array.isArray(state.metrics.heatmap.colDates) ? state.metrics.heatmap.colDates : [];
-      const parse = iso => {
-        const d = new Date(iso);
-        return Number.isNaN(d.getTime()) ? null : d;
-      };
-      const firstDate = parse(dates[0]);
-      const lastDate = parse(dates[dates.length - 1] || dates[0]);
-      if (!firstDate || !lastDate) {
-        state.rangeWindow = null;
-        return;
-      }
-      const startIso = toIso(firstDate);
-      let endDate = new Date(lastDate.getTime());
-      if (state.rangePreset === 'year') {
-        endDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0);
-      } else if (state.rangePreset === 'month' || state.rangePreset === 'custom') {
-        endDate.setDate(endDate.getDate() + 6);
-      }
-      const endIso = toIso(endDate);
-      state.rangeWindow = {start: startIso, end: endIso};
-    }
-
-    function renderRangeCaption(){
-      if (!els.rangeCaption) return;
-      const scenarioPrefix = state.scenario ? (withFallback('caption.scenarioPrefix', 'Night-Shift Scenario · ') || 'Night-Shift Scenario · ') : '';
-      const rangeText = captionRangeLabel();
-      const teamText = teamLabel(state.activeTeam);
-      const base = `${withFallback('caption.orgAverage', 'Org average')} · ${rangeText} · ${teamText}`;
-      els.rangeCaption.textContent = `${scenarioPrefix}${base}`;
-    }
-
-    function captionRangeLabel(){
-      if (state.rangeWindow) {
-        const {start, end} = state.rangeWindow;
-        const label = `${formatDateLabel(start)} – ${formatDateLabel(end)}`;
-        const translated = window.I18N?.t?.('caption.range', {range: label});
-        return translated && translated !== 'caption.range' ? translated : label;
-      }
-      const key = `range.${state.rangePreset}`;
-      const translated = window.I18N?.t?.(key);
-      if (translated && translated !== key) return translated;
-      return rangePresetDescription();
-    }
-
-    function teamLabel(team){
-      if (!team || team === 'all') {
-        return withFallback('caption.teamAll', 'All Teams');
-      }
-      return state.teamMap.get(team) || team;
-    }
-
-    function rangePresetDescription(){
-      switch (state.rangePreset) {
-        case '7d':
-          return 'Rolling 7-day aggregate';
-        case 'month':
-          return 'Rolling 4-week aggregate';
-        case 'year':
-          return 'Year-to-date monthly aggregate';
-        default:
-          return 'Custom aggregate';
-      }
-    }
-
-    function renderKpis(kpi){
-      const grid = els.kpiGrid || document.querySelector('#corp-kpi-grid');
-      if (!grid) return;
-
-      const defs = KPI_DEFS;
-
-      const tpl = ({label, value, unit = '', delta = null}) => `
-        <div class="tile kpi">
-          <div class="tile__head">
-            <span>${label}</span>
-            ${Number.isFinite(delta) ? `<span class="pill ${delta >= 0 ? 'green' : 'red'}">${delta >= 0 ? '▲' : '▼'} ${Math.abs(Math.round(delta))}</span>` : ''}
-          </div>
-          <div class="tile__kpi">${value}<small>${unit}</small></div>
-          <div class="spark" data-key="${label}"></div>
-        </div>`;
-
-      grid.innerHTML = defs.map(def => {
-        const raw = Number(kpi?.[def.key]);
-        const value = Number.isFinite(raw) ? def.fmt(raw) : '—';
-        const dRaw = Number(kpi?.delta?.[def.key]);
-        const delta = Number.isFinite(dRaw) ? dRaw : null;
-        const labelText = withFallback(def.labelKey || '', def.label);
-        return tpl({label: labelText, value, unit: def.unit, delta});
-      }).join('');
-    }
-
-    function currentKpiView(){
-      return buildKpiSnapshot(state.metrics, state.activeTeam);
-    }
-
-    function buildKpiSnapshot(metrics, team){
-      const source = resolveKpiSource(metrics, team);
-      if (!source) return null;
-
-      const snapshot = {};
-      KPI_DEFS.forEach(def => {
-        const value = Number(source?.[def.key]);
-        if (Number.isFinite(value)) {
-          snapshot[def.key] = value;
-          return;
-        }
-        const fallback = Number(metrics?.kpi?.[def.key]);
-        if (Number.isFinite(fallback)) {
-          snapshot[def.key] = fallback;
-        }
-      });
-
-      const delta = {};
-      KPI_DEFS.forEach(def => {
-        const current = Number(snapshot?.[def.key]);
-        const previous = previousValueForKey(metrics, def.key, team);
-        if (Number.isFinite(current) && Number.isFinite(previous)) {
-          delta[def.key] = current - previous;
-        }
-      });
-
-      if (Object.keys(delta).length) {
-        snapshot.delta = delta;
-      }
-
-      return snapshot;
-    }
-
-    function resolveKpiSource(metrics, team){
-      if (!metrics) return null;
-      if (team && team !== 'all') {
-        if (metrics.teams?.[team]) {
-          return metrics.teams[team];
-        }
-        const fallback = {};
-        KPI_DEFS.forEach(def => {
-          const list = metrics.breakdown?.[def.key];
-          if (!Array.isArray(list)) return;
-          const entry = list.find(item => item.team === team);
-          const value = Number(entry?.value);
-          if (Number.isFinite(value)) {
-            fallback[def.key] = value;
-          }
-        });
-        if (Object.keys(fallback).length) {
-          return fallback;
-        }
-      }
-      return metrics.kpi || null;
-    }
-
-    function previousValueForKey(metrics, key, team){
-      if (!metrics) return null;
-      if (team && team !== 'all') {
-        const list = metrics.breakdown?.[key];
-        if (Array.isArray(list)) {
-          const entry = list.find(item => item.team === team);
-          const value = Number(entry?.previous);
-          if (Number.isFinite(value)) {
-            return value;
-          }
-        }
-      }
-      const fallback = Number(metrics.previous?.[key]);
-      return Number.isFinite(fallback) ? fallback : null;
-    }
-
-    function renderHeatmap(){
-      if (!els.heatmap) return;
-      els.heatmap.innerHTML = '';
-      clearHighlightTimer();
+  function renderHeatmap(heatmap){
+    const grid = els.heatmapGrid;
+    if (!grid) return;
+    if (!heatmap || !Array.isArray(heatmap.rows) || !Array.isArray(heatmap.cols)) {
+      grid.innerHTML = '<p class="caption">No heatmap data</p>';
       state.heatmapCells = [];
-      if (!state.metrics || !state.metrics.heatmap) return;
-      const hm = state.metrics.heatmap;
-      const rows = Array.isArray(hm.rows) ? hm.rows : [];
-      const cols = Array.isArray(hm.cols) ? hm.cols : [];
-      const colDates = Array.isArray(hm.colDates) ? hm.colDates : cols.map(() => null);
-      const filteredRows = state.activeTeam && state.activeTeam !== 'all'
-        ? rows.filter(rowId => rowId === state.activeTeam)
-        : rows;
-      const displayRows = filteredRows.length ? filteredRows : rows;
-      if (!displayRows.length || !cols.length) {
-        els.heatmap.innerHTML = `<p role="status">${withFallback('status.noData', 'No data available')}</p>`;
-        return;
-      }
-      els.heatmap.style.gridTemplateColumns = `repeat(${cols.length + 1}, minmax(0, 1fr))`;
+      return;
+    }
 
-      // Header row
-      const headerCorner = document.createElement('div');
-      headerCorner.className = 'heatmap-cell heatmap-header';
-      headerCorner.setAttribute('role', 'columnheader');
-      headerCorner.textContent = '';
-      els.heatmap.appendChild(headerCorner);
+    const rows = heatmap.rows;
+    const cols = heatmap.cols;
+    const values = heatmap.value || {};
+    const dates = Array.isArray(heatmap.dates) ? heatmap.dates : [];
+    state.heatmapColumns = cols;
+    state.heatmapDates = dates;
 
-      cols.forEach((col, idx) => {
-        const header = document.createElement('div');
-        header.className = 'heatmap-cell heatmap-header';
-        header.setAttribute('role', 'columnheader');
-        const label = formatColumnLabel(colDates[idx] || col);
-        header.textContent = label;
-        header.title = label;
-        els.heatmap.appendChild(header);
-      });
+    const totalCols = cols.length + 1;
+    grid.style.setProperty('--heatmap-cols', totalCols);
+    grid.setAttribute('role', 'grid');
+    grid.setAttribute('aria-label', 'Wellbeing heatmap');
+    const fragment = document.createDocumentFragment();
 
-      displayRows.forEach(rowId => {
-        const rowLabel = document.createElement('div');
-        rowLabel.className = 'heatmap-cell heatmap-header';
-        rowLabel.setAttribute('role', 'rowheader');
-        rowLabel.textContent = state.teamMap.get(rowId) || rowId;
-        els.heatmap.appendChild(rowLabel);
+    const blank = document.createElement('div');
+    blank.className = 'heatmap-cell';
+    blank.setAttribute('role', 'columnheader');
+    blank.textContent = '';
+    fragment.appendChild(blank);
 
-        const values = Array.isArray(hm.value?.[rowId]) ? hm.value[rowId] : [];
-        cols.forEach((col, idx) => {
-          const val = values[idx];
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'heatmap-cell';
-          btn.setAttribute('role', 'gridcell');
-          btn.dataset.team = rowId;
-          btn.dataset.column = col;
-          const iso = colDates[idx] || '';
-          if (iso) btn.dataset.iso = iso;
-          if (typeof val === 'number') {
-            btn.textContent = String(Math.round(val));
-            const teamName = state.teamMap.get(rowId) || rowId;
-            const dayLabel = formatDateLabel(iso || col);
-            btn.title = `${teamName} — ${dayLabel}: ${Math.round(val)}`;
-            btn.setAttribute('aria-label', `${teamName} • ${dayLabel} • ${Math.round(val)}`);
-            btn.dataset.level = getHeatmapLevel(val);
-          } else {
-            btn.textContent = '–';
-          }
-          btn.addEventListener('click', () => {
-            const match = findEventForCell(rowId, iso);
-            if (match) {
-              openDrawer(match);
-            } else if (iso) {
-              setActiveTab('heatmap');
-              highlightHeatmapColumn(iso);
-            }
-          });
-          els.heatmap.appendChild(btn);
-          state.heatmapCells.push(btn);
+    cols.forEach((label, index) => {
+      const header = document.createElement('div');
+      header.className = 'heatmap-cell';
+      header.setAttribute('role', 'columnheader');
+      header.dataset.colIndex = String(index);
+      header.dataset.colLabel = label;
+      if (dates[index]) header.dataset.date = dates[index];
+      header.textContent = label;
+      fragment.appendChild(header);
+    });
+
+    rows.forEach(rowId => {
+      const rowHeader = document.createElement('div');
+      rowHeader.className = 'heatmap-cell';
+      rowHeader.setAttribute('role', 'rowheader');
+      rowHeader.textContent = state.teamMap.get(rowId) || rowId;
+      fragment.appendChild(rowHeader);
+
+      const rowValues = Array.isArray(values?.[rowId]) ? values[rowId] : [];
+      cols.forEach((label, colIndex) => {
+        const raw = rowValues[colIndex];
+        const cell = document.createElement('div');
+        cell.className = 'heatmap-cell';
+        cell.setAttribute('role', 'gridcell');
+        cell.tabIndex = 0;
+        cell.dataset.colIndex = String(colIndex);
+        cell.dataset.colLabel = label;
+        if (dates[colIndex]) cell.dataset.date = dates[colIndex];
+        cell.dataset.rowId = rowId;
+        if (Number.isFinite(raw)) {
+          const rounded = Math.round(raw);
+          cell.textContent = String(rounded);
+          cell.dataset.value = String(raw);
+          const level = heatmapLevel(rounded);
+          cell.dataset.level = level;
+          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • ${rounded}`);
+        } else {
+          cell.textContent = '—';
+          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • no data`);
+        }
+        cell.addEventListener('click', () => {
+          handleHeatmapSelection(colIndex);
         });
-      });
-    }
-
-    function getHeatmapLevel(value){
-      if (value <= 55) return 'low';
-      if (value >= 70) return 'high';
-      return 'mid';
-    }
-
-    function findEventForCell(teamId, isoDate){
-      if (!Array.isArray(state.events)) return null;
-      return state.events.find(ev => {
-        if (teamId && ev.team !== teamId) return false;
-        if (isoDate) {
-          if (ev.heatmapDate) return ev.heatmapDate === isoDate;
-          if (ev.ts) return ev.ts.startsWith(isoDate);
-        }
-        return true;
-      }) || null;
-    }
-
-    function handleDrawerKeydown(evt){
-      if (!state.drawerOpen) return;
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        closeDrawer();
-        return;
-      }
-      if (evt.key === 'Tab') {
-        trapDrawerFocus(evt);
-      }
-    }
-
-    function trapDrawerFocus(evt){
-      if (!els.drawer) return;
-      const focusable = Array.from(els.drawer.querySelectorAll(FOCUSABLE_SELECTOR))
-        .filter(el => !el.hasAttribute('disabled') && (el.offsetParent !== null || el === document.activeElement));
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (evt.shiftKey) {
-        if (active === first || !els.drawer.contains(active)) {
-          evt.preventDefault();
-          last.focus();
-        }
-      } else if (active === last) {
-        evt.preventDefault();
-        first.focus();
-      }
-    }
-
-    function openDrawer(event){
-      if (!els.drawer || !els.drawerOverlay || !event) return;
-      state.selectedEvent = event;
-      state.drawerOpen = true;
-      state.lastFocus = document.activeElement;
-      populateDrawer(event);
-      els.drawer.classList.add('is-open');
-      els.drawerOverlay.classList.add('is-open');
-      els.drawer.setAttribute('aria-hidden', 'false');
-      els.drawerOverlay.setAttribute('aria-hidden', 'false');
-      const targetFocus = els.drawerClose || els.drawer;
-      requestAnimationFrame(() => {
-        targetFocus?.focus({preventScroll: false});
-      });
-      const iso = eventIso(event);
-      if (iso) {
-        if (state.activeTab === 'heatmap') {
-          highlightHeatmapColumn(iso);
-        } else {
-          state.pendingHighlight = iso;
-        }
-      }
-    }
-
-    function closeDrawer(){
-      if (!els.drawer || !els.drawerOverlay) return;
-      state.drawerOpen = false;
-      state.selectedEvent = null;
-      els.drawer.classList.remove('is-open');
-      els.drawerOverlay.classList.remove('is-open');
-      els.drawer.setAttribute('aria-hidden', 'true');
-      els.drawerOverlay.setAttribute('aria-hidden', 'true');
-      const toFocus = state.lastFocus;
-      state.lastFocus = null;
-      if (toFocus && typeof toFocus.focus === 'function') {
-        requestAnimationFrame(() => toFocus.focus({preventScroll: false}));
-      }
-    }
-
-    function populateDrawer(event){
-      if (!event) return;
-      const teamName = teamLabel(event.team);
-      const timestamp = new Date(event.ts);
-      if (els.drawerSeverity) {
-        els.drawerSeverity.className = `${severityPillClass(event.severity)} drawer__severity`;
-        els.drawerSeverity.textContent = capitalize(event.severity || '');
-      }
-      if (els.drawerTeam) {
-        els.drawerTeam.textContent = teamName;
-      }
-      if (els.drawerTimestamp) {
-        els.drawerTimestamp.textContent = Number.isNaN(timestamp.getTime())
-          ? ''
-          : `${formatDateLabel(event.ts?.split('T')[0])} • ${formatTime(event.ts)}`;
-      }
-      if (els.drawerDetail) {
-        els.drawerDetail.textContent = event.detail || event.rule || '';
-      }
-      if (els.drawerRule) {
-        els.drawerRule.textContent = event.rule || event.detail || withFallback('drawer.noThresholds', 'No threshold details provided.');
-      }
-      if (els.drawerThresholds) {
-        els.drawerThresholds.innerHTML = '';
-        const thresholds = event.thresholds || {};
-        const entries = Object.entries(thresholds);
-        if (!entries.length) {
-          const dd = document.createElement('dd');
-          dd.textContent = withFallback('drawer.noThresholds', 'No threshold details provided.');
-          els.drawerThresholds.appendChild(dd);
-        } else {
-          entries.forEach(([key, value]) => {
-            const dt = document.createElement('dt');
-            dt.textContent = splitCamel(key);
-            const dd = document.createElement('dd');
-            dd.textContent = value;
-            els.drawerThresholds.appendChild(dt);
-            els.drawerThresholds.appendChild(dd);
-          });
-        }
-      }
-    }
-
-    function eventIso(event){
-      if (!event) return '';
-      if (event.heatmapDate) return event.heatmapDate;
-      if (event.ts) return event.ts.split('T')[0];
-      return '';
-    }
-
-    function scrollActivityToEvent(event){
-      if (!els.activity) return;
-      const targetTeam = event.team;
-      const targetDate = eventIso(event);
-      const rows = Array.from(els.activity.querySelectorAll('tbody tr'));
-      if (!rows.length) return;
-      rows.forEach(row => row.classList.remove('is-highlighted'));
-      const match = rows.find(row => {
-        const rowTeam = row.dataset.team;
-        const rowDate = row.dataset.date;
-        const teamMatch = !targetTeam || rowTeam === targetTeam;
-        const dateMatch = !targetDate || rowDate === targetDate;
-        return teamMatch && dateMatch;
-      });
-      if (match) {
-        match.classList.add('is-highlighted');
-        match.scrollIntoView({behavior: 'smooth', block: 'center'});
-        setTimeout(() => match.classList.remove('is-highlighted'), 3000);
-      }
-    }
-
-    function highlightHeatmapColumn(dateStr){
-      if (!dateStr) return;
-      clearHighlightTimer();
-      let found = false;
-      state.heatmapCells.forEach(cell => {
-        if (cell.dataset.iso === dateStr) {
-          cell.classList.add('is-highlighted');
-          if (!found) {
-            cell.focus({preventScroll: false});
-            found = true;
-          }
-        } else {
-          cell.classList.remove('is-highlighted');
-        }
-      });
-      if (found) {
-        state.highlightTimer = setTimeout(() => {
-          state.heatmapCells.forEach(cell => cell.classList.remove('is-highlighted'));
-          state.highlightTimer = null;
-        }, 4000);
-      }
-    }
-
-    function clearHighlightTimer(){
-      if (state.highlightTimer) {
-        clearTimeout(state.highlightTimer);
-        state.highlightTimer = null;
-      }
-    }
-
-    function renderEvents(){
-      if (!els.events) return;
-      els.events.innerHTML = '';
-      if (!Array.isArray(state.events) || state.events.length === 0 || !state.rangeWindow) {
-        const empty = document.createElement('p');
-        empty.textContent = withFallback('events.empty', 'No detection events in this range.');
-        els.events.appendChild(empty);
-        return;
-      }
-      const start = state.rangeWindow.start ? new Date(state.rangeWindow.start) : null;
-      const end = state.rangeWindow.end ? new Date(state.rangeWindow.end) : null;
-      const filtered = state.events.filter(ev => {
-        const ts = new Date(ev.ts);
-        if (start && ts < start) return false;
-        if (end) {
-          const endPlus = new Date(end);
-          endPlus.setHours(23, 59, 59, 999);
-          if (ts > endPlus) return false;
-        }
-        if (state.activeTeam && state.activeTeam !== 'all' && ev.team !== state.activeTeam) return false;
-        if (state.filters.team.size && !state.filters.team.has(ev.team)) return false;
-        if (state.filters.severity.size && !state.filters.severity.has(ev.severity)) return false;
-        if (state.filters.type.size && !state.filters.type.has(ev.type)) return false;
-        return true;
-      }).sort((a, b) => new Date(b.ts) - new Date(a.ts));
-
-      if (filtered.length === 0) {
-        const empty = document.createElement('p');
-        empty.textContent = withFallback('events.emptyFiltered', 'Filters returned no events.');
-        els.events.appendChild(empty);
-        return;
-      }
-
-      const grouped = new Map();
-      filtered.forEach(ev => {
-        const dayKey = formatDateLabel(ev.ts.split('T')[0]);
-        if (!grouped.has(dayKey)) grouped.set(dayKey, []);
-        grouped.get(dayKey).push(ev);
-      });
-
-      grouped.forEach((events, dayLabel) => {
-        const wrapper = document.createElement('section');
-        wrapper.className = 'timeline-day';
-
-        const heading = document.createElement('h3');
-        heading.className = 'timeline-day__header';
-        heading.textContent = dayLabel;
-        wrapper.appendChild(heading);
-
-        events.forEach(ev => {
-          const teamName = state.teamMap.get(ev.team) || ev.team;
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'timeline-event';
-          btn.dataset.severity = ev.severity;
-          btn.dataset.team = ev.team;
-          if (ev.heatmapDate) btn.dataset.iso = ev.heatmapDate;
-          const isoDate = ev.heatmapDate || (ev.ts ? ev.ts.split('T')[0] : '');
-          btn.setAttribute('aria-label', `${splitCamel(ev.type)} for ${teamName} at ${formatTime(ev.ts)}`);
-
-          const card = document.createElement('div');
-          card.className = 'tile tile--compact tile--interactive';
-
-          const head = document.createElement('div');
-          head.className = 'tile__head';
-          const severity = document.createElement('span');
-          severity.className = severityPillClass(ev.severity);
-          severity.textContent = capitalize(ev.severity);
-          head.appendChild(severity);
-          const time = document.createElement('time');
-          time.dateTime = ev.ts;
-          time.textContent = formatTime(ev.ts);
-          head.appendChild(time);
-          card.appendChild(head);
-
-          const title = document.createElement('div');
-          title.className = 'timeline-event__title';
-          title.textContent = splitCamel(ev.type);
-          card.appendChild(title);
-
-          const foot = document.createElement('div');
-          foot.className = 'tile__foot';
-          const teamPill = document.createElement('span');
-          teamPill.className = 'pill team-pill';
-          teamPill.textContent = teamName;
-          foot.appendChild(teamPill);
-          const rulePill = document.createElement('span');
-          rulePill.className = 'pill pill--neutral has-tooltip';
-          rulePill.tabIndex = 0;
-          rulePill.textContent = withFallback('events.trigger', 'Trigger');
-          const tooltip = document.createElement('span');
-          tooltip.className = 'tooltip';
-          tooltip.textContent = ev.rule || ev.detail || 'Threshold triggered';
-          rulePill.appendChild(tooltip);
-          rulePill.setAttribute('aria-label', tooltip.textContent);
-          foot.appendChild(rulePill);
-          card.appendChild(foot);
-
-          btn.appendChild(card);
-
-          btn.addEventListener('click', () => {
-            openDrawer(ev);
-          });
-
-          wrapper.appendChild(btn);
-        });
-
-        els.events.appendChild(wrapper);
-      });
-    }
-
-    function buildFilterGroup(container, options, setRef, allLabel){
-      if (!container) return;
-      container.innerHTML = '';
-      const allBtn = document.createElement('button');
-      allBtn.type = 'button';
-      allBtn.className = 'filter-chip is-active';
-      allBtn.dataset.value = '__all';
-      allBtn.textContent = allLabel;
-      allBtn.setAttribute('aria-pressed', 'true');
-      allBtn.addEventListener('click', () => {
-        setRef.clear();
-        updateFilterVisuals(container, setRef);
-        renderEvents();
-      });
-      container.appendChild(allBtn);
-
-      options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'filter-chip';
-        btn.dataset.value = opt.value;
-        btn.textContent = opt.label;
-        btn.setAttribute('aria-pressed', 'false');
-        btn.addEventListener('click', () => {
-          if (setRef.has(opt.value)) {
-            setRef.delete(opt.value);
-          } else {
-            setRef.add(opt.value);
-          }
-          updateFilterVisuals(container, setRef);
-          renderEvents();
-        });
-        container.appendChild(btn);
-      });
-
-      updateFilterVisuals(container, setRef);
-    }
-
-    function updateFilterVisuals(container, setRef){
-      const chips = Array.from(container.querySelectorAll('.filter-chip'));
-      chips.forEach(chip => {
-        const val = chip.dataset.value;
-        if (val === '__all') {
-          const isActive = setRef.size === 0;
-          chip.classList.toggle('is-active', isActive);
-          chip.setAttribute('aria-pressed', String(isActive));
-        } else {
-          const isActive = setRef.has(val);
-          chip.classList.toggle('is-active', isActive);
-          chip.setAttribute('aria-pressed', String(isActive));
-        }
-      });
-    }
-
-    function renderActivity(){
-      if (!els.activity) return;
-      els.activity.innerHTML = '';
-      if (!state.metrics || !Array.isArray(state.metrics.activity)) return;
-      const granularity = activityGranularity();
-      const filteredRows = state.metrics.activity.filter(row => !state.activeTeam || state.activeTeam === 'all' || row.team === state.activeTeam);
-      if (!filteredRows.length) {
-        els.activity.innerHTML = `<p role="status">${withFallback('status.noData', 'No data available')}</p>`;
-        return;
-      }
-
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      const columns = [
-        {key: 'date', label: 'Date'},
-        {key: 'team', label: 'Team'},
-        {key: 'hydration_logs', label: 'Hydration logs'},
-        {key: 'caffeine_logs', label: 'Caffeine logs'},
-        {key: 'meds_logs', label: 'Meds logs'},
-        {key: 'steps_active_pct', label: 'Steps active %'}
-      ];
-
-      columns.forEach(col => {
-        const th = document.createElement('th');
-        th.scope = 'col';
-        th.textContent = col.label;
-        th.dataset.key = col.key;
-        th.tabIndex = 0;
-        if (state.activitySort.key === col.key) {
-          th.classList.add(state.activitySort.direction === 'asc' ? 'is-sorted-asc' : 'is-sorted-desc');
-        }
-        const onSort = () => {
-          toggleSort(col.key);
-          renderActivity();
-        };
-        th.addEventListener('click', onSort);
-        th.addEventListener('keypress', evt => {
+        cell.addEventListener('keydown', evt => {
           if (evt.key === 'Enter' || evt.key === ' ') {
             evt.preventDefault();
-            onSort();
+            handleHeatmapSelection(colIndex);
           }
         });
-        headerRow.appendChild(th);
+        fragment.appendChild(cell);
       });
-      thead.appendChild(headerRow);
+    });
 
-      const tbody = document.createElement('tbody');
-      const sortedRows = [...filteredRows].sort((a, b) => compareActivityRows(a, b));
-      sortedRows.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.dataset.team = row.team;
-        tr.dataset.date = row.date;
-        columns.forEach(col => {
-          const td = document.createElement('td');
-          let value = row[col.key];
-          if (col.key === 'team') {
-            value = state.teamMap.get(row.team) || row.team;
-          } else if (col.key === 'date') {
-            value = formatActivityDate(row.date, granularity);
-          } else if (col.key === 'steps_active_pct') {
-            value = `${Math.round(row.steps_active_pct)}%`;
-          }
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      els.activity.appendChild(table);
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
+    state.heatmapCells = Array.from(grid.querySelectorAll('.heatmap-cell[role="gridcell"]'));
+    if (state.selectedColumn?.index != null) {
+      updateHeatmapHighlight(state.selectedColumn.index);
     }
+  }
 
-    function activityGranularity(){
-      switch (state.rangePreset) {
-        case '7d':
-          return 'day';
-        case 'year':
-          return 'month';
-        default:
-          return 'week';
+  function heatmapLevel(value){
+    if (!Number.isFinite(value)) return '';
+    if (value <= 55) return 'low';
+    if (value <= 69) return 'mid';
+    return 'high';
+  }
+
+  function handleHeatmapSelection(index){
+    const same = state.selectedColumn && state.selectedColumn.index === index;
+    if (same) {
+      setSelectedColumn(null, {updateFilter: true});
+    } else {
+      setSelectedColumn(index, {updateFilter: true});
+      scrollIntoView('corp-events');
+    }
+  }
+
+  function setSelectedColumn(index, options={}){
+    const {updateFilter = true} = options;
+    if (index == null || index < 0 || index >= state.heatmapColumns.length) {
+      state.selectedColumn = null;
+      updateHeatmapHighlight(null);
+      if (updateFilter) {
+        state.eventsDateFilter = null;
+        renderEvents();
       }
+      return;
+    }
+    state.selectedColumn = {
+      index,
+      label: state.heatmapColumns[index],
+      date: state.heatmapDates[index] || null
+    };
+    updateHeatmapHighlight(index);
+    if (updateFilter) {
+      state.eventsDateFilter = {label: state.selectedColumn.label, date: state.selectedColumn.date};
+      renderEvents();
+    }
+  }
+
+  function updateHeatmapHighlight(index){
+    state.heatmapCells.forEach(cell => {
+      const col = Number(cell.dataset.colIndex);
+      cell.classList.toggle('is-highlighted', index != null && col === index);
+    });
+    const headers = els.heatmapGrid?.querySelectorAll('.heatmap-cell[role="columnheader"]');
+    headers?.forEach(header => {
+      const col = Number(header.dataset.colIndex);
+      header?.classList.toggle('is-highlighted', index != null && col === index);
+    });
+  }
+
+  function renderEvents(events){
+    const list = els.eventsList;
+    if (!list) return;
+    const items = Array.isArray(events) ? events.slice() : [];
+
+    const filtered = items.filter(evt => {
+      const eventDate = toDateString(evt.ts);
+      if (state.rangeWindow) {
+        if (state.rangeWindow.start && eventDate && eventDate < state.rangeWindow.start) return false;
+        if (state.rangeWindow.end && eventDate && eventDate > state.rangeWindow.end) return false;
+      }
+      if (state.teamSelection !== 'all' && evt.team && evt.team !== state.teamSelection) {
+        return false;
+      }
+      if (state.eventFilterTeams.size && evt.team && !state.eventFilterTeams.has(evt.team)) {
+        return false;
+      }
+      if (state.eventFilterSeverity && evt.severity && evt.severity !== state.eventFilterSeverity) {
+        return false;
+      }
+      if (state.eventFilterType && evt.type && evt.type !== state.eventFilterType) {
+        return false;
+      }
+      if (state.eventsDateFilter) {
+        if (state.eventsDateFilter.date) {
+          if (!evt._colDate || evt._colDate !== state.eventsDateFilter.date) return false;
+        } else if (state.eventsDateFilter.label) {
+          if (!evt._colLabel || evt._colLabel !== state.eventsDateFilter.label) return false;
+        }
+      }
+      return true;
+    });
+
+    list.innerHTML = '';
+
+    if (state.eventsDateFilter) {
+      const note = document.createElement('div');
+      note.className = 'event-filter-note';
+      const label = state.eventsDateFilter.label || formatDateLabel(state.eventsDateFilter.date);
+      note.textContent = `Filtered by ${label}`;
+      list.appendChild(note);
     }
 
-    function toggleSort(key){
-      if (state.activitySort.key === key) {
-        state.activitySort.direction = state.activitySort.direction === 'asc' ? 'desc' : 'asc';
+    if (!filtered.length) {
+      const empty = document.createElement('p');
+      empty.className = 'caption';
+      empty.textContent = 'No events in range';
+      list.appendChild(empty);
+      return;
+    }
+
+    filtered.sort((a, b) => {
+      const da = a.ts ? new Date(a.ts).getTime() : 0;
+      const db = b.ts ? new Date(b.ts).getTime() : 0;
+      return db - da;
+    });
+
+    filtered.forEach(evt => {
+      const item = document.createElement('div');
+      item.className = 'event-item';
+      item.tabIndex = 0;
+      if (Number.isInteger(evt._colIndex)) {
+        item.dataset.colIndex = String(evt._colIndex);
+      }
+      const timestamp = document.createElement('time');
+      timestamp.dateTime = evt.ts || '';
+      timestamp.textContent = formatDateTime(evt.ts);
+
+      const body = document.createElement('div');
+      const header = document.createElement('div');
+      header.className = 'event-header';
+      const severity = document.createElement('span');
+      severity.className = severityClass(evt.severity);
+      severity.textContent = (evt.severity || 'info').toUpperCase();
+
+      const title = document.createElement('strong');
+      title.textContent = evt.type || 'Event';
+      header.appendChild(title);
+      header.appendChild(severity);
+
+      const detail = document.createElement('p');
+      detail.className = 'event-detail';
+      detail.textContent = evt.detail || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'event-meta';
+      const team = state.teamMap.get(evt.team) || evt.team;
+      if (team) {
+        const chip = document.createElement('span');
+        chip.className = 'event-pill';
+        chip.textContent = team;
+        meta.appendChild(chip);
+      }
+      if (evt._colLabel) {
+        const chip = document.createElement('span');
+        chip.className = 'event-pill';
+        chip.textContent = evt._colLabel;
+        meta.appendChild(chip);
+      }
+
+      body.appendChild(header);
+      body.appendChild(detail);
+      body.appendChild(meta);
+
+      item.appendChild(timestamp);
+      item.appendChild(body);
+
+      item.addEventListener('click', () => handleEventSelection(evt));
+      item.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleEventSelection(evt);
+        }
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function severityClass(severity){
+    switch (severity) {
+      case 'critical':
+        return 'event-pill event-pill--critical';
+      case 'warning':
+        return 'event-pill event-pill--warning';
+      default:
+        return 'event-pill event-pill--info';
+    }
+  }
+
+  function handleEventSelection(evt){
+    if (!Number.isInteger(evt?._colIndex)) return;
+    setSelectedColumn(evt._colIndex, {updateFilter: false});
+    scrollIntoView('corp-heatmap');
+  }
+
+  function renderActivity(activity){
+    const table = els.activityTable;
+    if (!table) return;
+    const rows = Array.isArray(activity) ? activity : [];
+    const filtered = rows.filter(row => {
+      if (!row) return false;
+      if (state.teamSelection !== 'all' && row.team && row.team !== state.teamSelection) return false;
+      return true;
+    });
+
+    const headers = ['Date', 'Team', 'Hydration Logs', 'Caffeine Logs', 'Medications Logged', 'Active Steps %'];
+    const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+    let tbody = '';
+    let csvRows = [];
+
+    if (state.insufficient) {
+      tbody = `<tbody><tr><td colspan="${headers.length}">—</td></tr></tbody>`;
+    } else if (!filtered.length) {
+      tbody = `<tbody><tr><td colspan="${headers.length}">No activity data</td></tr></tbody>`;
+    } else {
+      const lang = window.I18N?.getLang?.() || 'en';
+      const dateFormatter = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit', year: 'numeric'});
+      const bodyRows = filtered.map(row => {
+        const dateLabel = formatDateLabel(row.date, {formatter: dateFormatter});
+        const team = state.teamMap.get(row.team) || row.team || '—';
+        const hydration = numericOrDash(row.hydration);
+        const caffeine = numericOrDash(row.caffeine);
+        const meds = numericOrDash(row.meds);
+        const steps = numericOrDash(row.steps_active_pct);
+        if (hydration !== '—' && caffeine !== '—' && meds !== '—' && steps !== '—') {
+          csvRows.push([row.date, team, hydration, caffeine, meds, steps]);
+        }
+        return `<tr><td>${dateLabel}</td><td>${team}</td><td>${hydration}</td><td>${caffeine}</td><td>${meds}</td><td>${steps}</td></tr>`;
+      });
+      tbody = `<tbody>${bodyRows.join('')}</tbody>`;
+    }
+
+    table.innerHTML = `${thead}${tbody}`;
+    state.activityCsvRows = state.insufficient ? [] : csvRows;
+    if (els.exportBtn) {
+      els.exportBtn.disabled = !state.activityCsvRows.length;
+    }
+  }
+
+  function numericOrDash(value){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '—';
+    return String(Math.round(num));
+  }
+
+  function exportActivity(){
+    if (!state.activityCsvRows.length) return;
+    const headers = ['Date', 'Team', 'Hydration Logs', 'Caffeine Logs', 'Medications Logged', 'Active Steps %'];
+    const lines = [headers.join(',')].concat(state.activityCsvRows.map(row => row.map(csvEscape).join(',')));
+    const csv = lines.join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const team = state.teamSelection === 'all' ? 'all' : state.teamSelection;
+    const range = state.rangeKey || '7d';
+    const stamp = formatFileDate(new Date());
+    const filename = `activity_${team}_${range}_${stamp}.csv`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function csvEscape(value){
+    const text = String(value ?? '');
+    if (/[",\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+  }
+
+  function updateCaption(){
+    if (!els.caption) return;
+    const teamLabel = state.teamSelection === 'all'
+      ? (window.I18N?.t('label.team.all') || 'All Teams')
+      : (state.teamMap.get(state.teamSelection) || state.teamSelection);
+    const rangeLabel = state.rangeLabel || 'Range';
+    els.caption.textContent = `Org avg · ${rangeLabel} · ${teamLabel}`;
+  }
+
+  function handleStorageEvent(evt){
+    if (!evt) return;
+    if (evt.key === 'hr:team') {
+      state.teamSelection = readTeamSelection();
+      if (state.teamSelection !== 'all') {
+        state.eventFilterTeams = new Set([state.teamSelection]);
       } else {
-        state.activitySort.key = key;
-        state.activitySort.direction = key === 'date' ? 'desc' : 'asc';
+        state.eventFilterTeams = new Set();
+      }
+      syncEventTeamSelection();
+      renderEvents();
+      renderActivity(state.metrics?.activity);
+      updateCaption();
+    }
+    if (evt.key === 'hr:range') {
+      loadMetrics().then(() => {
+        renderAll();
+      });
+    }
+  }
+
+  function syncEventTeamSelection(){
+    if (!els.eventTeam) return;
+    const values = state.eventFilterTeams.size ? Array.from(state.eventFilterTeams) : [];
+    Array.from(els.eventTeam.options || []).forEach(option => {
+      option.selected = values.includes(option.value);
+    });
+  }
+
+  function handleI18nChange(){
+    state.rangeLabel = resolveRangeConfig(state.rangeSelection).label;
+    renderAll();
+  }
+
+  function readTeamSelection(){
+    try {
+      return localStorage.getItem('hr:team') || 'all';
+    } catch (err) {
+      return 'all';
+    }
+  }
+
+  function readRangeSelection(){
+    try {
+      const raw = localStorage.getItem('hr:range');
+      if (!raw) return {preset: '7d'};
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (err) {
+      // ignore malformed
+    }
+    return {preset: '7d'};
+  }
+
+  function resolveRangeConfig(selection){
+    const lang = window.I18N?.getLang?.() || 'en';
+    const presets = {
+      day: window.I18N?.t('range.day') || '1 Day',
+      '7d': window.I18N?.t('range.7d') || '7 Days',
+      month: window.I18N?.t('range.month') || '1 Month',
+      year: window.I18N?.t('range.year') || '1 Year'
+    };
+    if (selection?.preset) {
+      const preset = selection.preset;
+      if (preset === 'day') {
+        return {dataKey: '7d', label: presets.day, rangeKey: 'day'};
+      }
+      if (preset === '7d' || preset === 'month' || preset === 'year') {
+        return {dataKey: preset, label: presets[preset], rangeKey: preset};
       }
     }
-
-    function compareActivityRows(a, b){
-      const {key, direction} = state.activitySort;
-      const order = direction === 'asc' ? 1 : -1;
-      if (key === 'date') {
-        return (new Date(a.date) - new Date(b.date)) * order;
-      }
-      if (key === 'team') {
-        const nameA = state.teamMap.get(a.team) || a.team;
-        const nameB = state.teamMap.get(b.team) || b.team;
-        return nameA.localeCompare(nameB) * order;
-      }
-      const valA = Number(a[key]) || 0;
-      const valB = Number(b[key]) || 0;
-      if (valA === valB) return 0;
-      return valA > valB ? order : -order;
+    if (selection?.start && selection?.end) {
+      const startLabel = formatDateLabel(selection.start, {lang});
+      const endLabel = formatDateLabel(selection.end, {lang});
+      return {
+        dataKey: 'month',
+        label: `${startLabel} → ${endLabel}`,
+        rangeKey: 'custom'
+      };
     }
+    return {dataKey: '7d', label: presets['7d'], rangeKey: '7d'};
+  }
 
-    function exportActivityToCsv(){
-      if (!state.metrics || !Array.isArray(state.metrics.activity) || state.metrics.activity.length === 0) return;
-      const granularity = activityGranularity();
-      const headers = ['Date', 'Team', 'Hydration logs', 'Caffeine logs', 'Meds logs', 'Steps active %'];
-      const rows = state.metrics.activity.map(entry => [
-        formatActivityDate(entry.date, granularity),
-        state.teamMap.get(entry.team) || entry.team,
-        entry.hydration_logs,
-        entry.caffeine_logs,
-        entry.meds_logs,
-        Math.round(entry.steps_active_pct)
-      ]);
-      const csv = [headers, ...rows]
-        .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
-        .join('\n');
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `corporate-activity-${state.rangePreset}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+  function formatDateLabel(dateStr, options={}){
+    if (!dateStr) return '';
+    try {
+      const lang = options.lang || window.I18N?.getLang?.() || 'en';
+      const formatter = options.formatter || new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit', year: 'numeric'});
+      const date = new Date(`${dateStr}T00:00:00`);
+      if (Number.isNaN(date.getTime())) return dateStr;
+      return formatter.format(date);
+    } catch (err) {
+      return dateStr;
     }
+  }
 
-    function formatDateLabel(iso){
-      if (!iso) return '';
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return iso;
-      return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'});
+  function formatDateTime(iso){
+    if (!iso) return '';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const lang = window.I18N?.getLang?.() || 'en';
+    const datePart = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'}).format(date);
+    const timePart = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'}).format(date);
+    return `${datePart} · ${timePart}`;
+  }
+
+  function toDateString(iso){
+    if (!iso) return null;
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString().slice(0, 10);
+  }
+
+  function scrollIntoView(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+
+  function formatFileDate(date){
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '00000000';
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}${month}${day}`;
+  }
+
+  async function fetchJson(path){
+    const version = window.APP_VERSION || '';
+    const url = new URL(path, document.baseURI);
+    if (version) {
+      url.searchParams.set('v', version);
     }
-
-    function formatColumnLabel(iso){
-      if (!iso) return '';
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return iso;
-      const options = state.rangePreset === 'year'
-        ? {month: 'short', year: '2-digit'}
-        : {month: 'short', day: 'numeric'};
-      return date.toLocaleDateString(undefined, options);
+    const response = await fetch(url.toString(), {cache: 'no-store'});
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${path}`);
     }
-
-    function formatActivityDate(iso, granularity){
-      if (!iso) return '';
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return iso;
-      if (granularity === 'week') {
-        return `Week of ${date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
-      }
-      if (granularity === 'month') {
-        return date.toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
-      }
-      return date.toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'});
-    }
-
-    function formatTime(ts){
-      const date = new Date(ts);
-      if (Number.isNaN(date.getTime())) return '';
-      return date.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
-    }
-
-    function capitalize(str){
-      if (!str) return '';
-      return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    function splitCamel(str){
-      if (!str) return '';
-      return str.replace(/([a-z])([A-Z])/g, '$1 $2');
-    }
-
-    function toIso(date){
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
+    return await response.json();
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.I18N.onReady(initPage);
-});
+function renderKpis(kpi, delta={}){
+  const defs=[
+    {key:'wellbeing_avg',label:'Org Wellbeing',unit:'/100',fmt:v=>Math.round(v)},
+    {key:'high_stress_pct',label:'High Stress',unit:'%',fmt:v=>Math.round(v)},
+    {key:'fatigue_elevated_pct',label:'Elevated Fatigue',unit:'%',fmt:v=>Math.round(v)},
+    {key:'engagement_active_pct',label:'Active Engagement',unit:'%',fmt:v=>Math.round(v)},
+  ];
+  const grid=document.getElementById('corp-kpi-grid'); if(!grid) return;
+  grid.innerHTML = defs.map(d=>{
+    const raw = Number(kpi?.[d.key]);  const val = Number.isFinite(raw)?d.fmt(raw):'—';
+    const dRaw = Number(delta?.[d.key]); const dl = Number.isFinite(dRaw)?dRaw:null;
+    return `<div class="tile kpi">
+      <div class="tile__head">${d.label}${dl!==null?`<span class="pill ${dl>=0?'green':'red'}">${dl>=0?'▲':'▼'} ${Math.abs(Math.round(dl))}</span>`:''}</div>
+      <div class="tile__kpi">${val}<small>${d.unit}</small></div>
+      <div class="spark"></div>
+    </div>`;
+  }).join('');
+}

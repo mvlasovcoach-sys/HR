@@ -5,121 +5,70 @@
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20251019">
 <link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251019">
 <link rel="stylesheet" href="./assets/css/ui.components.css?v=20251019">
-<!-- optional page CSS -->
 <link rel="stylesheet" href="./assets/css/corporate.css?v=20251019">
-</head><body>
-<div class="page">
-  <div id="sidebar-slot"></div>
-  <main class="main main--corporate">
-    <div class="header header--corporate">
-      <div class="header__title" data-i18n="header.corporate">Corporate</div>
-      <div class="header__badges" aria-hidden="true">
-        <span class="pill pill--neutral">AGGREGATES ONLY</span>
-        <span class="pill pill--neutral">NO RAW BIOSIGNALS</span>
-        <span class="pill pill--neutral">FIXED THRESHOLDS</span>
-        <span class="pill pill--neutral">NO ML</span>
-      </div>
-      <div class="header__actions">
-        <button class="btn btn--ghost" type="button" id="scenario-trigger" data-i18n="btn.loadScenario">Load Night-Shift Scenario</button>
-        <div id="team-filter" class="team-filter"></div>
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
-      </div>
-    </div>
-    <p id="corporate-range-caption" class="header__caption" aria-live="polite"></p>
-
-    <div class="corp-tabs" role="tablist" aria-label="Corporate overview tabs">
-      <button class="corp-tab is-active" role="tab" aria-selected="true" aria-controls="corp-overview" id="tab-overview" data-tab="overview">Overview</button>
-      <button class="corp-tab" role="tab" aria-selected="false" aria-controls="corp-heatmap" id="tab-heatmap" data-tab="heatmap">Heatmap</button>
-      <button class="corp-tab" role="tab" aria-selected="false" aria-controls="corp-events" id="tab-events" data-tab="events">Events</button>
-      <button class="corp-tab" role="tab" aria-selected="false" aria-controls="corp-activity" id="tab-activity" data-tab="activity">Activity Log</button>
-    </div>
-
-    <section id="corp-overview" class="panel corp-panel is-active" role="tabpanel" aria-labelledby="tab-overview">
-      <div class="kpi-grid" id="corp-kpi-grid"></div>
-    </section>
-
-    <section id="corp-heatmap" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-heatmap" hidden>
-      <div class="heatmap-wrapper">
-        <div class="legend heatmap-legend" aria-hidden="true">
-          <span class="legend__item"><span class="legend__swatch legend__swatch--low" aria-hidden="true"></span>≤55</span>
-          <span class="legend__item"><span class="legend__swatch legend__swatch--mid" aria-hidden="true"></span>56–69</span>
-          <span class="legend__item"><span class="legend__swatch legend__swatch--high" aria-hidden="true"></span>≥70</span>
-        </div>
-        <div class="heatmap-grid" role="grid" aria-label="Wellbeing heatmap" id="corporate-heatmap"></div>
-      </div>
-    </section>
-
-    <section id="corp-events" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-events" hidden>
-      <div class="events-controls">
-        <fieldset>
-          <legend>Team</legend>
-          <div id="event-team-filter" class="filter-chips" role="group"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Severity</legend>
-          <div id="event-severity-filter" class="filter-chips" role="group"></div>
-        </fieldset>
-        <fieldset>
-          <legend>Type</legend>
-          <div id="event-type-filter" class="filter-chips" role="group"></div>
-        </fieldset>
-      </div>
-      <div class="events-timeline" id="corporate-events" aria-live="polite"></div>
-    </section>
-
-    <section id="corp-activity" class="panel corp-panel" role="tabpanel" aria-labelledby="tab-activity" hidden>
-      <div class="activity-actions">
-        <button id="activity-export" type="button" class="btn btn--ghost">Export CSV</button>
-      </div>
-      <div class="activity-table" id="corporate-activity" aria-live="polite"></div>
-    </section>
-    <footer class="corp-footer" aria-label="Compliance note">EU cloud, encryption at rest/in transit</footer>
-    <div class="drawer__overlay" id="event-drawer-overlay" aria-hidden="true"></div>
-    <aside class="drawer" id="event-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="event-drawer-title">
-      <header class="drawer__header">
-        <h2 class="drawer__title" id="event-drawer-title" data-i18n="drawer.title">Event details</h2>
-        <button class="drawer__close" type="button" id="event-drawer-close" aria-label="Close">
-          <span aria-hidden="true">×</span>
-        </button>
-        <span id="event-drawer-severity" class="pill pill--neutral"></span>
-        <dl class="drawer__meta">
-          <dt data-i18n="drawer.metaTeam">Team</dt>
-          <dd id="event-drawer-team"></dd>
-          <dt data-i18n="drawer.metaTime">Detected</dt>
-          <dd id="event-drawer-ts"></dd>
-        </dl>
-      </header>
-      <div class="drawer__body">
-        <p id="event-drawer-detail"></p>
-        <div>
-          <h3 class="drawer__subtitle" data-i18n="drawer.rule">Detection rule</h3>
-          <p id="event-drawer-rule"></p>
-        </div>
-        <div>
-          <h3 class="drawer__subtitle" data-i18n="drawer.thresholds">Thresholds</h3>
-          <dl id="event-drawer-thresholds" class="drawer__meta"></dl>
-        </div>
-      </div>
-      <footer class="drawer__footer">
-        <div class="drawer__links">
-          <button type="button" class="btn btn--ghost" id="drawer-link-heatmap" data-i18n="events.filterHeatmap">Filter heatmap to date</button>
-          <button type="button" class="btn btn--ghost" id="drawer-link-activity" data-i18n="events.openLog">Open activity log</button>
-        </div>
-      </footer>
-    </aside>
-  </main>
-</div>
 <script defer src="./assets/js/i18n.js"></script>
 <script defer src="./assets/js/version.js"></script>
 <script defer src="./assets/js/app-shell.js"></script>
 <script defer src="./assets/js/date-controls.js"></script>
 <script defer src="./assets/js/team-filter.js"></script>
-<!-- page script last -->
+<script defer src="./assets/js/corporate.js?v=20251019"></script>
+</head><body>
+<div class="page">
+  <div id="sidebar-slot"></div>
+  <main class="main main--corporate">
+    <div class="toolbar">
+      <div class="toolbar__filters">
+        <div id="team-filter" class="toolbar__filter"></div>
+        <div id="date-controls" class="toolbar__filter"></div>
+      </div>
+      <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+    </div>
+
+    <header class="page-head">
+      <h1>Corporate</h1>
+      <div class="badges">
+        <span class="pill">AGGREGATES ONLY · NO RAW BIOSIGNALS</span>
+        <span class="pill">FIXED THRESHOLDS · NO ML</span>
+      </div>
+    </header>
+
+    <p id="corp-caption" class="caption" aria-live="polite"></p>
+
+    <section id="corp-kpis" class="panel">
+      <div class="panel__head">Overview KPIs</div>
+      <div id="corp-kpi-grid" class="grid grid-4"></div>
+    </section>
+
+    <section id="corp-heatmap" class="panel">
+      <div class="panel__head">Divisional Heatmap
+        <span class="legend"><i class="sw red"></i> ≤55 <i class="sw amber"></i> 56–69 <i class="sw green"></i> ≥70</span>
+      </div>
+      <div id="heatmap-grid"></div>
+    </section>
+
+    <section id="corp-events" class="panel">
+      <div class="panel__head">Detected Events
+        <div class="filters">
+          <select id="f-team" multiple></select>
+          <select id="f-sev">
+            <option value="">All severities</option>
+            <option>info</option><option>warning</option><option>critical</option>
+          </select>
+          <select id="f-type"><option value="">All types</option></select>
+        </div>
+      </div>
+      <div id="events-list"></div>
+    </section>
+
+    <section id="corp-activity" class="panel">
+      <div class="panel__head">Activity Log
+        <button id="export-activity" class="btn">Export CSV</button>
+      </div>
+      <table id="activity-table" class="table"></table>
+    </section>
+  </main>
+</div>
 <script defer src="./assets/js/data-loader.js?v=20251019"></script>
 <script defer src="./assets/js/auth.js?v=20251019"></script>
-<script defer src="./assets/js/guards.js?v=20251019"></script>
-<script defer src="./assets/js/theme.js?v=20251019"></script>
 <script defer src="./assets/js/about.js?v=20251019"></script>
-<script defer src="./assets/js/corporate.js?v=20251019"></script>
 </body></html>
