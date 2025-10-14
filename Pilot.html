@@ -1,25 +1,31 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SPA2099 HR Health — Summary</title>
+<title>SPA2099 HR Health — Pilot Dashboard</title>
 <link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
-<link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/engagement.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/pilot.css?v=20240920">
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
-  <main class="main">
-    <div class="header">
-      <div class="header__title" data-i18n="header.summary">Summary</div>
+  <main class="main main--pilot">
+    <div class="header header--pilot">
+      <div class="header__title" data-i18n="header.pilot">Pilot Dashboard</div>
       <div class="header__actions">
+        <button class="btn btn--ghost" type="button" id="pilot-export" data-i18n="label.export.pdf">Export Pilot Summary</button>
         <div id="team-filter" class="team-filter"></div>
         <div id="date-controls"></div>
         <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
       </div>
     </div>
-    <p id="global-caption" class="header__caption" aria-live="polite"></p>
-    <section id="hr-board" class="panel" aria-live="polite"></section>
+    <p id="pilot-caption" class="header__caption" aria-live="polite"></p>
+
+    <section class="panel" id="pilot-kpis" aria-live="polite"></section>
+    <section class="panel" id="pilot-heatmap" aria-live="polite"></section>
+    <section class="panel" id="pilot-events" aria-live="polite"></section>
+    <p class="pilot-note" data-i18n="pilot.gdpr">GDPR note: dashboards expose only aggregates with no personal data.</p>
   </main>
 </div>
 <script defer src="./assets/js/data-loader.js?v=20240920"></script>
@@ -28,5 +34,6 @@
 <script defer src="./assets/js/date-controls.js?v=20240920"></script>
 <script defer src="./assets/js/team-filter.js?v=20240920"></script>
 <script defer src="./assets/js/about.js?v=20240920"></script>
-<script defer src="./assets/js/hr-board.neon.js?v=20240920"></script>
+<script defer src="./assets/js/exporter.js?v=20240920"></script>
+<script defer src="./assets/js/pilot.js?v=20240920"></script>
 </body></html>

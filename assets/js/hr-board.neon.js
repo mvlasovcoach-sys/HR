@@ -2,186 +2,238 @@
   const mount = document.getElementById('hr-board');
   if (!mount) return;
 
-  const METRICS = {
-    stress: {label: 'Stress', type: 'negative'},
-    burnout: {label: 'Burnout', type: 'negative'},
-    fatigue: {label: 'Fatigue', type: 'negative'},
-    cardio: {label: 'Cardio Index', type: 'positive'}
-  };
+  const CAPTION = document.getElementById('global-caption');
+  const KPI_CONFIG = [
+    {key: 'wellbeing_avg', labelKey: 'kpi.wellbeing', unit: '/100', decimals: 0, positive: true},
+    {key: 'high_stress_pct', labelKey: 'metric.highStress', unit: '%', decimals: 0, positive: false},
+    {key: 'fatigue_elevated_pct', labelKey: 'metric.elevatedFatigue', unit: '%', decimals: 0, positive: false},
+    {key: 'engagement_active_pct', labelKey: 'metric.activeEngagement', unit: '%', decimals: 0, positive: true}
+  ];
 
-  const defaults = {
-    stress: {score: 42, trend: [48, 46, 44, 43, 42, 40, 41], updated_at: new Date().toISOString()},
-    burnout: {score: 31, trend: [35, 34, 33, 32, 31, 30, 31], updated_at: new Date().toISOString()},
-    fatigue: {score: 58, trend: [61, 60, 59, 58, 57, 58, 58], updated_at: new Date().toISOString()},
-    cardio: {score: 72, trend: [70, 71, 72, 72, 73, 72, 74], updated_at: new Date().toISOString()}
-  };
+  init();
 
-  function readRange() {
+  function init(){
+    render();
+    window.addEventListener('storage', evt => {
+      if (!evt) return;
+      if (evt.key === 'hr:range' || evt.key === 'hr:team') {
+        render();
+      }
+    });
+    document.addEventListener('i18n:change', render);
+  }
+
+  function readRange(){
     try {
       const raw = localStorage.getItem('hr:range');
       if (!raw) return {preset: '7d'};
       const parsed = JSON.parse(raw);
-      if (parsed) return parsed;
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.preset) return parsed;
+        if (parsed.start && parsed.end) return parsed;
+      }
     } catch (e) {
       // ignore
     }
     return {preset: '7d'};
   }
 
-  function horizonForRange(range) {
+  function readTeam(){
+    try {
+      return localStorage.getItem('hr:team') || 'all';
+    } catch (e) {
+      return 'all';
+    }
+  }
+
+  function presetForRange(range){
     if (range && range.preset) {
-      if (range.preset === 'month' || range.preset === 'year') return 'long';
-      return 'short';
+      if (range.preset === 'month' || range.preset === 'year') return range.preset;
+      return '7d';
     }
     if (range && range.start && range.end) {
       const start = new Date(range.start);
       const end = new Date(range.end);
       if (!isNaN(start) && !isNaN(end)) {
         const diff = (end - start) / (1000 * 60 * 60 * 24);
-        if (diff > 14) return 'long';
+        if (diff > 120) return 'year';
+        if (diff > 21) return 'month';
       }
     }
-    return 'short';
+    return '7d';
   }
 
-  function readMetric(key, horizon) {
+  async function loadMetrics(range){
+    const preset = presetForRange(range);
+    const path = `./data/org/metrics_${preset}.json`;
     try {
-      const raw = localStorage.getItem(`hr:${key}`);
-      if (!raw) return {...defaults[key]};
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed.score === 'number') {
-        const result = {...defaults[key], ...parsed};
-        if (horizon === 'long' && Array.isArray(parsed.trend30d)) {
-          result.trend = parsed.trend30d;
-        } else if (horizon === 'short' && Array.isArray(parsed.trend7d)) {
-          result.trend = parsed.trend7d;
-        } else if (!Array.isArray(result.trend) || !result.trend.length) {
-          result.trend = defaults[key].trend;
-        }
-        return result;
-      }
+      return await window.dataLoader.fetch(path, {range, team: readTeam()});
     } catch (e) {
-      // ignore malformed entries
+      console.error('Failed to load metrics', e);
+      return null;
     }
-    return {...defaults[key]};
   }
 
-  function sparkline(values) {
-    const points = values && values.length ? values : [0];
-    const max = Math.max(...points);
-    const min = Math.min(...points);
+  function sparkline(values){
+    if (!Array.isArray(values) || !values.length) return '';
+    const max = Math.max(...values);
+    const min = Math.min(...values);
     const span = max - min || 1;
-    const step = points.length > 1 ? 100 / (points.length - 1) : 100;
-    const path = points
+    const step = values.length > 1 ? 100 / (values.length - 1) : 100;
+    const points = values
       .map((v, i) => {
         const x = (step * i).toFixed(2);
         const y = (100 - ((v - min) / span) * 100).toFixed(2);
         return `${x},${y}`;
       })
       .join(' ');
-    return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" points="${path}" /></svg>`;
+    return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" points="${points}" /></svg>`;
   }
 
-  function toneClass(tone) {
-    switch (tone) {
-      case 'strong':
-      case 'low':
-        return 'pill pill--strong';
-      case 'high':
-      case 'weak':
-        return 'pill pill--critical';
-      case 'moderate':
-        return 'pill pill--caution';
-      case 'neutral':
-      default:
-        return 'pill pill--neutral';
-    }
+  function formatValue(value, decimals){
+    return (value ?? 0).toFixed(decimals ?? 0);
   }
 
-  function status(score, type) {
-    if (type === 'positive') {
-      if (score >= 70) return {label: 'Strong', tone: 'strong'};
-      if (score >= 40) return {label: 'Neutral', tone: 'neutral'};
-      return {label: 'Weak', tone: 'weak'};
-    }
-    if (score >= 70) return {label: 'High', tone: 'high'};
-    if (score >= 40) return {label: 'Moderate', tone: 'moderate'};
-    return {label: 'Low', tone: 'low'};
+  function buildCaption(range, team){
+    const rangeText = rangeLabel(range);
+    const teamText = teamLabel(team);
+    return `${window.t('caption.orgAverage')}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
   }
 
-  function rangeLabel(range) {
-    if (!range) return 'Custom range';
+  function rangeLabel(range){
+    if (!range) return window.t('caption.range', {range: '—'});
     if (range.preset) {
-      return (
-        {
-          day: 'Daily snapshot',
-          '7d': '7-day overview',
-          month: 'Monthly trend',
-          year: 'Yearly outlook'
-        }[range.preset] || 'Custom range'
-      );
+      const mapping = {
+        day: window.t('range.day'),
+        '7d': window.t('range.7d'),
+        month: window.t('range.month'),
+        year: window.t('range.year')
+      };
+      return mapping[range.preset] || window.t('caption.range', {range: '—'});
     }
     if (range.start && range.end) {
       return `${range.start} → ${range.end}`;
     }
-    return 'Custom range';
+    return window.t('caption.range', {range: '—'});
   }
 
-  function render() {
+  function teamLabel(team){
+    if (!team || team === 'all') {
+      return window.t('caption.teamAll');
+    }
+    try {
+      const teams = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
+      if (teams && teams[team]) return teams[team];
+    } catch (e) {
+      // ignore
+    }
+    return team;
+  }
+
+  async function ensureTeamNames(){
+    if (localStorage.getItem('hr:team:names')) return;
+    try {
+      const data = await window.dataLoader.fetch('./data/org/teams.json');
+      const map = {};
+      if (Array.isArray(data?.depts)) {
+        data.depts.forEach(d => {
+          map[d.id] = d.name || d.id;
+        });
+      }
+      localStorage.setItem('hr:team:names', JSON.stringify(map));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  async function render(){
+    await ensureTeamNames();
     const range = readRange();
-    const horizon = horizonForRange(range);
-    const cards = Object.keys(METRICS)
-      .map(key => {
-        const metric = readMetric(key, horizon);
-        const updated = metric.updated_at ? new Date(metric.updated_at) : new Date();
-        const updatedText = isNaN(updated.getTime()) ? 'Updated recently' : `Updated ${updated.toLocaleDateString()}`;
-        const trend = Array.isArray(metric.trend) && metric.trend.length ? metric.trend : defaults[key].trend;
-        const badge = status(metric.score, METRICS[key].type);
-        return `<article class="tile tile--interactive" role="button" tabindex="0" data-focus="${key}">
-        <div class="tile__ring" aria-hidden="true"></div>
-        <div class="tile__head">
-          <span class="tile__title">${METRICS[key].label}</span>
-          <span class="tile__badge ${toneClass(badge.tone)}">${badge.label}</span>
-        </div>
-        <div class="tile__kpi">${Math.round(metric.score)}<span>/100</span></div>
-        <div class="spark">${sparkline(trend)}</div>
+    const team = readTeam();
+    const data = await loadMetrics(range);
+    if (!data) {
+      mount.innerHTML = '<p role="status">No data</p>';
+      if (CAPTION) CAPTION.textContent = buildCaption(range, team);
+      return;
+    }
+
+    const cards = KPI_CONFIG.map(cfg => {
+      const value = resolveValue(data, cfg.key, team);
+      const previous = resolvePrevious(data, cfg.key, team);
+      const delta = value - previous;
+      const spark = resolveSeries(data, cfg.key, team);
+      const badge = buildDelta(delta, cfg.positive);
+      return `<article class="tile">
+        <header class="tile__head">
+          <span class="tile__title">${labelFor(cfg.labelKey, cfg.key)}</span>
+          <span class="tile__badge pill ${badge.className}">${badge.label}</span>
+        </header>
+        <div class="tile__kpi">${formatValue(value, cfg.decimals)}<span>${cfg.unit}</span></div>
+        <div class="spark">${sparkline(spark)}</div>
         <footer class="tile__foot">
-          <span>${updatedText}</span>
-          <span>${trend.length} pts</span>
+          <span>${window.t('label.updated')} ${updatedText(data.updated)}</span>
+          <span>${spark.length || 0} pts</span>
         </footer>
       </article>`;
-      })
-      .join('');
+    }).join('');
 
-    mount.innerHTML = `<div class="panel__meta">
-      <span>HR Board</span>
-      <span>${rangeLabel(range)}</span>
-    </div>
-    <div class="panel__grid">${cards}</div>`;
+    mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
+    if (CAPTION) CAPTION.textContent = buildCaption(range, team);
   }
 
-  render();
-
-  addEventListener('storage', evt => {
-    if (!evt || !evt.key) return;
-    if (evt.key === 'hr:range' || (evt.key.startsWith('hr:') && METRICS[evt.key.replace('hr:', '')])) {
-      render();
+  function resolveValue(data, key, team){
+    if (team && team !== 'all' && data.teams && data.teams[team] && key in data.teams[team]) {
+      return data.teams[team][key];
     }
-  });
+    if (data.kpi && key in data.kpi) return data.kpi[key];
+    return 0;
+  }
 
-  mount.addEventListener('click', evt => {
-    const card = evt.target.closest('[data-focus]');
-    if (!card) return;
-    const key = card.getAttribute('data-focus');
-    if (!key) return;
-    window.location.href = `./User.html?focus=${encodeURIComponent(key)}`;
-  });
+  function resolvePrevious(data, key, team){
+    if (team && team !== 'all' && data.breakdown && data.breakdown[key]) {
+      const entry = data.breakdown[key].find(item => item.team === team);
+      if (entry && typeof entry.previous === 'number') return entry.previous;
+    }
+    if (data.previous && key in data.previous) return data.previous[key];
+    return resolveValue(data, key, team);
+  }
 
-  mount.addEventListener('keydown', evt => {
-    if (evt.key !== 'Enter' && evt.key !== ' ') return;
-    const card = evt.target.closest('[data-focus]');
-    if (!card) return;
-    evt.preventDefault();
-    card.click();
-  });
+  function resolveSeries(data, key, team){
+    if (team && team !== 'all' && data.breakdown && data.breakdown[key]) {
+      const entry = data.breakdown[key].find(item => item.team === team);
+      if (entry && Array.isArray(entry.series)) return entry.series;
+    }
+    if (data.series && Array.isArray(data.series[key])) return data.series[key];
+    return [];
+  }
+
+  function buildDelta(delta, positive){
+    if (isNaN(delta)) return {label: window.t('delta.equal'), className: 'pill--neutral'};
+    if (Math.abs(delta) < 0.1) {
+      return {label: window.t('delta.equal'), className: 'pill--neutral'};
+    }
+    const improved = positive ? delta >= 0 : delta <= 0;
+    return improved
+      ? {label: window.t('delta.up'), className: 'pill--strong'}
+      : {label: window.t('delta.down'), className: 'pill--critical'};
+  }
+
+  function updatedText(updated){
+    if (!updated) return '';
+    const dt = new Date(updated);
+    if (isNaN(dt)) return '';
+    return dt.toLocaleDateString();
+  }
+
+  function labelFor(key, fallback){
+    const translation = window.t(key);
+    if (translation && translation !== key) return translation;
+    const map = {
+      wellbeing_avg: 'Wellbeing',
+      high_stress_pct: 'High stress %',
+      fatigue_elevated_pct: 'Fatigue %',
+      engagement_active_pct: 'Active %'
+    };
+    return map[fallback] || fallback;
+  }
 })();

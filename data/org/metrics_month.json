@@ -1,16 +1,81 @@
 {
   "range": "month",
+  "updated": "2025-10-13T09:00:00Z",
+  "timeline": [
+    "2025-09-22",
+    "2025-09-29",
+    "2025-10-06",
+    "2025-10-13"
+  ],
   "kpi": {
     "wellbeing_avg": 69,
     "high_stress_pct": 21,
     "fatigue_elevated_pct": 27,
     "engagement_active_pct": 78
   },
+  "previous": {
+    "wellbeing_avg": 68,
+    "high_stress_pct": 23,
+    "fatigue_elevated_pct": 29,
+    "engagement_active_pct": 75
+  },
+  "series": {
+    "wellbeing_avg": [67, 68, 69, 69],
+    "high_stress_pct": [24, 22, 21, 21],
+    "fatigue_elevated_pct": [30, 28, 27, 27],
+    "engagement_active_pct": [74, 76, 78, 78]
+  },
   "kpi_trend": {
     "wellbeing_avg": [67, 68, 69, 69],
     "high_stress_pct": [24, 22, 21, 21],
     "fatigue_elevated_pct": [30, 28, 27, 27],
     "engagement_active_pct": [74, 76, 78, 78]
+  },
+  "teams": {
+    "ops": {
+      "wellbeing_avg": 64,
+      "high_stress_pct": 25,
+      "fatigue_elevated_pct": 30,
+      "engagement_active_pct": 74
+    },
+    "cs": {
+      "wellbeing_avg": 65,
+      "high_stress_pct": 26,
+      "fatigue_elevated_pct": 29,
+      "engagement_active_pct": 72
+    },
+    "it": {
+      "wellbeing_avg": 75,
+      "high_stress_pct": 17,
+      "fatigue_elevated_pct": 21,
+      "engagement_active_pct": 84
+    },
+    "lab": {
+      "wellbeing_avg": 72,
+      "high_stress_pct": 19,
+      "fatigue_elevated_pct": 24,
+      "engagement_active_pct": 80
+    }
+  },
+  "breakdown": {
+    "high_stress_pct": [
+      {"label": "Operations", "team": "ops", "value": 25, "previous": 27, "series": [27, 26, 25, 25]},
+      {"label": "Customer Service", "team": "cs", "value": 26, "previous": 28, "series": [28, 27, 26, 26]},
+      {"label": "IT", "team": "it", "value": 17, "previous": 18, "series": [18, 17, 17, 17]},
+      {"label": "Lab", "team": "lab", "value": 19, "previous": 20, "series": [20, 20, 19, 19]}
+    ],
+    "fatigue_elevated_pct": [
+      {"label": "Operations", "team": "ops", "value": 30, "previous": 33, "series": [33, 31, 30, 30]},
+      {"label": "Customer Service", "team": "cs", "value": 29, "previous": 31, "series": [31, 30, 29, 29]},
+      {"label": "IT", "team": "it", "value": 21, "previous": 23, "series": [23, 22, 21, 21]},
+      {"label": "Lab", "team": "lab", "value": 24, "previous": 26, "series": [26, 25, 24, 24]}
+    ],
+    "engagement_active_pct": [
+      {"label": "Operations", "team": "ops", "value": 74, "previous": 72, "series": [72, 73, 74, 74]},
+      {"label": "Customer Service", "team": "cs", "value": 72, "previous": 70, "series": [70, 71, 72, 72]},
+      {"label": "IT", "team": "it", "value": 84, "previous": 81, "series": [81, 82, 83, 84]},
+      {"label": "Lab", "team": "lab", "value": 80, "previous": 78, "series": [78, 79, 80, 80]}
+    ]
   },
   "heatmap": {
     "rows": ["ops", "cs", "it", "lab"],

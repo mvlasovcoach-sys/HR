@@ -1,0 +1,50 @@
+{
+  "range": "7d",
+  "updated": "2025-10-13T07:30:00Z",
+  "summary": {
+    "devices_online_pct": 86,
+    "avg_battery_pct": 61,
+    "sync_fresh_pct": 92
+  },
+  "distribution": [
+    {"bucket": "0-20", "value": 6},
+    {"bucket": "21-40", "value": 14},
+    {"bucket": "41-60", "value": 28},
+    {"bucket": "61-80", "value": 34},
+    {"bucket": "81-100", "value": 18}
+  ],
+  "teams": [
+    {
+      "team": "ops",
+      "devices": 120,
+      "online_pct": 84,
+      "avg_battery": 58,
+      "last_sync": "2025-10-13T06:55:00Z",
+      "status": "amber"
+    },
+    {
+      "team": "cs",
+      "devices": 98,
+      "online_pct": 82,
+      "avg_battery": 55,
+      "last_sync": "2025-10-13T07:10:00Z",
+      "status": "amber"
+    },
+    {
+      "team": "it",
+      "devices": 76,
+      "online_pct": 92,
+      "avg_battery": 68,
+      "last_sync": "2025-10-13T07:25:00Z",
+      "status": "green"
+    },
+    {
+      "team": "lab",
+      "devices": 64,
+      "online_pct": 90,
+      "avg_battery": 63,
+      "last_sync": "2025-10-13T07:05:00Z",
+      "status": "green"
+    }
+  ]
+}

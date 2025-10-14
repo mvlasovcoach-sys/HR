@@ -6,6 +6,11 @@
     "severity": "warning",
     "detail": "3-day recovery fell ≥15% vs baseline",
     "rule": "3-day moving average wellbeing dropped ≥15% vs team baseline",
+    "thresholds": {
+      "metric": "Wellbeing MA(3)",
+      "delta": "−15% vs baseline",
+      "window": "72h"
+    },
     "heatmapDate": "2025-10-10"
   },
   {
@@ -15,6 +20,11 @@
     "severity": "critical",
     "detail": "≥30% staff with Stress ≥70 for 2+ days",
     "rule": "≥30% of staff reported stress ≥70 for at least two consecutive days",
+    "thresholds": {
+      "metric": "Stress ≥70",
+      "population": "≥30% of team",
+      "duration": "48h"
+    },
     "heatmapDate": "2025-10-12"
   },
   {
@@ -24,6 +34,11 @@
     "severity": "info",
     "detail": "Shift-end fatigue >65 for two consecutive shifts",
     "rule": "Shift-end fatigue mean ≥65 for at least two consecutive shifts",
+    "thresholds": {
+      "metric": "Fatigue index",
+      "limit": ">65",
+      "occurrences": "2 shifts"
+    },
     "heatmapDate": "2025-10-13"
   }
 ]

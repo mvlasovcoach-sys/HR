@@ -329,6 +329,11 @@
   background: rgba(39, 224, 255, 0.08);
 }
 
+.activity-table tbody tr.is-highlighted {
+  background: rgba(39, 224, 255, 0.18);
+  outline: 2px solid rgba(39, 224, 255, 0.45);
+}
+
 .corp-footer {
   margin-top: var(--space-5);
   text-align: center;

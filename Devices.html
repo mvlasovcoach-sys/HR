@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SPA2099 HR Health — Devices</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=20240920">
+<link rel="stylesheet" href="./assets/css/devices.css?v=20240920">
+</head><body>
+<div class="page">
+  <div id="sidebar-slot"></div>
+  <main class="main main--devices">
+    <div class="header header--devices">
+      <div class="header__title" data-i18n="header.devices">Devices</div>
+      <div class="header__actions">
+        <button class="btn btn--ghost" type="button" id="devices-export" data-i18n="label.export.csv">Export CSV</button>
+        <div id="team-filter" class="team-filter"></div>
+        <div id="date-controls"></div>
+        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      </div>
+    </div>
+    <p id="devices-caption" class="header__caption" aria-live="polite"></p>
+
+    <section class="panel">
+      <div class="panel__meta" data-i18n="section.devicesOverview">Fleet status</div>
+      <div class="kpi-grid" id="devices-cards" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__meta" data-i18n="section.devicesTable">Devices by team</div>
+      <div class="devices-layout">
+        <div class="devices-table" id="devices-table" aria-live="polite"></div>
+        <div class="devices-distribution" aria-live="polite">
+          <h3 data-i18n="devices.distribution">Battery distribution</h3>
+          <div id="devices-histogram" class="devices-histogram"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script defer src="./assets/js/data-loader.js?v=20240920"></script>
+<script defer src="./assets/js/i18n.js?v=20240920"></script>
+<script defer src="./assets/js/app-shell.js?v=20240920"></script>
+<script defer src="./assets/js/date-controls.js?v=20240920"></script>
+<script defer src="./assets/js/team-filter.js?v=20240920"></script>
+<script defer src="./assets/js/about.js?v=20240920"></script>
+<script defer src="./assets/js/devices.js?v=20240920"></script>
+</body></html>

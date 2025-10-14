@@ -11,7 +11,7 @@
   <div id="sidebar-slot"></div>
   <main class="main">
     <div class="header">
-      <div class="header__title">
+      <div class="header__title" data-i18n="header.wellness">
         <span>Wellness</span>
         <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-wellness">
           Aggregates only · No raw biosignals
@@ -22,7 +22,10 @@
           <span class="tooltip" id="tooltip-ml-wellness" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
         </span>
       </div>
-      <div id="date-controls"></div>
+      <div class="header__actions">
+        <div id="date-controls"></div>
+        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      </div>
     </div>
     <section id="wellness-root" class="wellness-grid" aria-live="polite">
       <article class="tile wellness-tile wellness-tile--wellbeing">
@@ -139,8 +142,11 @@
     </section>
   </main>
 </div>
+<script defer src="./assets/js/data-loader.js?v=20240920"></script>
+<script defer src="./assets/js/i18n.js?v=20240920"></script>
 <script defer src="./assets/js/app-shell.js?v=20240920"></script>
 <script defer src="./assets/js/date-controls.js?v=20240920"></script>
+<script defer src="./assets/js/about.js?v=20240920"></script>
 <script defer src="./assets/js/mock-stream.js?v=20240920"></script>
 <script defer src="./assets/js/wellbeing.compute.js?v=20240920"></script>
 <script defer src="./assets/js/wellness-page.js?v=20240920"></script>
