@@ -1,4 +1,5 @@
 (function(){
+  console.info('Summary init');
   const ver = ()=> window.APP_VERSION || '';
   const MIN_N = 5;
 
@@ -107,7 +108,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    console.info('Summary init');
     const ready = ()=> loadAndRender();
     if (window.I18N?.onReady){
       window.I18N.onReady(ready);

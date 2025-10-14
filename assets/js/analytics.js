@@ -325,28 +325,48 @@ function initPage(){
 
     function metricDeltaInfo(metrics, key, team){
       if (!metrics) return {current: null, previous: null, delta: null, series: []};
-      const current = teamValue(metrics.kpi, key, team) ?? metrics.kpi?.[key] ?? null;
-      let delta = null;
-      if (team !== 'all' && metrics?.delta?.teams?.[team] && key in metrics.delta.teams[team]) {
-        const raw = metrics.delta.teams[team][key];
-        delta = Number.isFinite(raw) ? raw : null;
-      } else if (metrics?.delta && key in metrics.delta) {
-        const raw = metrics.delta[key];
-        delta = Number.isFinite(raw) ? raw : null;
+      const preset = metrics?.range || presetForRange(readRange());
+      const series = seriesForMetric(metrics, key, team);
+      const windowStats = computeWindowStats(series, preset);
+
+      let current = windowStats && Number.isFinite(windowStats.current)
+        ? windowStats.current
+        : (teamValue(metrics.kpi, key, team) ?? metrics.kpi?.[key] ?? null);
+
+      let previous = windowStats && Number.isFinite(windowStats.previous)
+        ? windowStats.previous
+        : null;
+
+      let delta = windowStats && Number.isFinite(windowStats.delta)
+        ? windowStats.delta
+        : null;
+
+      if (delta == null) {
+        if (team !== 'all' && metrics?.delta?.teams?.[team] && key in metrics.delta.teams[team]) {
+          const raw = metrics.delta.teams[team][key];
+          delta = Number.isFinite(raw) ? raw : null;
+        } else if (metrics?.delta && key in metrics.delta) {
+          const raw = metrics.delta[key];
+          delta = Number.isFinite(raw) ? raw : null;
+        }
       }
-      let previous = null;
-      if (delta != null && current != null) {
-        previous = current - delta;
-      } else {
-        const candidate = teamValue(metrics.previous, key, team) ?? metrics.previous?.[key];
-        if (Number.isFinite(candidate)) {
-          previous = candidate;
-          if (current != null) {
-            delta = current - previous;
+
+      if (previous == null) {
+        if (windowStats && Number.isFinite(windowStats.previous)) {
+          previous = windowStats.previous;
+        } else if (delta != null && current != null) {
+          previous = current - delta;
+        } else {
+          const candidate = teamValue(metrics.previous, key, team) ?? metrics.previous?.[key];
+          if (Number.isFinite(candidate)) {
+            previous = candidate;
+            if (delta == null && current != null) {
+              delta = current - previous;
+            }
           }
         }
       }
-      const series = Array.isArray(metrics?.series?.[key]) ? metrics.series[key] : [];
+
       return {current, previous, delta, series};
     }
 
@@ -405,6 +425,62 @@ function initPage(){
         return `${x},${y}`;
       }).join(' ');
       return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke" points="${points}" /></svg>`;
+    }
+
+    function seriesForMetric(metrics, key, team){
+      if (!metrics) return [];
+      if (team && team !== 'all') {
+        const breakdownList = metrics?.breakdown?.[key];
+        if (Array.isArray(breakdownList)) {
+          const entry = breakdownList.find(item => item?.team === team);
+          if (entry && Array.isArray(entry.series) && entry.series.length) {
+            return entry.series;
+          }
+        }
+        const teamSeries = metrics?.series?.teams?.[team]?.[key];
+        if (Array.isArray(teamSeries) && teamSeries.length) {
+          return teamSeries;
+        }
+      }
+      const direct = metrics?.series?.[key];
+      if (Array.isArray(direct) && direct.length) return direct;
+      const trend = metrics?.kpi_trend?.[key];
+      if (Array.isArray(trend) && trend.length) return trend;
+      return [];
+    }
+
+    function computeWindowStats(series, rangeKey){
+      if (!Array.isArray(series) || series.length === 0) return null;
+      const windowSize = windowSizeForRange(rangeKey, series.length);
+      if (!windowSize) return null;
+      if (series.length < windowSize * 2) return null;
+      const numeric = series.map(value => Number(value));
+      const currentSlice = numeric.slice(-windowSize);
+      const previousSlice = numeric.slice(-windowSize * 2, -windowSize);
+      if (!previousSlice.length || previousSlice.some(v => !Number.isFinite(v))) return null;
+      if (currentSlice.some(v => !Number.isFinite(v))) return null;
+      const currentAvg = average(currentSlice);
+      const previousAvg = average(previousSlice);
+      if (!Number.isFinite(currentAvg) || !Number.isFinite(previousAvg)) return null;
+      return {current: currentAvg, previous: previousAvg, delta: currentAvg - previousAvg};
+    }
+
+    function windowSizeForRange(rangeKey, length){
+      const defaults = { '7d': 7, month: 4, year: 12 };
+      const key = rangeKey || '7d';
+      let size = defaults[key] || Math.max(1, Math.floor(length / 2));
+      if (!length || length < 2) return null;
+      if (length < size * 2) {
+        size = Math.floor(length / 2);
+      }
+      if (size < 1) return null;
+      return length >= size * 2 ? size : null;
+    }
+
+    function average(values){
+      if (!Array.isArray(values) || !values.length) return NaN;
+      const total = values.reduce((acc, val) => acc + Number(val || 0), 0);
+      return total / values.length;
     }
 
     function deltaBadge(delta, positive){
