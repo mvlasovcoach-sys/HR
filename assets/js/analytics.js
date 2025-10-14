@@ -1,5 +1,4 @@
-(function(){
-  function initPage(){
+function initPage(){
     const trackerEl = document.getElementById('wellbeing-tracker');
     if (!trackerEl) return;
     const breakdownEl = document.getElementById('analytics-breakdown');
@@ -261,7 +260,7 @@
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${t('caption.orgAverage')}${t('caption.separator')}${rangeText}${t('caption.separator')}${teamText}`;
+      return `${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
@@ -289,21 +288,8 @@
       } catch (e) {}
       return team;
     }
-  }
+}
 
-  function boot(){
-    Promise.resolve().then(() => {
-      if (window.I18N?.onReady) {
-        window.I18N.onReady(initPage);
-      } else {
-        initPage();
-      }
-    });
-  }
-
-  if (document.readyState !== 'loading') {
-    boot();
-  } else {
-    window.addEventListener('DOMContentLoaded', boot);
-  }
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  window.I18N?.onReady ? window.I18N.onReady(initPage) : initPage();
+});

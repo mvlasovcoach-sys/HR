@@ -2,16 +2,23 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Summary</title>
-<link rel="stylesheet" href="./assets/css/ui.tokens.css">
-<link rel="stylesheet" href="./assets/css/ui.components.css">
-<link rel="stylesheet" href="./assets/css/app-shell.css">
-<link rel="stylesheet" href="./assets/css/hr-board.neon.css">
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=20251014">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=20251014">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=20251014">
+<!-- страничные стили (если есть) -->
+<link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=20251014">
 </head><body>
 <div class="page">
   <div id="sidebar-slot"></div>
   <main class="main">
     <div class="header">
       <div class="header__title" data-i18n="header.summary">Summary</div>
+      <div class="header__badges" aria-hidden="true">
+        <span class="pill pill--neutral">AGGREGATES ONLY</span>
+        <span class="pill pill--neutral">NO RAW BIOSIGNALS</span>
+        <span class="pill pill--neutral">FIXED THRESHOLDS</span>
+        <span class="pill pill--neutral">NO ML</span>
+      </div>
       <div class="header__actions">
         <div id="team-filter" class="team-filter"></div>
         <div id="date-controls"></div>
@@ -22,15 +29,16 @@
     <section id="hr-board" class="panel" aria-live="polite"></section>
   </main>
 </div>
-<script defer src="./assets/js/data-loader.js"></script>
-<script defer src="./assets/js/auth.js"></script>
-<script defer src="./assets/js/guards.js"></script>
-<script defer src="./assets/js/theme.js"></script>
 <script defer src="./assets/js/i18n.js"></script>
 <script defer src="./assets/js/version.js"></script>
 <script defer src="./assets/js/app-shell.js"></script>
 <script defer src="./assets/js/date-controls.js"></script>
 <script defer src="./assets/js/team-filter.js"></script>
+<!-- страничные скрипты -->
+<script defer src="./assets/js/data-loader.js"></script>
+<script defer src="./assets/js/auth.js"></script>
+<script defer src="./assets/js/guards.js"></script>
+<script defer src="./assets/js/theme.js"></script>
 <script defer src="./assets/js/about.js"></script>
 <script defer src="./assets/js/hr-board.neon.js"></script>
 </body></html>

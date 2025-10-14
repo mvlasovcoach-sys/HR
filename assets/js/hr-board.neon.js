@@ -1,5 +1,4 @@
-(function(){
-  function initPage(){
+function initPage(){
     const mount = document.getElementById('hr-board');
     if (!mount) return;
 
@@ -95,12 +94,6 @@
       return (value ?? 0).toFixed(decimals ?? 0);
     }
 
-    function buildCaption(range, team){
-      const rangeText = rangeLabel(range);
-      const teamText = teamLabel(team);
-      return `${t('caption.orgAverage')}${t('caption.separator')}${rangeText}${t('caption.separator')}${teamText}`;
-    }
-
     function rangeLabel(range){
       if (!range) return t('caption.range', {range: '—'});
       if (range.preset) {
@@ -154,7 +147,7 @@
       const data = await loadMetrics(range);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (CAPTION) CAPTION.textContent = buildCaption(range, team);
+        if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
         return;
       }
 
@@ -179,7 +172,7 @@
       }).join('');
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
-      if (CAPTION) CAPTION.textContent = buildCaption(range, team);
+      if (CAPTION) CAPTION.textContent = `${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
     }
 
     function resolveValue(data, key, team){
@@ -234,21 +227,8 @@
       if (isNaN(date)) return input;
       return date.toLocaleDateString();
     }
-  }
+}
 
-  function boot(){
-    Promise.resolve().then(() => {
-      if (window.I18N?.onReady) {
-        window.I18N.onReady(initPage);
-      } else {
-        initPage();
-      }
-    });
-  }
-
-  if (document.readyState !== 'loading') {
-    boot();
-  } else {
-    window.addEventListener('DOMContentLoaded', boot);
-  }
-})();
+document.addEventListener('DOMContentLoaded', () => {
+  window.I18N?.onReady ? window.I18N.onReady(initPage) : initPage();
+});
