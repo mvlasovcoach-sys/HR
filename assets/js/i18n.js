@@ -19,7 +19,15 @@
   function translateElement(el){
     const key = el.getAttribute('data-i18n');
     if (!key) return;
-    el.textContent = t(key);
+    const attrTargets = (el.getAttribute('data-i18n-attr') || '').split(/[,\s]+/).filter(Boolean);
+    const translation = t(key);
+    if (!attrTargets.length || attrTargets.includes('text')) {
+      el.textContent = translation;
+    }
+    attrTargets.forEach(attr => {
+      if (attr === 'text') return;
+      el.setAttribute(attr, translation);
+    });
   }
 
   function translateDocument(){
