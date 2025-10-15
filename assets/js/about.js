@@ -9,7 +9,7 @@
     <div class="about__sheet" role="document">
       <header class="about__header">
         <h2 class="about__title" data-i18n="about.title">About this platform</h2>
-        <button type="button" class="about__close" data-about-close aria-label="Close">
+        <button type="button" class="about__close" data-about-close data-i18n="about.close" data-i18n-attr="aria-label" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
       </header>
@@ -22,7 +22,7 @@
         <li data-i18n="about.bullet6">Accuracy 2.4–4.7%</li>
       </ul>
       <footer class="about__footer">
-        <div class="lang-toggle" role="group" aria-label="Language switcher">
+        <div class="lang-toggle" role="group" data-i18n="aria.languageSwitcher" data-i18n-attr="aria-label" aria-label="Language switcher">
           <button type="button" data-lang="en">EN</button>
           <button type="button" data-lang="nl">NL</button>
         </div>
@@ -37,7 +37,7 @@
     footer.className = 'page-footer';
     footer.innerHTML = `
       <span class="page-footer__label" data-i18n="label.language">Language</span>
-      <div class="lang-toggle" role="group" aria-label="Language switcher">
+      <div class="lang-toggle" role="group" data-i18n="aria.languageSwitcher" data-i18n-attr="aria-label" aria-label="Language switcher">
         <button type="button" data-lang="en">EN</button>
         <button type="button" data-lang="nl">NL</button>
       </div>`;

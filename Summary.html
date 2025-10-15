@@ -27,20 +27,20 @@
     <div class="header">
       <div class="header__title" data-i18n="header.summary">Summary</div>
       <div class="header__badges" aria-hidden="true">
-        <span class="pill pill--neutral">AGGREGATES ONLY</span>
-        <span class="pill pill--neutral">NO RAW BIOSIGNALS</span>
-        <span class="pill pill--neutral">FIXED THRESHOLDS</span>
-        <span class="pill pill--neutral">NO ML</span>
+        <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
+        <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
+        <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
+        <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
       </div>
       <div class="header__actions">
         <div id="team-filter" class="team-filter"></div>
         <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+        <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
       </div>
     </div>
     <p id="global-caption" class="header__caption" aria-live="polite"></p>
     <p id="sum-caption" class="caption" aria-live="polite"></p>
-    <div class="scenario-controls" role="group" aria-label="Scenario toggles">
+    <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label" aria-label="Scenario toggles">
       <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="btn.loadScenario">Load Night-Shift Scenario</button>
       <button type="button" id="btn-night-reset" class="btn btn--ghost" data-i18n="btn.liveView">Return to Live View</button>
     </div>

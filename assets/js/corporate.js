@@ -284,7 +284,7 @@ function initCorporatePage(){
     const grid = els.heatmapGrid;
     if (!grid) return;
     if (!heatmap || !Array.isArray(heatmap.rows) || !Array.isArray(heatmap.cols)) {
-      grid.innerHTML = '<p class="caption">No heatmap data</p>';
+      grid.innerHTML = `<p class="caption">${t('heatmap.empty', 'No heatmap data')}</p>`;
       state.heatmapCells = [];
       return;
     }
@@ -299,7 +299,7 @@ function initCorporatePage(){
     const totalCols = cols.length + 1;
     grid.style.setProperty('--heatmap-cols', totalCols);
     grid.setAttribute('role', 'grid');
-    grid.setAttribute('aria-label', 'Wellbeing heatmap');
+    grid.setAttribute('aria-label', t('aria.corporateHeatmap', 'Wellbeing heatmap'));
     const fragment = document.createDocumentFragment();
 
     const blank = document.createElement('div');
@@ -346,7 +346,7 @@ function initCorporatePage(){
           cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • ${rounded}`);
         } else {
           cell.textContent = '—';
-          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • no data`);
+          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • ${t('status.noData', 'No data')}`);
         }
         cell.addEventListener('click', () => {
           handleHeatmapSelection(colIndex);

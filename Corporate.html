@@ -27,27 +27,34 @@
         <div id="team-filter" class="toolbar__filter"></div>
         <div id="date-controls" class="toolbar__filter"></div>
       </div>
-      <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
     </div>
 
     <header class="page-head">
-      <h1>Corporate</h1>
+      <h1 data-i18n="header.corporate">Corporate</h1>
       <div class="badges">
-        <span class="pill">AGGREGATES ONLY · NO RAW BIOSIGNALS</span>
-        <span class="pill">FIXED THRESHOLDS · NO ML</span>
+        <span class="pill" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
+        <span class="pill" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
+        <span class="pill" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
+        <span class="pill" data-i18n="badge.noMl">NO ML</span>
       </div>
     </header>
 
     <p id="corp-caption" class="caption" aria-live="polite"></p>
 
     <section id="corp-kpis" class="panel">
-      <div class="panel__head">Overview KPIs</div>
+      <div class="panel__head" data-i18n="section.corporateOverview">Overview KPIs</div>
       <div id="corp-kpi-grid" class="grid grid-4"></div>
     </section>
 
     <section id="corp-heatmap" class="panel">
-      <div class="panel__head">Divisional Heatmap
-        <span class="legend"><i class="sw red"></i> ≤55 <i class="sw amber"></i> 56–69 <i class="sw green"></i> ≥70</span>
+      <div class="panel__head">
+        <span data-i18n="section.corporateHeatmap">Divisional Heatmap</span>
+        <span class="legend" aria-hidden="true">
+          <span><i class="sw red"></i><span data-i18n="legend.low">≤55 red</span></span>
+          <span><i class="sw amber"></i><span data-i18n="legend.mid">56–69 amber</span></span>
+          <span><i class="sw green"></i><span data-i18n="legend.high">≥70 green</span></span>
+        </span>
       </div>
       <div id="heatmap-grid"></div>
     </section>
@@ -69,8 +76,9 @@
     </section>
 
     <section id="corp-activity" class="panel">
-      <div class="panel__head">Activity Log
-        <button id="export-activity" class="btn">Export CSV</button>
+      <div class="panel__head">
+        <span data-i18n="section.corporateActivity">Activity Log</span>
+        <button id="export-activity" class="btn" data-i18n="label.export.csv">Export CSV</button>
       </div>
       <table id="activity-table" class="table"></table>
     </section>
