@@ -6,10 +6,10 @@ function initPage(){
     const panel = document.getElementById('engagement-panel');
 
     const KPI_KEYS = [
-      {key: 'onboarding_pct', label: 'kpi.onboarding', targetKey: 'onboarding_pct', unit: '%', decimals: 0},
-      {key: 'weekly_active_pct', label: 'kpi.weeklyActive', targetKey: 'weekly_active_pct', unit: '%', decimals: 0},
-      {key: 'nps', label: 'kpi.nps', targetKey: 'nps', unit: '', decimals: 0},
-      {key: 'alert_count', label: 'kpi.alertCount', targetKey: null, unit: '', decimals: 0}
+      {key: 'onboarding_pct', label: 'kpi.onboarding', targetKey: 'onboarding_pct', target: 80, unit: '%', decimals: 0},
+      {key: 'weekly_active_pct', label: 'kpi.weeklyActive', targetKey: 'weekly_active_pct', target: 75, unit: '%', decimals: 0},
+      {key: 'nps', label: 'kpi.nps', targetKey: 'nps', target: 25, unit: '', decimals: 0},
+      {key: 'alert_count', label: 'kpi.alertCount', targetKey: null, target: 3, unit: '', decimals: 0}
     ];
 
     let npsData = null;
@@ -104,11 +104,21 @@ function initPage(){
         return;
       }
 
+      grid.innerHTML = '';
+      const nValue = Number(data?.n);
+      if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, grid)) {
+        if (caption) caption.textContent = buildCaption(range, team);
+        if (updatedEl) updatedEl.textContent = '';
+        return;
+      } else if (!Number.isFinite(nValue)) {
+        grid.removeAttribute('data-guard');
+      }
+
       const cards = KPI_KEYS.map(cfg => buildCard(cfg, data, preset, team, range)).join('');
       grid.innerHTML = cards;
       if (caption) caption.textContent = buildCaption(range, team);
       if (updatedEl) {
-        updatedEl.textContent = data.updated ? `${t('label.updatedAt', {date: formatDate(data.updated)})}` : '';
+        updatedEl.textContent = data.updated ? `${t('ui.updated')} ${formatDate(data.updated)}` : '';
       }
     }
 
@@ -146,7 +156,7 @@ function initPage(){
     }
 
     function resolveKpiMetrics(cfg, data, preset, team, range){
-      const target = data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 3 : null);
+      const target = cfg.target ?? data.targets?.[cfg.targetKey] ?? (cfg.key === 'alert_count' ? 3 : null);
       const value = resolveValue(cfg.key, data, preset, team, range);
       const previous = resolvePrevious(cfg.key, data, preset, team);
       const delta = previous != null && value != null ? value - previous : null;
@@ -302,7 +312,8 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
+      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
@@ -347,8 +358,10 @@ function initPage(){
       if (!panel) return;
       if (active) {
         panel.setAttribute('data-insufficient', 'true');
+        panel.setAttribute('data-guard-message', t('guard.insufficient'));
       } else {
         panel.removeAttribute('data-insufficient');
+        panel.removeAttribute('data-guard-message');
       }
     }
 

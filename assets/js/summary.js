@@ -1,6 +1,5 @@
 (function(){
   console.info('Summary init');
-  const MIN_N = 5;
   const TILE_COUNT = 4;
 
   const state = {
@@ -39,7 +38,10 @@
     document.getElementById('sum-kpi-grid')?.addEventListener('click', evt => {
       const tile = evt.target.closest('.tile');
       if (!tile) return;
-      window.location.href = './Analytics.html';
+      const params = new URLSearchParams();
+      params.set('team', getTeamId());
+      params.set('range', getRangeKey());
+      window.location.href = `./Analytics.html?${params.toString()}`;
     });
   }
 
@@ -133,16 +135,6 @@
     return id;
   }
 
-  function kGuard(n, host){
-    if(n>=MIN_N){
-      host.removeAttribute('data-guard');
-      return false;
-    }
-    host.setAttribute('data-guard', 'true');
-    host.innerHTML = `<div class="kGuard">Aggregated metrics withheld — n < ${MIN_N}.</div>`;
-    return true;
-  }
-
   function rangeLabel(){
     const key = getRangeKey();
     const map = {
@@ -162,7 +154,7 @@
   function renderCaption(){
     const el = document.getElementById('sum-caption');
     if(!el) return;
-    const prefix = window.I18N?.t('caption.orgAverage') || 'Org avg';
+    const prefix = window.I18N?.t('caption.orgAvg') || window.I18N?.t('caption.orgAverage') || 'Org avg';
     const sep = window.I18N?.t('caption.separator') || ' · ';
     el.textContent = `${scenarioPrefix()}${prefix}${sep}${rangeLabel()}${sep}${teamLabel(getTeamId())}`;
   }
@@ -172,7 +164,7 @@
     if (!grid) return;
     const skeleton = [];
     for (let i = 0; i < TILE_COUNT; i++) {
-      skeleton.push(`<div class="tile tile--skeleton" aria-hidden="true">
+      skeleton.push(`<div class="tile tile--skeleton skeleton" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
         <div class="tile__meta"><span class="skeleton skeleton--pill"></span></div>
         <div class="tile__kpi"><span class="skeleton skeleton--value"></span></div>
@@ -196,7 +188,7 @@
     }catch(err){
       console.error('Summary metrics failed', err);
       grid.innerHTML = '';
-      toast(window.I18N?.t('status.noData') || 'Unable to load data');
+      toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
     } finally {
       state.loading = false;
     }
@@ -207,18 +199,24 @@
     if(!grid) return;
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
-    const n = metrics?.n || 0;
-    if (kGuard(Number(n||0), grid)) return;
+    const nValue = Number(metrics?.n);
+    grid.innerHTML = '';
+    if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, grid)) {
+      return;
+    }
+    if (!Number.isFinite(nValue)) {
+      grid.removeAttribute('data-guard');
+    }
 
     const updatedDate = lastDate(metrics?.heatmap?.dates);
-    const updatedLabel = updatedDate ? `${window.I18N?.t('label.updated') || 'Updated'} ${formatDate(updatedDate)}` : '';
+    const updatedLabel = updatedDate ? `${window.I18N?.t('ui.updated') || window.I18N?.t('label.updated') || 'Updated'} ${formatDate(updatedDate)}` : '';
     const sparkSeries = buildSparkSeries(trend?.heatmap);
 
     const defs = [
-      { key:'wellbeing_avg',         label:()=>window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',     unit:'/100', fmt:v=>Math.round(v) },
-      { key:'high_stress_pct',       label:()=>window.I18N?.t('metric.highStress') || 'High Stress',   unit:'%',    fmt:v=>Math.round(v) },
-      { key:'fatigue_elevated_pct',  label:()=>window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue',  unit:'%',    fmt:v=>Math.round(v) },
-      { key:'engagement_active_pct', label:()=>window.I18N?.t('metric.activeEngagement') || 'Active Engagement', unit:'%',    fmt:v=>Math.round(v) }
+      { key:'wellbeing_avg',         label:()=>window.I18N?.t('kpi.orgWellbeing') || window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',     unit:'/100', fmt:v=>Math.round(v) },
+      { key:'high_stress_pct',       label:()=>window.I18N?.t('kpi.highStress') || window.I18N?.t('metric.highStress') || 'High Stress %',   unit:'%',    fmt:v=>Math.round(v) },
+      { key:'fatigue_elevated_pct',  label:()=>window.I18N?.t('kpi.elevatedFatigue') || window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue %',  unit:'%',    fmt:v=>Math.round(v) },
+      { key:'engagement_active_pct', label:()=>window.I18N?.t('kpi.activeEngagement') || window.I18N?.t('metric.activeEngagement') || 'Active Engagement %', unit:'%',    fmt:v=>Math.round(v) }
     ];
 
     grid.innerHTML = defs.map((d, index)=>{
@@ -289,21 +287,13 @@
 
   function toast(message){
     if (!message) return;
-    let stack = document.querySelector('.toast-stack');
-    if (!stack) {
-      stack = document.createElement('div');
-      stack.className = 'toast-stack';
-      document.body.appendChild(stack);
-    }
-    const el = document.createElement('div');
-    el.className = 'toast toast--quiet';
-    el.setAttribute('role', 'status');
-    el.textContent = message;
-    stack.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('is-visible'));
-    setTimeout(() => {
-      el.classList.remove('is-visible');
-      setTimeout(() => el.remove(), 400);
+    const host = document.getElementById('sum-toast');
+    if (!host) return;
+    host.textContent = message;
+    host.classList.add('is-visible');
+    clearTimeout(host._hideTimer);
+    host._hideTimer = setTimeout(() => {
+      host.classList.remove('is-visible');
     }, 3200);
   }
 })();

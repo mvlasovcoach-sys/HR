@@ -5,7 +5,7 @@
     const heatmapSection = document.getElementById('pilot-heatmap');
     const eventsSection = document.getElementById('pilot-events');
     const captionEl = document.getElementById('pilot-caption');
-    const exportBtn = document.getElementById('pilot-export');
+    const exportBtn = document.getElementById('btn-export-pilot');
 
     let events = [];
     const state = {
@@ -89,6 +89,10 @@
       state.preset = preset;
       state.engagement = engagement;
       state.metrics = metrics;
+      if (exportBtn) {
+        const nValue = Number(metrics?.n ?? engagement?.n);
+        exportBtn.disabled = Number.isFinite(nValue) && nValue < 5;
+      }
       renderKpis(engagement, preset, team, range);
       renderHeatmap(metrics);
       renderEvents(range, team);
@@ -377,7 +381,8 @@
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = team === 'all' ? window.t('caption.teamAll') : teamMap()[team] || team;
-      return `${scenarioPrefix()}${window.t('caption.orgAverage')}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
+      const prefix = window.t('caption.orgAvg') || window.t('caption.orgAverage');
+      return `${scenarioPrefix()}${prefix}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
     }
 
     function rangeLabel(range){
@@ -412,7 +417,7 @@
       const team = readTeam();
       const preset = presetForRange(range);
       try {
-        const teamSlug = team === 'all' ? 'all-teams' : team;
+        const teamSlug = team === 'all' ? 'all' : team;
         const gdprHeading = (() => {
           const text = window.t('pilot.gdpr') || '';
           return text.includes(':') ? text.split(':')[0] : text;
@@ -436,7 +441,7 @@
             statusText: entry.statusText,
             deltaText: entry.deltaText
           })),
-          heatmapEl: heatmapSection,
+          heatmapEl: document.querySelector('#heatmap-grid') || heatmapSection,
           events: ['critical', 'warning', 'info'].map(sev => ({
             label: tSeverity(sev),
             count: state.eventCounts[sev] || 0

@@ -140,7 +140,8 @@ function initPage(){
         {key: 'status', label: t('devices.table.status')}
       ];
       const rowsMarkup = filtered.map(row => {
-        const status = statusClass(row.status, row.avg_battery ?? row.avg_battery_pct ?? 0);
+        const online = Number(row.online_pct ?? row.devices_online_pct ?? 0);
+        const status = statusClass(row.status, online);
         return `<tr>
           <td>${teamName(row.team)}</td>
           <td>${row.devices}</td>
@@ -197,8 +198,10 @@ function initPage(){
         if (!panel) return;
         if (active) {
           panel.setAttribute('data-insufficient', 'true');
+          panel.setAttribute('data-guard-message', t('guard.insufficient'));
         } else {
           panel.removeAttribute('data-insufficient');
+          panel.removeAttribute('data-guard-message');
         }
       });
     }
@@ -237,7 +240,8 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
+      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){
