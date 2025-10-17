@@ -59,26 +59,6 @@
     }
   });
 
-  modal.addEventListener('keydown', evt => {
-    if (evt.key === 'Escape') {
-      evt.preventDefault();
-      closeModal();
-      return;
-    }
-    if (evt.key !== 'Tab') return;
-    const focusable = Array.from(modal.querySelectorAll(focusSelectors)).filter(el => el.offsetParent !== null);
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (evt.shiftKey && document.activeElement === first) {
-      evt.preventDefault();
-      last.focus();
-    } else if (!evt.shiftKey && document.activeElement === last) {
-      evt.preventDefault();
-      first.focus();
-    }
-  });
-
   bindLanguageButtons(modal);
   if (footer) {
     bindLanguageButtons(footer);
@@ -121,15 +101,38 @@
     const firstFocusable = modal.querySelector(focusSelectors);
     if (firstFocusable) firstFocusable.focus();
     document.body.classList.add('modal-open');
+    document.addEventListener('keydown', handleKeyDown, true);
   }
 
   function closeModal(){
     modal.setAttribute('aria-hidden', 'true');
     modal.classList.remove('is-open');
     document.body.classList.remove('modal-open');
+    document.removeEventListener('keydown', handleKeyDown, true);
     if (lastFocus) {
       try { lastFocus.focus(); } catch (e) { /* ignore */ }
       lastFocus = null;
+    }
+  }
+
+  function handleKeyDown(evt){
+    if (modal.getAttribute('aria-hidden') === 'true') return;
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      closeModal();
+      return;
+    }
+    if (evt.key !== 'Tab') return;
+    const focusable = Array.from(modal.querySelectorAll(focusSelectors)).filter(el => el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (evt.shiftKey && document.activeElement === first) {
+      evt.preventDefault();
+      last.focus();
+    } else if (!evt.shiftKey && document.activeElement === last) {
+      evt.preventDefault();
+      first.focus();
     }
   }
 })();

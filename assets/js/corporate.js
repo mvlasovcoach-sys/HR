@@ -21,9 +21,15 @@ function initCorporatePage(){
     eventSeverity: document.getElementById('f-sev'),
     eventType: document.getElementById('f-type'),
     eventBadges: document.getElementById('event-badges'),
+    eventCount: document.getElementById('ev-count'),
+    eventCritical: document.getElementById('ev-crit'),
+    eventWarning: document.getElementById('ev-warn'),
+    eventInfo: document.getElementById('ev-info'),
     activityPanel: document.getElementById('corp-activity'),
     activityTable: document.getElementById('activity-table'),
-    exportBtn: document.getElementById('export-activity')
+    exportBtn: document.getElementById('export-activity'),
+    scenarioNight: document.getElementById('btn-load-night'),
+    scenarioLive: document.getElementById('btn-return-live')
   };
 
   if (!els.kpiGrid || !els.heatmapGrid || !els.eventsList || !els.activityTable) {
@@ -78,6 +84,7 @@ function initCorporatePage(){
     await loadEvents();
     await loadMetrics();
     bindEvents();
+    updateScenarioButtons();
     updateCaption();
     renderAll();
   }
@@ -104,6 +111,9 @@ function initCorporatePage(){
 
     window.addEventListener('storage', handleStorageEvent);
     document.addEventListener('i18n:change', handleI18nChange);
+
+    els.scenarioNight?.addEventListener('click', () => setScenario('night'));
+    els.scenarioLive?.addEventListener('click', () => setScenario('live'));
   }
 
   async function loadTeams(){
@@ -137,7 +147,7 @@ function initCorporatePage(){
       }
     }
     if (els.eventSeverity) {
-      const current = els.eventSeverity.value || '';
+      const current = state.eventFilterSeverity || '';
       const options = document.createDocumentFragment();
       const all = document.createElement('option');
       all.value = '';
@@ -152,7 +162,9 @@ function initCorporatePage(){
       });
       els.eventSeverity.innerHTML = '';
       els.eventSeverity.appendChild(options);
-      state.eventFilterSeverity = current;
+      const hasOption = Array.from(els.eventSeverity.options || []).some(opt => opt.value === current);
+      els.eventSeverity.value = hasOption ? current : '';
+      state.eventFilterSeverity = els.eventSeverity.value || '';
     }
     if (els.eventType) {
       const placeholder = document.createElement('option');
@@ -176,11 +188,13 @@ function initCorporatePage(){
   async function loadMetrics(){
     state.rangeSelection = readRangeSelection();
     const {dataKey, label, rangeKey} = resolveRangeConfig(state.rangeSelection);
-    state.dataRangeKey = dataKey;
-    state.rangeLabel = label;
-    state.rangeKey = rangeKey;
+    const scenario = readScenario();
+    const effectiveKey = scenario === 'night' ? '7d' : dataKey;
+    state.dataRangeKey = effectiveKey;
+    state.rangeLabel = scenario === 'night' ? (window.I18N?.t('range.7d') || '7 Days') : label;
+    state.rangeKey = scenario === 'night' ? '7d' : rangeKey;
     try {
-      const metrics = await fetchJson(`${DATA_ROOT}/metrics_${dataKey}.json`);
+      const metrics = await fetchJson(`${DATA_ROOT}/metrics_${effectiveKey}.json`);
       state.metrics = metrics;
       const nVal = Number(metrics?.n);
       state.insufficient = Number.isFinite(nVal) && nVal < 5;
@@ -261,7 +275,7 @@ function initCorporatePage(){
 
   function renderAll(){
     toggleInsufficientOverlays();
-    try { renderKpis(state.metrics?.kpi, state.metrics?.delta); } catch (err) { console.error('KPI', err); }
+    try { renderKpis(state.metrics?.kpi, state.metrics?.delta, state.metrics?.n); } catch (err) { console.error('KPI', err); }
     try { renderHeatmap(state.metrics?.heatmap); } catch (err) { console.error('Heatmap', err); }
     try { renderEvents(state.events); } catch (err) { console.error('Events', err); }
     try { renderActivity(state.metrics?.activity); } catch (err) { console.error('Activity', err); }
@@ -274,8 +288,10 @@ function initCorporatePage(){
       if (!panel) return;
       if (state.insufficient) {
         panel.setAttribute('data-insufficient', 'true');
+        panel.setAttribute('data-guard-message', t('guard.insufficient', 'Insufficient group size'));
       } else {
         panel.removeAttribute('data-insufficient');
+        panel.removeAttribute('data-guard-message');
       }
     });
   }
@@ -462,7 +478,7 @@ function initCorporatePage(){
       const note = document.createElement('div');
       note.className = 'event-filter-note';
       const label = state.eventsDateFilter.label || formatDateLabel(state.eventsDateFilter.date);
-      note.textContent = t('events.filteredBy', vars => `Filtered by ${vars?.label ?? ''}`, {label});
+      note.textContent = t('events.filteredBy', {label});
       list.appendChild(note);
     }
 
@@ -678,12 +694,16 @@ function initCorporatePage(){
   function sortActivityRows(rows, columns, lang){
     const active = columns.find(col => col.key === state.activitySort.key) || columns[0];
     const direction = state.activitySort.dir === 'asc' ? 1 : -1;
-    return rows.slice().sort((a, b) => {
-      const result = active.sort(a, b, lang);
-      if (result !== 0) return result * direction;
-      const fallback = columns[0].sort(a, b, lang);
-      return fallback * direction;
-    });
+    return rows
+      .map((row, index) => ({row, index}))
+      .sort((a, b) => {
+        const result = active.sort(a.row, b.row, lang);
+        if (result !== 0) return result * direction;
+        const fallback = columns[0].sort(a.row, b.row, lang);
+        if (fallback !== 0) return fallback * direction;
+        return a.index - b.index;
+      })
+      .map(entry => entry.row);
   }
 
   function handleActivitySortClick(evt){
@@ -735,7 +755,7 @@ function initCorporatePage(){
       ? t('label.team.all', 'All Teams')
       : (state.teamMap.get(state.teamSelection) || state.teamSelection);
     const rangeLabel = state.rangeLabel || t('label.range', 'Range');
-    const prefix = t('caption.orgAverage', 'Org avg');
+    const prefix = t('caption.orgAvg', t('caption.orgAverage', 'Org avg'));
     const sep = t('caption.separator', ' · ');
     els.caption.textContent = `${scenarioPrefix()}${prefix}${sep}${rangeLabel}${sep}${teamLabel}`;
   }
@@ -760,6 +780,7 @@ function initCorporatePage(){
       });
     }
     if (evt.key === 'hr:scenario') {
+      updateScenarioButtons();
       Promise.all([loadEvents(), loadMetrics()]).then(() => {
         renderAll();
       });
@@ -778,6 +799,7 @@ function initCorporatePage(){
     state.rangeLabel = resolveRangeConfig(state.rangeSelection).label;
     setupEventFilters();
     buildEventTypeOptions();
+    updateScenarioButtons();
     renderAll();
   }
 
@@ -882,11 +904,15 @@ function initCorporatePage(){
 
   function updateEventBadges(events){
     if (!els.eventBadges) return;
+    const list = Array.isArray(events) ? events : [];
     if (state.insufficient) {
-      els.eventBadges.innerHTML = '';
+      if (els.eventCount) els.eventCount.textContent = t('guard.insufficient', 'Insufficient group size');
+      [els.eventCritical, els.eventWarning, els.eventInfo].forEach(el => {
+        if (!el) return;
+        el.textContent = '—';
+      });
       return;
     }
-    const list = Array.isArray(events) ? events : [];
     const counts = {critical: 0, warning: 0, info: 0};
     list.forEach(evt => {
       const sev = evt?.severity;
@@ -895,16 +921,35 @@ function initCorporatePage(){
       }
     });
     const total = list.length;
-    const pills = [
-      `<span class="pill pill--neutral">${t('events.count.total', vars => `Total ${vars?.count ?? 0}`, {count: total})}</span>`
-    ];
-    SEVERITIES.forEach(level => {
-      const count = counts[level];
-      const className = level === 'critical' ? 'pill--critical' : level === 'warning' ? 'pill--caution' : 'pill--neutral';
-      const label = t(`events.severity.${level}`, level.toUpperCase());
-      pills.push(`<span class="pill ${className}">${t(`events.count.${level}`, vars => `${label} ${vars?.count ?? 0}`, {count, label})}</span>`);
-    });
-    els.eventBadges.innerHTML = pills.join('');
+    if (els.eventCount) {
+      els.eventCount.textContent = t('events.count.total', {count: total});
+    }
+    if (els.eventCritical) {
+      els.eventCritical.textContent = t('events.count.critical', {count: counts.critical});
+    }
+    if (els.eventWarning) {
+      els.eventWarning.textContent = t('events.count.warning', {count: counts.warning});
+    }
+    if (els.eventInfo) {
+      els.eventInfo.textContent = t('events.count.info', {count: counts.info});
+    }
+  }
+
+  function setScenario(mode){
+    const next = mode === 'night' ? 'night' : 'live';
+    try {
+      const prev = readScenario();
+      if (prev === next) {
+        updateScenarioButtons();
+        return;
+      }
+      localStorage.setItem('hr:scenario', next);
+      window.dataLoader?.clear?.();
+      dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
+    } catch (err) {
+      console.warn('scenario set failed', err);
+    }
+    updateScenarioButtons();
   }
 
   function readScenario(){
@@ -918,25 +963,43 @@ function initCorporatePage(){
   function scenarioPrefix(){
     return readScenario() === 'night' ? t('caption.scenarioPrefix', 'Night-Shift Scenario · ') : '';
   }
+
+  function updateScenarioButtons(){
+    const scenario = readScenario();
+    const isNight = scenario === 'night';
+    const buttons = [
+      {btn: els.scenarioNight, active: isNight},
+      {btn: els.scenarioLive, active: !isNight}
+    ];
+    buttons.forEach(({btn, active}) => {
+      if (!btn) return;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
 }
 
-function renderKpis(kpi, delta={}){
+function renderKpis(kpi, delta={}, n){
   const grid=document.getElementById('corp-kpi-grid');
   if(!grid) return;
+  grid.innerHTML = '';
+  if (window.guardSmallN && window.guardSmallN(Number(n || 0), grid)) {
+    return;
+  }
   const defs=[
-    {key:'wellbeing_avg',label:()=>window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',unit:'/100',fmt:v=>Math.round(v)},
-    {key:'high_stress_pct',label:()=>window.I18N?.t('metric.highStress') || 'High Stress',unit:'%',fmt:v=>Math.round(v)},
-    {key:'fatigue_elevated_pct',label:()=>window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue',unit:'%',fmt:v=>Math.round(v)},
-    {key:'engagement_active_pct',label:()=>window.I18N?.t('metric.activeEngagement') || 'Active Engagement',unit:'%',fmt:v=>Math.round(v)},
+    {key:'wellbeing_avg',label:()=>window.I18N?.t('kpi.orgWellbeing') || window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',unit:'/100',fmt:v=>Math.round(v)},
+    {key:'high_stress_pct',label:()=>window.I18N?.t('kpi.highStress') || window.I18N?.t('metric.highStress') || 'High Stress %',unit:'%',fmt:v=>Math.round(v)},
+    {key:'fatigue_elevated_pct',label:()=>window.I18N?.t('kpi.elevatedFatigue') || window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue %',unit:'%',fmt:v=>Math.round(v)},
+    {key:'engagement_active_pct',label:()=>window.I18N?.t('kpi.activeEngagement') || window.I18N?.t('metric.activeEngagement') || 'Active Engagement %',unit:'%',fmt:v=>Math.round(v)},
   ];
   grid.innerHTML = defs.map(d=>{
     const raw = Number(kpi?.[d.key]);
     const val = Number.isFinite(raw)?d.fmt(raw):'—';
     const dRaw = Number(delta?.[d.key]);
     const dl = Number.isFinite(dRaw)?dRaw:null;
-    const badge = dl!==null ? `<span class="pill ${dl>=0?'green':'red'}">${dl>=0?'▲':'▼'} ${Math.abs(Math.round(dl))}</span>` : '';
+    const badge = dl!==null ? `<span class="pill ${dl>=0?'pill--strong':'pill--critical'}">${dl>=0?'▲':'▼'} ${Math.abs(Math.round(dl))}</span>` : '';
     return `<div class="tile kpi">
-      <div class="tile__head">${d.label()}${badge}</div>
+      <div class="tile__head">${d.label()} ${badge}</div>
       <div class="tile__kpi">${val}<small>${d.unit}</small></div>
       <div class="spark"></div>
     </div>`;

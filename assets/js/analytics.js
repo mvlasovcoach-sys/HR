@@ -11,9 +11,9 @@ function initPage(){
     const breakdownPanel = document.querySelector('.analytics-breakdown');
 
     const BREAKDOWN_KEYS = [
-      {key: 'high_stress_pct', label: 'metric.highStress', inverse: true, unit: '%'},
-      {key: 'fatigue_elevated_pct', label: 'metric.elevatedFatigue', inverse: true, unit: '%'},
-      {key: 'engagement_active_pct', label: 'metric.activeEngagement', inverse: false, unit: '%'}
+      {key: 'high_stress_pct', label: 'kpi.highStress', inverse: true, unit: '%'},
+      {key: 'fatigue_elevated_pct', label: 'kpi.elevatedFatigue', inverse: true, unit: '%'},
+      {key: 'engagement_active_pct', label: 'kpi.activeEngagement', inverse: false, unit: '%'}
     ];
 
     const MA_KEY = 'hr:analytics:ma';
@@ -274,6 +274,15 @@ function initPage(){
 
     function renderMiniKpis(metrics, team){
       if (!miniGrid) return;
+      miniGrid.innerHTML = '';
+      const nValue = Number(metrics?.n);
+      if (Number.isFinite(nValue) && window.guardSmallN) {
+        if (window.guardSmallN(nValue, miniGrid)) {
+          return;
+        }
+      } else {
+        miniGrid.removeAttribute('data-guard');
+      }
       const items = BREAKDOWN_KEYS.map(cfg => {
         const info = metricDeltaInfo(metrics, cfg.key, team);
         const value = info.current ?? 0;
@@ -392,8 +401,10 @@ function initPage(){
         if (!panel) return;
         if (active) {
           panel.setAttribute('data-insufficient', 'true');
+          panel.setAttribute('data-guard-message', t('guard.insufficient'));
         } else {
           panel.removeAttribute('data-insufficient');
+          panel.removeAttribute('data-guard-message');
         }
       });
     }
@@ -525,7 +536,8 @@ function initPage(){
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      return `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeText} · ${teamText}`;
+      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
+      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
     }
 
     function rangeLabel(range){

@@ -161,7 +161,7 @@ function initPage(){
       toggleInsufficient(insufficient);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+        if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
         toggleInsufficient(false);
         return;
       }
@@ -180,14 +180,14 @@ function initPage(){
           <div class="tile__kpi">${formatValue(value, cfg.decimals)}<span>${cfg.unit}</span></div>
           <div class="spark">${sparkline(series)}</div>
           <footer class="tile__foot">
-            <span>${t('label.updated')} ${updatedText(data.updated)}</span>
+            <span>${t('ui.updated') || t('label.updated')} ${updatedText(data.updated)}</span>
             <span>${series.length || 0} pts</span>
           </footer>
         </article>`;
       }).join('');
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
-      if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+      if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
     }
 
     function toggleInsufficient(active){
