@@ -398,7 +398,7 @@ function initCorporatePage(){
       setSelectedColumn(null, {updateFilter: true});
     } else {
       setSelectedColumn(index, {updateFilter: true});
-      scrollIntoView('corp-events');
+      scrollEventsPanel();
     }
   }
 
@@ -441,36 +441,7 @@ function initCorporatePage(){
     const list = els.eventsList;
     if (!list) return;
     const items = Array.isArray(events) ? events.slice() : [];
-
-    const filtered = items.filter(evt => {
-      const eventDate = toDateString(evt.ts);
-      if (state.rangeWindow) {
-        if (state.rangeWindow.start && eventDate && eventDate < state.rangeWindow.start) return false;
-        if (state.rangeWindow.end && eventDate && eventDate > state.rangeWindow.end) return false;
-      }
-      if (state.teamSelection !== 'all' && evt.team && evt.team !== state.teamSelection) {
-        return false;
-      }
-      if (state.eventFilterTeams.size && evt.team && !state.eventFilterTeams.has(evt.team)) {
-        return false;
-      }
-      if (state.eventFilterSeverity && evt.severity && evt.severity !== state.eventFilterSeverity) {
-        return false;
-      }
-      if (state.eventFilterType && evt.type && evt.type !== state.eventFilterType) {
-        return false;
-      }
-      if (state.eventsDateFilter) {
-        if (state.eventsDateFilter.date) {
-          if (!evt._colDate || evt._colDate !== state.eventsDateFilter.date) return false;
-        } else if (state.eventsDateFilter.label) {
-          if (!evt._colLabel || evt._colLabel !== state.eventsDateFilter.label) return false;
-        }
-      }
-      return true;
-    });
-
-    updateEventBadges(filtered);
+    const filtered = applyEventFilters(items, state.eventsDateFilter);
 
     list.innerHTML = '';
 
@@ -561,6 +532,43 @@ function initCorporatePage(){
     });
   }
 
+  function applyEventFilters(allEvents, dayLabel){
+    const events = Array.isArray(allEvents) ? allEvents.slice() : [];
+    const filterMeta = typeof dayLabel === 'string'
+      ? {label: dayLabel}
+      : (dayLabel && typeof dayLabel === 'object' ? dayLabel : null);
+    const filtered = events.filter(evt => {
+      if (!evt) return false;
+      const eventDate = toDateString(evt.ts);
+      if (state.rangeWindow) {
+        if (state.rangeWindow.start && eventDate && eventDate < state.rangeWindow.start) return false;
+        if (state.rangeWindow.end && eventDate && eventDate > state.rangeWindow.end) return false;
+      }
+      if (state.teamSelection !== 'all' && evt.team && evt.team !== state.teamSelection) {
+        return false;
+      }
+      if (state.eventFilterTeams.size && evt.team) {
+        if (!state.eventFilterTeams.has(evt.team)) return false;
+      }
+      if (state.eventFilterSeverity) {
+        if (!evt.severity || evt.severity !== state.eventFilterSeverity) return false;
+      }
+      if (state.eventFilterType) {
+        if (!evt.type || evt.type !== state.eventFilterType) return false;
+      }
+      if (filterMeta) {
+        if (filterMeta.date) {
+          if (!evt._colDate || evt._colDate !== filterMeta.date) return false;
+        } else if (filterMeta.label) {
+          if (!evt._colLabel || evt._colLabel !== filterMeta.label) return false;
+        }
+      }
+      return true;
+    });
+    updateEventBadges(filtered);
+    return filtered;
+  }
+
   function severityClass(severity){
     switch (severity) {
       case 'critical':
@@ -588,31 +596,47 @@ function initCorporatePage(){
       return true;
     });
 
+    table.innerHTML = '';
+    if (state.insufficient) {
+      if (window.guardSmallN) {
+        window.guardSmallN(0, table, t('guard.insufficient', 'Insufficient group size'));
+      }
+      state.activityCsvRows = [];
+      if (els.exportBtn) {
+        els.exportBtn.disabled = true;
+      }
+      return;
+    }
+
+    if (window.guardSmallN) {
+      window.guardSmallN(5, table);
+    }
+
     const lang = window.I18N?.getLang?.() || 'en';
     const columns = buildActivityColumns(lang);
-    const thead = `<thead><tr>${columns.map(activityHeaderCell).join('')}</tr></thead>`;
+    const thead = `<thead><tr>${columns.map((col, index) => activityHeaderCell(col, index)).join('')}</tr></thead>`;
     let tbody = '';
-    let csvRows = [];
 
-    if (state.insufficient) {
-      tbody = `<tbody><tr><td colspan="${columns.length}">—</td></tr></tbody>`;
-    } else if (!filtered.length) {
-      tbody = `<tbody><tr><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr></tbody>`;
+    if (!filtered.length) {
+      tbody = `<tbody><tr data-empty-row="true"><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr></tbody>`;
     } else {
       const sorted = sortActivityRows(filtered, columns, lang);
       const bodyRows = sorted.map(row => {
-        const cells = columns.map(col => `<td>${col.render(row, lang)}</td>`);
-        csvRows.push(columns.map(col => col.render(row, lang)));
+        const cells = columns.map(col => {
+          const display = col.render(row, lang);
+          const sortValue = col.sortValue(row, lang);
+          const typeAttr = ` data-sort-type="${col.type || 'text'}"`;
+          const valueAttr = sortValue != null && sortValue !== '' ? ` data-sort-value="${escapeAttr(sortValue)}"` : '';
+          return `<td${typeAttr}${valueAttr}>${display}</td>`;
+        });
         return `<tr>${cells.join('')}</tr>`;
       });
       tbody = `<tbody>${bodyRows.join('')}</tbody>`;
     }
 
     table.innerHTML = `${thead}${tbody}`;
-    state.activityCsvRows = state.insufficient ? [] : csvRows;
-    if (els.exportBtn) {
-      els.exportBtn.disabled = !state.activityCsvRows.length;
-    }
+    updateActivityHeaderState(table, state.activitySort.key, state.activitySort.dir);
+    updateActivityCsvFromDom();
   }
 
   function numericOrDash(value){
@@ -632,9 +656,34 @@ function initCorporatePage(){
     return Number.isFinite(ts) ? ts : Number.NEGATIVE_INFINITY;
   }
 
-  function compareNumbers(a, b){
-    if (a === b) return 0;
-    return a < b ? -1 : 1;
+  function compareValues(a, b, type, lang){
+    if (type === 'number') {
+      const numA = Number(a);
+      const numB = Number(b);
+      const finiteA = Number.isFinite(numA);
+      const finiteB = Number.isFinite(numB);
+      if (!finiteA && !finiteB) return 0;
+      if (!finiteA) return -1;
+      if (!finiteB) return 1;
+      if (numA === numB) return 0;
+      return numA < numB ? -1 : 1;
+    }
+    const textA = String(a ?? '').trim();
+    const textB = String(b ?? '').trim();
+    try {
+      return textA.localeCompare(textB, lang || undefined, {sensitivity: 'base'});
+    } catch (err) {
+      if (textA === textB) return 0;
+      return textA < textB ? -1 : 1;
+    }
+  }
+
+  function escapeAttr(value){
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   function getTeamName(id){
@@ -648,47 +697,59 @@ function initCorporatePage(){
         key: 'date',
         label: t('activity.date', 'Date'),
         render: (row) => formatDateLabel(row.date, {formatter: dateFormatter}),
-        sort: (a, b) => compareNumbers(dateValue(a.date), dateValue(b.date))
+        sortValue: (row) => dateValue(row.date),
+        type: 'number',
+        defaultDir: 'desc'
       },
       {
         key: 'team',
         label: t('activity.team', 'Team'),
         render: (row) => getTeamName(row.team),
-        sort: (a, b) => getTeamName(a.team).localeCompare(getTeamName(b.team), lang, {sensitivity: 'base'})
+        sortValue: (row) => getTeamName(row.team),
+        type: 'text',
+        defaultDir: 'asc'
       },
       {
         key: 'hydration',
         label: t('activity.hydration', 'Hydration Logs'),
         render: (row) => numericOrDash(row.hydration),
-        sort: (a, b) => compareNumbers(numericValue(a.hydration), numericValue(b.hydration))
+        sortValue: (row) => numericValue(row.hydration),
+        type: 'number',
+        defaultDir: 'desc'
       },
       {
         key: 'caffeine',
         label: t('activity.caffeine', 'Caffeine Logs'),
         render: (row) => numericOrDash(row.caffeine),
-        sort: (a, b) => compareNumbers(numericValue(a.caffeine), numericValue(b.caffeine))
+        sortValue: (row) => numericValue(row.caffeine),
+        type: 'number',
+        defaultDir: 'desc'
       },
       {
         key: 'meds',
         label: t('activity.meds', 'Medications Logged'),
         render: (row) => numericOrDash(row.meds),
-        sort: (a, b) => compareNumbers(numericValue(a.meds), numericValue(b.meds))
+        sortValue: (row) => numericValue(row.meds),
+        type: 'number',
+        defaultDir: 'desc'
       },
       {
         key: 'steps',
         label: t('activity.steps', 'Active Steps %'),
         render: (row) => numericOrDash(row.steps_active_pct),
-        sort: (a, b) => compareNumbers(numericValue(a.steps_active_pct), numericValue(b.steps_active_pct))
+        sortValue: (row) => numericValue(row.steps_active_pct),
+        type: 'number',
+        defaultDir: 'desc'
       }
     ];
   }
 
-  function activityHeaderCell(column){
+  function activityHeaderCell(column, index){
     const isActive = state.activitySort.key === column.key;
     const dir = isActive ? state.activitySort.dir : 'none';
     const ariaSort = isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
     const icon = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
-    return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort="${column.key}">${column.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
+    return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort="${column.key}" data-sort-index="${index}" data-sort-type="${column.type || 'text'}" data-default-dir="${column.defaultDir || 'asc'}" data-sort-dir="${dir}">${column.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
   }
 
   function sortActivityRows(rows, columns, lang){
@@ -697,10 +758,13 @@ function initCorporatePage(){
     return rows
       .map((row, index) => ({row, index}))
       .sort((a, b) => {
-        const result = active.sort(a.row, b.row, lang);
+        const result = compareValues(active.sortValue(a.row, lang), active.sortValue(b.row, lang), active.type, lang);
         if (result !== 0) return result * direction;
-        const fallback = columns[0].sort(a.row, b.row, lang);
-        if (fallback !== 0) return fallback * direction;
+        const fallbackCol = columns[0];
+        if (fallbackCol) {
+          const fallback = compareValues(fallbackCol.sortValue(a.row, lang), fallbackCol.sortValue(b.row, lang), fallbackCol.type, lang);
+          if (fallback !== 0) return fallback * direction;
+        }
         return a.index - b.index;
       })
       .map(entry => entry.row);
@@ -710,14 +774,61 @@ function initCorporatePage(){
     const trigger = evt.target.closest('[data-sort]');
     if (!trigger) return;
     evt.preventDefault();
+    const tableEl = els.activityTable;
+    if (!tableEl) return;
     const key = trigger.getAttribute('data-sort');
     if (!key) return;
+    const colIndex = Number(trigger.getAttribute('data-sort-index'));
+    if (!Number.isFinite(colIndex) || colIndex < 0) return;
+    const lang = window.I18N?.getLang?.() || 'en';
+    const columns = buildActivityColumns(lang);
+    const column = columns.find(col => col.key === key) || null;
+    const defaultDir = trigger.getAttribute('data-default-dir') || column?.defaultDir || 'asc';
+    let dir;
     if (state.activitySort.key === key) {
-      state.activitySort.dir = state.activitySort.dir === 'asc' ? 'desc' : 'asc';
+      dir = state.activitySort.dir === 'asc' ? 'desc' : 'asc';
     } else {
-      state.activitySort = {key, dir: key === 'date' ? 'desc' : 'asc'};
+      dir = defaultDir;
     }
-    renderActivity(state.metrics?.activity);
+    state.activitySort = {key, dir};
+    const type = trigger.getAttribute('data-sort-type') || column?.type || 'text';
+    const locale = lang;
+    const sorted = window.exporter?.sortTable?.(tableEl, colIndex, dir, {type, locale});
+    if (!sorted || !sorted.length) {
+      renderActivity(state.metrics?.activity);
+      return;
+    }
+    updateActivityHeaderState(tableEl, key, dir);
+    updateActivityCsvFromDom();
+  }
+
+  function updateActivityHeaderState(table, activeKey, dir){
+    const headers = table?.querySelectorAll('th');
+    headers?.forEach(header => {
+      const button = header.querySelector('[data-sort]');
+      if (!button) return;
+      const key = button.getAttribute('data-sort');
+      const isActive = key === activeKey;
+      const currentDir = isActive ? dir : 'none';
+      button.dataset.sortDir = currentDir;
+      button.classList.toggle('is-active', isActive);
+      header.setAttribute('aria-sort', isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none');
+      const icon = button.querySelector('.table-sort__icon');
+      if (icon) {
+        icon.textContent = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
+      }
+    });
+  }
+
+  function updateActivityCsvFromDom(){
+    const table = els.activityTable;
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.dataset.emptyRow !== 'true');
+    state.activityCsvRows = rows.map(row => Array.from(row.cells).map(cell => cell.textContent.trim()));
+    if (els.exportBtn) {
+      const disabled = state.insufficient || !state.activityCsvRows.length;
+      els.exportBtn.disabled = disabled;
+    }
   }
 
   function exportActivity(){
@@ -888,6 +999,11 @@ function initCorporatePage(){
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+
+  function scrollEventsPanel(){
+    const panel = document.getElementById('corp-events');
+    panel?.scrollIntoView({behavior: 'smooth'});
   }
 
   function formatFileDate(date){

@@ -8,7 +8,12 @@ function initPage(){
     const summaryPanel = document.getElementById('fleet-summary-panel');
     const tablePanel = document.getElementById('fleet-table-panel');
 
+    const sortState = {key: 'team', dir: 'asc'};
+    let lastData = null;
+    let lastTeam = 'all';
+
     exportBtn?.addEventListener('click', exportCsv);
+    tableEl?.addEventListener('click', handleTableSort);
     window.addEventListener('storage', evt => {
       if (!evt) return;
       if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
@@ -78,6 +83,8 @@ function initPage(){
         if (exportBtn) exportBtn.disabled = true;
         return;
       }
+      lastData = data;
+      lastTeam = team;
       renderCards(data, team);
       const hasRows = renderTable(data, team);
       renderHistogram(data);
@@ -99,11 +106,12 @@ function initPage(){
     }
 
     function renderCards(data, team){
-      const source = team !== 'all' ? data.teams?.find(entry => entry.team === team) : data.summary;
+      const summary = data.summary || {};
+      const source = team !== 'all' ? data.teams?.find(entry => entry.team === team) || {} : summary;
       const cards = [
-        {key: 'devices_online_pct', label: 'kpi.devicesOnline', value: source?.devices_online_pct ?? source?.online_pct ?? 0, unit: '%'},
-        {key: 'avg_battery_pct', label: 'kpi.avgBattery', value: source?.avg_battery_pct ?? source?.avg_battery ?? 0, unit: '%'},
-        {key: 'sync_fresh_pct', label: 'kpi.syncFresh', value: source?.sync_fresh_pct ?? source?.sync_fresh ?? 0, unit: '%'}
+        {key: 'devices_online_pct', label: 'kpi.devicesOnline', value: valueOrFallback(source.devices_online_pct ?? source.online_pct, summary.devices_online_pct ?? summary.online_pct), unit: '%'},
+        {key: 'avg_battery_pct', label: 'kpi.avgBattery', value: valueOrFallback(source.avg_battery_pct ?? source.avg_battery, summary.avg_battery_pct ?? summary.avg_battery), unit: '%'},
+        {key: 'sync_fresh_pct', label: 'kpi.syncFresh', value: valueOrFallback(source.sync_fresh_pct ?? source.sync_fresh, summary.sync_fresh_pct ?? summary.sync_fresh), unit: '%'}
       ];
       cardsEl.classList.add('devices-cards');
       cardsEl.innerHTML = cards.map(card => {
@@ -124,34 +132,74 @@ function initPage(){
     }
 
     function renderTable(data, team){
-      const rows = Array.isArray(data.teams) ? data.teams : [];
-      const filtered = team !== 'all' ? rows.filter(row => row.team === team) : rows;
+      if (!tableEl) return false;
+      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
+      if (insufficient) {
+        tableEl.innerHTML = '';
+        if (window.guardSmallN) {
+          window.guardSmallN(0, tableEl, t('guard.insufficient'));
+        }
+        return false;
+      }
+      if (window.guardSmallN) {
+        window.guardSmallN(5, tableEl);
+      }
+      const rows = Array.isArray(data?.teams) ? data.teams : [];
+      const filtered = team !== 'all' ? rows.filter(row => row.team === team) : rows.slice();
       if (!filtered.length) {
         const emptyText = t('devices.empty');
         tableEl.innerHTML = `<p role="status">${emptyText}</p>`;
         return false;
       }
-      const headers = [
-        {key: 'team', label: t('devices.table.team')},
-        {key: 'devices', label: t('devices.table.devices')},
-        {key: 'online_pct', label: t('devices.table.online')},
-        {key: 'avg_battery', label: t('devices.table.battery')},
-        {key: 'last_sync', label: t('devices.table.sync')},
-        {key: 'status', label: t('devices.table.status')}
-      ];
-      const rowsMarkup = filtered.map(row => {
-        const online = Number(row.online_pct ?? row.devices_online_pct ?? 0);
-        const status = statusClass(row.status, online);
+
+      const lang = window.I18N?.getLang?.() || 'en';
+      const columns = getTableColumns();
+      const active = columns.find(col => col.key === sortState.key) || columns[0];
+      const direction = sortState.dir === 'asc' ? 1 : -1;
+
+      const sortedRows = filtered
+        .map((row, index) => ({row, index}))
+        .sort((a, b) => {
+          const primary = compareValues(active.accessor(a.row), active.accessor(b.row), active.type, lang);
+          if (primary !== 0) return primary * direction;
+          const fallbackCol = columns[0];
+          const secondary = compareValues(fallbackCol.accessor(a.row), fallbackCol.accessor(b.row), fallbackCol.type, lang);
+          if (secondary !== 0) return secondary * direction;
+          return a.index - b.index;
+        })
+        .map(entry => entry.row);
+
+      const headerHtml = columns.map((col, index) => {
+        const isActive = sortState.key === col.key;
+        const dir = isActive ? sortState.dir : 'none';
+        const ariaSort = isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
+        const icon = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
+        return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort-key="${col.key}" data-sort-type="${col.type}" data-default-dir="${col.defaultDir || 'asc'}" data-sort-dir="${dir}" data-sort-index="${index}">${col.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
+      }).join('');
+
+      const bodyRows = sortedRows.map(row => {
+        const teamLabel = teamName(row.team);
+        const devicesCount = Number(row.devices || 0);
+        const onlineValue = Number(row.online_pct ?? row.devices_online_pct ?? 0);
+        const batteryValue = Number(row.avg_battery ?? row.avg_battery_pct ?? 0);
+        const syncValue = Date.parse(row.last_sync || '');
+        const syncLabel = formatSync(row.last_sync);
+        const statusInfo = toneForValue(onlineValue);
+        const onlineSort = Number.isFinite(onlineValue) ? onlineValue : Number.NEGATIVE_INFINITY;
+        const batterySort = Number.isFinite(batteryValue) ? batteryValue : Number.NEGATIVE_INFINITY;
+        const syncSort = Number.isFinite(syncValue) ? syncValue : Number.NEGATIVE_INFINITY;
+        const statusLabel = statusInfo.label;
         return `<tr>
-          <td>${teamName(row.team)}</td>
-          <td>${row.devices}</td>
-          <td>${Math.round(row.online_pct ?? row.devices_online_pct ?? 0)}%</td>
-          <td>${Math.round(row.avg_battery ?? row.avg_battery_pct ?? 0)}%</td>
-          <td>${formatSync(row.last_sync)}</td>
-          <td><span class="status-chip ${status.className}">${status.label}</span></td>
+          <td data-sort-type="text" data-sort-value="${escapeAttr(teamLabel)}">${escapeHtml(teamLabel)}</td>
+          <td data-sort-type="number" data-sort-value="${devicesCount}">${devicesCount}</td>
+          <td data-sort-type="number" data-sort-value="${onlineSort}">${Math.round(onlineValue)}%</td>
+          <td data-sort-type="number" data-sort-value="${batterySort}">${Math.round(batteryValue)}%</td>
+          <td data-sort-type="number" data-sort-value="${syncSort}">${escapeHtml(syncLabel)}</td>
+          <td data-sort-type="text" data-sort-value="${escapeAttr(statusLabel)}"><span class="status-chip ${statusInfo.className}">${escapeHtml(statusLabel)}</span></td>
         </tr>`;
       }).join('');
-      tableEl.innerHTML = `<table><thead><tr>${headers.map(h => `<th>${h.label}</th>`).join('')}</tr></thead><tbody>${rowsMarkup}</tbody></table>`;
+
+      tableEl.innerHTML = `<table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyRows}</tbody></table>`;
       return true;
     }
 
@@ -176,7 +224,17 @@ function initPage(){
       const preset = presetForRange(range);
       const data = Array.from(tableEl.querySelectorAll('tbody tr')).map(row => Array.from(row.children).map(cell => cell.textContent.trim()));
       if (!data.length) return;
-      const headers = Array.from(tableEl.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      const headers = Array.from(tableEl.querySelectorAll('thead th')).map(th => {
+        const btn = th.querySelector('button');
+        if (btn) {
+          const textNode = Array.from(btn.childNodes || []).find(node => node.nodeType === Node.TEXT_NODE);
+          if (textNode) {
+            return textNode.textContent.trim();
+          }
+          return btn.textContent.trim();
+        }
+        return th.textContent.trim();
+      });
       const csvRows = [headers, ...data]
         .map(row => row.map(value => `"${value.replace(/"/g, '""')}"`).join(','))
         .join('\n');
@@ -193,6 +251,37 @@ function initPage(){
       URL.revokeObjectURL(url);
     }
 
+    function handleTableSort(evt){
+      const trigger = evt.target.closest('[data-sort-key]');
+      if (!trigger) return;
+      evt.preventDefault();
+      const key = trigger.getAttribute('data-sort-key');
+      if (!key) return;
+      const columns = getTableColumns();
+      const column = columns.find(col => col.key === key) || null;
+      const defaultDir = trigger.getAttribute('data-default-dir') || column?.defaultDir || 'asc';
+      if (sortState.key === key) {
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = defaultDir;
+      }
+      if (lastData) {
+        renderTable(lastData, lastTeam);
+      }
+    }
+
+    function getTableColumns(){
+      return [
+        {key: 'team', label: t('devices.table.team'), type: 'text', defaultDir: 'asc', accessor: row => teamName(row.team)},
+        {key: 'devices', label: t('devices.table.devices'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.devices || 0)},
+        {key: 'online_pct', label: t('devices.table.online'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.online_pct ?? row.devices_online_pct ?? 0)},
+        {key: 'avg_battery', label: t('devices.table.battery'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.avg_battery ?? row.avg_battery_pct ?? 0)},
+        {key: 'last_sync', label: t('devices.table.sync'), type: 'number', defaultDir: 'desc', accessor: row => Date.parse(row.last_sync || '')},
+        {key: 'status', label: t('devices.table.status'), type: 'text', defaultDir: 'asc', accessor: row => toneForValue(Number(row.online_pct ?? row.devices_online_pct ?? 0)).label}
+      ];
+    }
+
     function toggleInsufficient(active){
       [summaryPanel, tablePanel].forEach(panel => {
         if (!panel) return;
@@ -206,17 +295,50 @@ function initPage(){
       });
     }
 
+    function compareValues(a, b, type, lang){
+      if (type === 'number') {
+        const numA = Number(a);
+        const numB = Number(b);
+        const finiteA = Number.isFinite(numA);
+        const finiteB = Number.isFinite(numB);
+        if (!finiteA && !finiteB) return 0;
+        if (!finiteA) return -1;
+        if (!finiteB) return 1;
+        if (numA === numB) return 0;
+        return numA < numB ? -1 : 1;
+      }
+      const textA = String(a ?? '').trim();
+      const textB = String(b ?? '').trim();
+      try {
+        return textA.localeCompare(textB, lang || undefined, {sensitivity: 'base'});
+      } catch (err) {
+        if (textA === textB) return 0;
+        return textA < textB ? -1 : 1;
+      }
+    }
+
+    function escapeHtml(value){
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function escapeAttr(value){
+      return escapeHtml(value).replace(/"/g, '&quot;');
+    }
+
+    function valueOrFallback(primary, fallback){
+      if (primary == null || Number.isNaN(primary)) {
+        return fallback ?? 0;
+      }
+      return primary;
+    }
+
     function toneForValue(value){
       if (value >= 60) return {className: 'status-chip--green', label: t('devices.status.good')};
       if (value >= 30) return {className: 'status-chip--amber', label: t('devices.status.caution')};
       return {className: 'status-chip--red', label: t('devices.status.poor')};
-    }
-
-    function statusClass(status, value){
-      if (status === 'green') return {className: 'status-chip--green', label: t('devices.status.good')};
-      if (status === 'amber') return {className: 'status-chip--amber', label: t('devices.status.caution')};
-      if (status === 'red') return {className: 'status-chip--red', label: t('devices.status.poor')};
-      return toneForValue(value);
     }
 
     function formatSync(ts){

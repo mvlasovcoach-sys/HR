@@ -224,12 +224,13 @@ function initPage(){
     function buildSpark(key, data, preset, team, range){
       if (key === 'nps') {
         const slice = npsSlice(preset);
-        return slice?.values || [];
+        return Array.isArray(slice?.values) ? slice.values.slice(-7) : [];
       }
       if (key === 'alert_count') {
         return alertSpark(range, data.timeline || [], team);
       }
-      return Array.isArray(data.series?.[key]) ? data.series[key] : [];
+      const series = Array.isArray(data.series?.[key]) ? data.series[key] : [];
+      return series.slice(-7);
     }
 
     function npsSlice(preset){
@@ -253,7 +254,8 @@ function initPage(){
     function alertSpark(range, timeline, team){
       if (!Array.isArray(timeline)) return [];
       const {start, end} = resolveRangeWindow(range);
-      const buckets = timeline.map(point => {
+      const windowTimeline = timeline.slice(-7);
+      const buckets = windowTimeline.map(point => {
         const ts = new Date(point.date || point.timestamp);
         if (Number.isNaN(ts)) return 0;
         if (start && ts < start) return 0;
@@ -367,11 +369,22 @@ function initPage(){
 
     function sparkline(values){
       if (!Array.isArray(values) || values.length === 0) return '';
-      const max = Math.max(...values);
-      const min = Math.min(...values);
+      const sliced = values.slice(-7);
+      const series = [];
+      sliced.forEach((val, index) => {
+        const num = Number(val);
+        if (Number.isFinite(num)) {
+          series.push(num);
+        } else {
+          series.push(index > 0 ? series[index - 1] : 0);
+        }
+      });
+      if (!series.length) return '';
+      const max = Math.max(...series);
+      const min = Math.min(...series);
       const span = max - min || 1;
-      const step = values.length > 1 ? 100 / (values.length - 1) : 100;
-      const points = values.map((v, i) => {
+      const step = series.length > 1 ? 100 / (series.length - 1) : 100;
+      const points = series.map((v, i) => {
         const x = (step * i).toFixed(2);
         const y = (100 - ((v - min) / span) * 100).toFixed(2);
         return `${x},${y}`;
