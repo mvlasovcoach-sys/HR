@@ -2,34 +2,41 @@
   const MIN_N = 5;
 
   function resolveHost(host){
+    if (!host) return null;
     if (typeof host === 'string') {
-      return document.querySelector(host);
+      try {
+        return document.querySelector(host);
+      } catch (err) {
+        return null;
+      }
     }
-    return host || null;
+    return host;
   }
 
-  function guardSmallN(n, host, message){
+  function guardSmallN(n, host, msg){
     const target = resolveHost(host);
-    if (!target) return false;
     const count = Number(n);
     if (Number.isFinite(count) && count >= MIN_N) {
-      target.removeAttribute('data-guard');
-      target.removeAttribute('data-guard-message');
-      const existing = target.querySelector('[data-guard-placeholder]');
-      if (existing) existing.remove();
+      if (target) {
+        target.removeAttribute('data-guard');
+        target.removeAttribute('data-guard-message');
+        const placeholder = target.querySelector('.kGuard');
+        if (placeholder) {
+          placeholder.remove();
+        }
+      }
       return false;
     }
-    const text = message || (global.I18N?.t?.('guard.insufficient') || 'Insufficient group size');
+
+    if (!target) return true;
+
+    const message = typeof msg === 'string' && msg.trim()
+      ? msg
+      : (global.I18N?.t?.('guard.insufficient') || 'Insufficient group size');
+    const label = Number.isFinite(count) ? count : '–';
+    target.innerHTML = `<div class="kGuard">${message} (n=${label}).</div>`;
     target.setAttribute('data-guard', 'true');
-    target.setAttribute('data-guard-message', text);
-    let overlay = target.querySelector('[data-guard-placeholder]');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.setAttribute('data-guard-placeholder', '');
-      overlay.className = 'k-guard';
-      target.appendChild(overlay);
-    }
-    overlay.textContent = text;
+    target.setAttribute('data-guard-message', `${message} (n=${label}).`);
     return true;
   }
 

@@ -30,7 +30,8 @@
 }
 
 [data-guard-placeholder],
-.k-guard {
+.k-guard,
+.kGuard {
   position: absolute;
   inset: 0;
   display: flex;
