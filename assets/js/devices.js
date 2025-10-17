@@ -90,7 +90,8 @@ function initPage(){
       renderHistogram(data);
       if (captionEl) captionEl.textContent = buildCaption(range, team);
       if (exportBtn) {
-        exportBtn.setAttribute('aria-label', `${t('label.export.csv')} (${preset})`);
+        const exportLabel = t('ui.exportCSV') || t('label.export.csv');
+        exportBtn.setAttribute('aria-label', `${exportLabel} (${preset})`);
         exportBtn.disabled = insufficient || !hasRows;
       }
     }
