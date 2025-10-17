@@ -168,10 +168,25 @@ function initPage(){
       }
 
       if (deltaBadgeEl) {
-        const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
-        const text = Number.isFinite(delta) ? `${badge.label} ${magnitude}` : badge.label;
+        const baseSeries = Array.isArray(info.series)
+          ? info.series.map(val => Number(val)).filter(Number.isFinite)
+          : [];
+        const trendDelta = baseSeries.length ? deltaVsPrior(baseSeries) : 0;
+        const label = trendDelta > 0
+          ? (window.I18N?.t('analytics.deltaImproved') || 'Improved')
+          : trendDelta < 0
+            ? (window.I18N?.t('analytics.deltaDeclined') || 'Declined')
+            : (window.I18N?.t('analytics.deltaNoChange') || 'No change');
+        const symbol = trendDelta > 0 ? '+' : trendDelta < 0 ? '−' : '±';
+        const magnitude = Math.abs(Math.round(trendDelta));
+        const text = `${label} ${symbol}${magnitude}`;
+        const className = trendDelta > 0
+          ? 'delta-badge--up'
+          : trendDelta < 0
+            ? 'delta-badge--down'
+            : 'delta-badge--neutral';
         deltaBadgeEl.textContent = text;
-        deltaBadgeEl.className = `delta-badge ${badge.className}`.trim();
+        deltaBadgeEl.className = `delta-badge ${className}`.trim();
         deltaBadgeEl.setAttribute('aria-label', `${t('delta.header')}: ${text}`);
       }
 
@@ -285,8 +300,16 @@ function initPage(){
       }
       const items = BREAKDOWN_KEYS.map(cfg => {
         const info = metricDeltaInfo(metrics, cfg.key, team);
-        const value = info.current ?? 0;
-        const delta = info.delta != null ? info.delta : (info.previous != null ? value - info.previous : 0);
+        const rawValue = teamValue(metrics?.kpi, cfg.key, team);
+        const value = Number.isFinite(Number(rawValue)) ? Number(rawValue) : (info.current ?? 0);
+        const teamDelta = team !== 'all' && metrics?.delta?.teams?.[team] && cfg.key in metrics.delta.teams[team]
+          ? metrics.delta.teams[team][cfg.key]
+          : metrics?.delta?.[cfg.key];
+        const delta = Number.isFinite(Number(teamDelta))
+          ? Number(teamDelta)
+          : info.delta != null
+            ? info.delta
+            : (info.previous != null ? value - info.previous : 0);
         const badge = deltaBadge(delta, !cfg.inverse);
         const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
         const summary = Number.isFinite(delta) ? `${badge.label} ${magnitude}` : badge.label;
@@ -424,6 +447,13 @@ function initPage(){
         result.push(count ? sum / count : values[i]);
       }
       return result;
+    }
+
+    function deltaVsPrior(series){
+      const n=series.length, half=Math.floor(n/2);
+      if(!half) return 0;
+      const avg=a=>Math.round(a.reduce((s,v)=>s+v,0)/a.length);
+      return avg(series.slice(half)) - avg(series.slice(0,half));
     }
 
     function sparkline(values){

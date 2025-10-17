@@ -38,10 +38,7 @@
     document.getElementById('sum-kpi-grid')?.addEventListener('click', evt => {
       const tile = evt.target.closest('.tile');
       if (!tile) return;
-      const params = new URLSearchParams();
-      params.set('team', getTeamId());
-      params.set('range', getRangeKey());
-      window.location.href = `./Analytics.html?${params.toString()}`;
+      window.location.href = './Analytics.html';
     });
   }
 
@@ -290,10 +287,13 @@
     const host = document.getElementById('sum-toast');
     if (!host) return;
     host.textContent = message;
+    host.hidden = false;
     host.classList.add('is-visible');
     clearTimeout(host._hideTimer);
     host._hideTimer = setTimeout(() => {
       host.classList.remove('is-visible');
-    }, 3200);
+      host.hidden = true;
+      host.textContent = '';
+    }, 4000);
   }
 })();

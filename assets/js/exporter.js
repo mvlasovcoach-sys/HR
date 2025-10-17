@@ -169,5 +169,69 @@
     doc.save(filename);
   }
 
-  window.exporter = {exportPilotSummary};
+  function sortTable(table, colIndex, dir='asc', options={}){
+    if (!table || !table.tBodies || !table.tBodies.length) return [];
+    const index = Number(colIndex);
+    if (!Number.isFinite(index) || index < 0) return [];
+    const tbody = table.tBodies[0];
+    if (!tbody) return [];
+    const rows = Array.from(tbody.rows || []);
+    if (!rows.length) return [];
+    const direction = String(dir).toLowerCase() === 'desc' ? -1 : 1;
+    const requestedType = (options.type || rows[0]?.cells?.[index]?.dataset?.sortType || 'text').toString().toLowerCase();
+    const type = requestedType === 'text' ? 'text' : 'number';
+    const locale = options.locale || (typeof window !== 'undefined' && window.I18N?.getLang?.());
+    let collator = null;
+    if (type === 'text') {
+      try {
+        collator = locale ? new Intl.Collator(locale, {sensitivity: 'base'}) : new Intl.Collator(undefined, {sensitivity: 'base'});
+      } catch (err) {
+        collator = null;
+      }
+    }
+    const sorted = rows
+      .map((row, order) => ({row, order}))
+      .sort((a, b) => {
+        const cellA = a.row.cells[index];
+        const cellB = b.row.cells[index];
+        const aVal = readCellValue(cellA);
+        const bVal = readCellValue(cellB);
+        const cmp = compareValues(aVal, bVal, type, collator);
+        if (cmp !== 0) return cmp * direction;
+        return a.order - b.order;
+      })
+      .map(entry => entry.row);
+    sorted.forEach(row => tbody.appendChild(row));
+    return sorted;
+
+    function readCellValue(cell){
+      if (!cell) return type === 'number' ? Number.NEGATIVE_INFINITY : '';
+      const raw = cell.dataset?.sortValue;
+      if (raw != null) return raw;
+      return cell.textContent?.trim?.() ?? '';
+    }
+
+    function compareValues(a, b, valueType, collatorInstance){
+      if (valueType === 'number') {
+        const numA = Number(a);
+        const numB = Number(b);
+        const finiteA = Number.isFinite(numA);
+        const finiteB = Number.isFinite(numB);
+        if (!finiteA && !finiteB) return 0;
+        if (!finiteA) return -1;
+        if (!finiteB) return 1;
+        if (numA === numB) return 0;
+        return numA < numB ? -1 : 1;
+      }
+      const textA = String(a ?? '').trim();
+      const textB = String(b ?? '').trim();
+      if (collatorInstance) {
+        return collatorInstance.compare(textA, textB);
+      }
+      if (textA === textB) return 0;
+      return textA < textB ? -1 : 1;
+    }
+  }
+
+  window.exporter = Object.assign({}, window.exporter, {exportPilotSummary, sortTable});
 })();
