@@ -138,6 +138,91 @@
     }
   }
 
+  async function exportSiteBriefPDF(options={}){
+    await ensureLibs();
+    const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
+    const margin = 12;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const contentWidth = pageWidth - margin * 2;
+    let y = margin;
+
+    const title = window.I18N?.t?.('demo.title') || 'Demo';
+    const badgeText = typeof options.badgeText === 'string'
+      ? options.badgeText
+      : document.getElementById('site-badge')?.textContent?.trim?.() || '';
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(title, margin, y);
+    y += 8;
+
+    if (badgeText) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      const badgeLines = doc.splitTextToSize(badgeText, contentWidth);
+      doc.text(badgeLines, margin, y);
+      y += badgeLines.length * 5 + 2;
+    }
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+
+    await addSectionImage(document.getElementById('demo-hero'), {maxHeight: 90, spacing: 8});
+    await addSectionImage(document.getElementById('demo-overview'), {spacing: 10});
+    await addSectionImage(document.querySelector('#org-table table') || document.getElementById('org-table'), {maxHeight: 140, spacing: 10});
+    await addSectionImage(document.getElementById('chart-gender-overall'), {maxHeight: 110, spacing: 6});
+    await addSectionImage(document.getElementById('chart-age-overall'), {maxHeight: 110, spacing: 10});
+    await addSectionImage(document.getElementById('chart-gender-by-dept'), {maxHeight: 130, spacing: 10});
+    await addSectionImage(document.getElementById('shift-grid'), {maxHeight: 140, spacing: 10});
+
+    const note = 'Fictional demo data; aggregates only; no PII.';
+    if (y > pageHeight - margin - 12) {
+      doc.addPage();
+      y = pageHeight - margin - 12;
+    }
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.setTextColor(150, 170, 190);
+    doc.text(note, margin, pageHeight - margin);
+    doc.setTextColor(0, 0, 0);
+
+    const date = new Date();
+    const iso = date.toISOString().slice(0, 10);
+    doc.save(`aurora_site_brief_${iso}.pdf`);
+
+    function ensureSpace(space){
+      if (y + space > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    }
+
+    async function addSectionImage(element, opts={}){
+      if (!element) return;
+      const options = Object.assign({spacing: 6, maxHeight: pageHeight - margin * 2}, opts);
+      try {
+        const canvas = await window.html2canvas(element, {backgroundColor: '#06131b', scale: 2});
+        const ratio = canvas.width / canvas.height || 1;
+        let renderWidth = contentWidth;
+        let renderHeight = renderWidth / ratio;
+        const maxHeight = Math.max(60, options.maxHeight || contentWidth / ratio);
+        if (renderHeight > maxHeight) {
+          const scale = maxHeight / renderHeight;
+          renderHeight = maxHeight;
+          renderWidth = renderWidth * scale;
+        }
+        ensureSpace(renderHeight + options.spacing + 4);
+        const x = margin + (contentWidth - renderWidth) / 2;
+        const imgData = canvas.toDataURL('image/png');
+        doc.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
+        y += renderHeight + options.spacing;
+      } catch (err) {
+        console.warn('exportSiteBriefPDF: capture failed', err);
+      }
+    }
+  }
+
   async function legacyExport(sections, filename){
     const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
     let y = 10;
@@ -233,5 +318,7 @@
     }
   }
 
-  window.exporter = Object.assign({}, window.exporter, {exportPilotSummary, sortTable});
+  const api = Object.assign({}, window.exporter, {exportPilotSummary, sortTable, exportSiteBriefPDF});
+  window.exporter = api;
+  window.EXPORTER = api;
 })();

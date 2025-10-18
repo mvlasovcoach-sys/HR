@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SPA2099 HR Health — Demo</title>
+<link rel="stylesheet" href="./assets/css/app-shell.css?v=2025-11-12a">
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025-11-12a">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025-11-12a">
+<link rel="stylesheet" href="./assets/css/demo.css?v=2025-11-12a">
+<script defer src="./assets/js/i18n.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/version.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/app-shell.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/guard.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/guards.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/auth.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/theme.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/exporter.js?v=2025-11-12a"></script>
+<script defer src="./assets/js/demo.js?v=2025-11-12a"></script>
+</head><body>
+<div class="page">
+  <div id="sidebar-slot"></div>
+  <main class="main">
+    <div class="page-head">
+      <h1 data-i18n="demo.title">Demo</h1>
+      <span id="site-badge" class="pill" aria-live="polite"></span>
+    </div>
+
+    <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
+
+    <section id="demo-overview" class="grid grid-4" aria-live="polite">
+      <div id="card-site" class="tile"></div>
+      <div id="card-headcount" class="tile"></div>
+      <div id="card-rotation" class="tile"></div>
+      <div id="card-shifts" class="tile"></div>
+    </section>
+
+    <section id="demo-org" class="panel" aria-live="polite">
+      <div class="panel__head" data-i18n="demo.orgStructure">Organization</div>
+      <div id="org-table"></div>
+    </section>
+
+    <section id="demo-demographics" class="panel" aria-live="polite">
+      <div class="panel__head" data-i18n="demo.demographics">Demographics</div>
+      <div class="grid grid-2">
+        <div>
+          <div class="subhead" data-i18n="demo.genderOverall">Gender — Overall</div>
+          <div id="chart-gender-overall" class="chart-donut" role="img"></div>
+        </div>
+        <div>
+          <div class="subhead" data-i18n="demo.ageOverall">Age — Overall</div>
+          <div id="chart-age-overall" class="chart-bars" role="img"></div>
+        </div>
+      </div>
+      <div class="subhead" data-i18n="demo.byDepartment">By department</div>
+      <div id="chart-gender-by-dept" class="chart-bars" role="img"></div>
+    </section>
+
+    <section id="demo-shifts" class="panel" aria-live="polite">
+      <div class="panel__head" data-i18n="demo.shiftPattern">Shift Pattern</div>
+      <div id="shift-grid"></div>
+    </section>
+
+    <div class="actions">
+      <button id="btn-export-brief" class="btn" data-i18n="demo.exportBrief">Export Site Brief (PDF)</button>
+    </div>
+
+    <div id="demo-toast" class="toast" role="status" aria-live="assertive" hidden></div>
+  </main>
+</div>
+</body></html>
