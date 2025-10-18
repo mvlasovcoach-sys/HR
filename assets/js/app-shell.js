@@ -33,6 +33,7 @@
       '<li><a href="./Corporate.html" data-key="corporate" data-i18n="nav.corporate">Corporate</a></li>' +
       '<li><a href="./Devices.html" data-key="devices" data-i18n="nav.devices">Devices</a></li>' +
       '<li><a href="./Settings.html" data-key="settings" data-i18n="nav.settings">Settings</a></li>' +
+      '<li><a href="./Demo.html" data-key="demo" data-i18n="nav.demo">Demo</a></li>' +
       '</ul></nav>';
   }
   const event = new CustomEvent('sidebar:ready', {detail: {root: slot}});
