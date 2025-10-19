@@ -1,50 +1,51 @@
 {
   "range": "year",
   "updated": "2025-10-13T07:30:00Z",
-  "summary": {
+  "org": {
+    "devices_issued": 90,
     "devices_online_pct": 89,
     "avg_battery_pct": 63,
-    "sync_fresh_pct": 94
+    "last_sync_24h_pct": 94
   },
-  "distribution": [
-    {"bucket": "0-20", "value": 3},
-    {"bucket": "21-40", "value": 10},
-    {"bucket": "41-60", "value": 22},
-    {"bucket": "61-80", "value": 38},
-    {"bucket": "81-100", "value": 27}
-  ],
-  "teams": [
+  "by_team": [
     {
-      "team": "ops",
-      "devices": 120,
-      "online_pct": 87,
-      "avg_battery": 61,
-      "last_sync": "2025-10-10T22:10:00Z",
-      "status": "green"
+      "id": "ops",
+      "devices_issued": 30,
+      "devices_online_pct": 87,
+      "avg_battery_pct": 61,
+      "last_sync_24h_pct": 92,
+      "last_sync": "2025-10-10T22:10:00Z"
     },
     {
-      "team": "cs",
-      "devices": 98,
-      "online_pct": 85,
-      "avg_battery": 58,
-      "last_sync": "2025-10-10T22:40:00Z",
-      "status": "amber"
+      "id": "it",
+      "devices_issued": 18,
+      "devices_online_pct": 95,
+      "avg_battery_pct": 70,
+      "last_sync_24h_pct": 98,
+      "last_sync": "2025-10-10T23:05:00Z"
     },
     {
-      "team": "it",
-      "devices": 76,
-      "online_pct": 95,
-      "avg_battery": 70,
-      "last_sync": "2025-10-10T23:05:00Z",
-      "status": "green"
+      "id": "lab",
+      "devices_issued": 16,
+      "devices_online_pct": 93,
+      "avg_battery_pct": 66,
+      "last_sync_24h_pct": 97,
+      "last_sync": "2025-10-10T22:25:00Z"
     },
     {
-      "team": "lab",
-      "devices": 64,
-      "online_pct": 93,
-      "avg_battery": 66,
-      "last_sync": "2025-10-10T22:25:00Z",
-      "status": "green"
+      "id": "cs",
+      "devices_issued": 26,
+      "devices_online_pct": 85,
+      "avg_battery_pct": 60,
+      "last_sync_24h_pct": 92,
+      "last_sync": "2025-10-10T22:40:00Z"
     }
-  ]
+  ],
+  "battery_distribution": {
+    "0-20": 3,
+    "21-40": 10,
+    "41-60": 22,
+    "61-80": 38,
+    "81-100": 27
+  }
 }

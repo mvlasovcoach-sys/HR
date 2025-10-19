@@ -1,9 +1,9 @@
 {
   "org": "SPA2099 Demo Co.",
   "depts": [
-    {"id": "ops", "name": "Operations"},
-    {"id": "cs", "name": "Customer Service"},
-    {"id": "it", "name": "IT"},
-    {"id": "lab", "name": "Lab"}
+    {"id": "ops", "name": "Production"},
+    {"id": "cs", "name": "Day-Shift Support"},
+    {"id": "it", "name": "Maintenance & IT"},
+    {"id": "lab", "name": "Lab & HSE"}
   ]
 }
