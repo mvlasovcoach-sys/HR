@@ -6,6 +6,7 @@
     corporate: {roles: ['HR', 'OH', 'Admin']},
     devices: {roles: ['HR', 'OH', 'Admin']},
     settings: {roles: ['Admin']},
+    demo: {roles: ['HR', 'OH', 'Admin']},
     wellness: {roles: []},
     pilot: {roles: ['Admin']},
     index: {roles: ['HR', 'OH', 'Admin']},
@@ -19,6 +20,7 @@
     'corporate.html': 'corporate',
     'devices.html': 'devices',
     'settings.html': 'settings',
+    'demo.html': 'demo',
     'user.html': 'wellness',
     'pilot.html': 'pilot',
     'index.html': 'index'

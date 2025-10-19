@@ -12,8 +12,15 @@
     const themeFromUrl = readThemeFromUrl();
     const persisted = themeFromUrl || readThemeFromStorage();
     const path = themeFromUrl ? buildThemePath(themeFromUrl) : (persisted ? buildThemePath(persisted) : DEFAULT_THEME);
-    document.addEventListener('sidebar:ready', () => applyThemeToSidebar(currentTheme));
-    document.addEventListener('sidebar:update', () => applyThemeToSidebar(currentTheme));
+    if (typeof window.renderSideNav === 'function') {
+      const originalRender = window.renderSideNav;
+      window.renderSideNav = function(...args){
+        const result = originalRender.apply(this, args);
+        applyThemeToSidebar(currentTheme);
+        return result;
+      };
+    }
+    document.addEventListener('DOMContentLoaded', () => applyThemeToSidebar(currentTheme));
     try {
       currentTheme = await fetchTheme(path);
       if (themeFromUrl) {
@@ -128,7 +135,7 @@
   }
 
   function applyThemeToSidebar(theme){
-    const root = document.getElementById('sidebar-slot');
+    const root = document.getElementById('side-nav') || document.getElementById('sidebar-slot');
     if (!root || !theme) return;
     const logoEl = root.querySelector('[data-theme-logo]');
     if (logoEl) {
@@ -139,7 +146,7 @@
         logoEl.hidden = true;
       }
     }
-    const brandEl = root.querySelector('.side__brand-name');
+    const brandEl = root.querySelector('.brand');
     if (brandEl && theme.brand) {
       brandEl.textContent = theme.brand;
     }

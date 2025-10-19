@@ -10,6 +10,14 @@
 
   function init(){
     const roleFromUrl = readRoleFromUrl();
+    if (typeof window.renderSideNav === 'function') {
+      const originalRender = window.renderSideNav;
+      window.renderSideNav = function(...args){
+        const result = originalRender.apply(this, args);
+        handleSidebarReady();
+        return result;
+      };
+    }
     if (roleFromUrl) {
       setRole(roleFromUrl, {skipHistory: true});
     } else {
@@ -17,11 +25,10 @@
       persistRole(currentRole);
       notifyRoleChange();
     }
-    document.addEventListener('sidebar:ready', handleSidebarReady, {once: false});
-    document.addEventListener('sidebar:update', handleSidebarReady);
     document.addEventListener(ROLE_CHANGE_EVENT, () => {
       handleSidebarReady();
     });
+    handleSidebarReady();
   }
 
   function readRoleFromUrl(){
@@ -80,22 +87,23 @@
   }
 
   function handleSidebarReady(evt){
-    const root = evt?.detail?.root || document.getElementById('sidebar-slot');
+    const root = evt?.detail?.root || document.getElementById('side-nav') || document.getElementById('sidebar-slot');
     if (!root) return;
     applyRoleToSidebar(root);
   }
 
   function applyRoleToSidebar(root){
-    const navItems = root.querySelectorAll('[data-role-key]');
-    navItems.forEach(item => {
-      const key = item.getAttribute('data-role-key');
+    const navItems = root.querySelectorAll('a[data-id]');
+    navItems.forEach(link => {
+      const key = link.dataset.id || '';
       const allowed = window.routeGuards?.isAllowed(currentRole, key) ?? true;
-      item.style.display = allowed ? '' : 'none';
+      const li = link.parentElement;
+      if (li && li.tagName === 'LI') {
+        li.style.display = allowed ? '' : 'none';
+      } else {
+        link.style.display = allowed ? '' : 'none';
+      }
     });
-    const roleLabel = root.querySelector('[data-role-label]');
-    if (roleLabel) {
-      roleLabel.textContent = currentRole;
-    }
   }
 
   window.auth = {
@@ -104,7 +112,7 @@
     },
     setRole(role){
       setRole(role);
-      document.dispatchEvent(new CustomEvent('sidebar:update')); // trigger UI refresh
+      handleSidebarReady();
     },
     onRoleChange(handler){
       if (typeof handler !== 'function') return () => {};
