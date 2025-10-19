@@ -1,5 +1,6 @@
 // assets/js/nav.js
 (function(){
+  // 1) Single source of nav items
   window.NAV_ITEMS = [
     {id:'summary',    href:'Summary.html',    i18n:'nav.summary'},
     {id:'analytics',  href:'Analytics.html',  i18n:'nav.analytics'},
@@ -7,51 +8,64 @@
     {id:'corporate',  href:'Corporate.html',  i18n:'nav.corporate'},
     {id:'devices',    href:'Devices.html',    i18n:'nav.devices'},
     {id:'settings',   href:'Settings.html',   i18n:'nav.settings'},
-    // bottom section
+    // pinned at bottom:
     {id:'demo',       href:'Demo.html',       i18n:'nav.demo', position:'bottom'}
   ];
 
+  // 2) Fallback English labels (in case i18n is late)
+  const LABEL_EN = {
+    summary:'Summary', analytics:'Analytics', engagement:'Engagement',
+    corporate:'Corporate', devices:'Devices', settings:'Settings', demo:'Demo'
+  };
+
+  // 3) Render function
   window.renderSideNav = function(activeId){
+    // Accept either #side-nav or legacy #sidebar-slot
     const host = document.getElementById('side-nav') || document.getElementById('sidebar-slot');
     if(!host) return;
+
     host.innerHTML = `
       <nav class="side">
         <div class="brand">SPA2099 HR Health</div>
-        <ul class="menu top"></ul>
-        <ul class="menu bottom"></ul>
+        <ul class="menu top"   aria-label="Primary"></ul>
+        <ul class="menu bottom" aria-label="Secondary"></ul>
       </nav>`;
+
     const top = host.querySelector('.menu.top');
     const bottom = host.querySelector('.menu.bottom');
 
     NAV_ITEMS.forEach(item=>{
       const li = document.createElement('li');
-      const a = document.createElement('a');
+      const a  = document.createElement('a');
       a.href = item.href;
       a.dataset.id = item.id;
-      a.textContent = (window.I18N?.t?.(item.i18n)) || item.id; // fallback text
+
+      // show English immediately, then let i18n replace via data-i18n
+      a.textContent = LABEL_EN[item.id] || item.id;
+      a.setAttribute('data-i18n', item.i18n);
+
       li.appendChild(a);
-      (item.position==='bottom'? bottom : top).appendChild(li);
+      (item.position === 'bottom' ? bottom : top).appendChild(li);
     });
 
-    // active state
+    // Active state
     const here = (location.pathname.split('/').pop() || '').toLowerCase();
     host.querySelectorAll('a').forEach(a=>{
       const fname = a.getAttribute('href').split('/').pop().toLowerCase();
-      if(fname === here) a.classList.add('active');
+      if (fname === here) a.classList.add('active');
     });
 
-    // i18n refresh after DOM paint
-    if(window.I18N?.refresh) I18N.refresh(host);
+    // Translate just-in-time (if i18n is present)
+    try { window.I18N?.refresh?.(host); } catch(e){/* noop */}
 
-    // debug self-check
+    // Self-check in console to debug
     console.debug('nav:', [...host.querySelectorAll('a')].map(a=>a.textContent.trim()));
   };
 
-  // last-resort auto render if a page forgets to call renderSideNav
+  // 4) Last-resort auto-render if page forgot to call
   document.addEventListener('DOMContentLoaded', ()=>{
     if(!document.querySelector('#side-nav a, #sidebar-slot a')){
-      const guess = (location.pathname.match(/(\w+)\.html$/)?.[1] || 'summary')
-        .toLowerCase();
+      const guess = (location.pathname.match(/(\w+)\.html$/)?.[1] || 'summary').toLowerCase();
       renderSideNav(guess);
     }
   });
