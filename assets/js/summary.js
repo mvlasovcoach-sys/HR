@@ -203,8 +203,8 @@
       skeleton.push(`<div class="tile tile--skeleton skeleton tile--compact" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
         <div class="tile__meta"><span class="skeleton skeleton--pill"></span></div>
-        <div class="tile__kpi"><span class="skeleton skeleton--value"></span></div>
-        <div class="spark"><span class="skeleton skeleton--spark"></span></div>
+        <div class="tile__kpi tile__value"><span class="skeleton skeleton--value"></span></div>
+        <div class="tile__spark spark"><span class="skeleton skeleton--spark"></span></div>
       </div>`);
     }
     grid.innerHTML = skeleton.join('');
@@ -212,12 +212,18 @@
 
   async function loadAndRender(){
     state.loading = true;
+    if (document?.body) {
+      document.body.classList.add('is-loading');
+    }
     const range = readRange();
     RANGE.current = range;
     refreshHeaderMeta();
     const grid = document.getElementById('sum-kpi-grid');
     if (!grid) {
       state.loading = false;
+      if (document?.body) {
+        document.body.classList.remove('is-loading');
+      }
       return;
     }
     try{
@@ -238,6 +244,9 @@
       toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
     } finally {
       state.loading = false;
+      if (document?.body) {
+        document.body.classList.remove('is-loading');
+      }
     }
   }
 
@@ -303,8 +312,8 @@
       return `<div class="tile tile--interactive tile--compact kpi" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
         <div class="tile__meta">${updatedLabel}</div>
-        <div class="tile__kpi">${val}<small>${d.unit}</small></div>
-        <div class="spark">${spark}</div>
+        <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>
+        <div class="tile__spark spark">${spark}</div>
       </div>`;
     }).join('');
   }

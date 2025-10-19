@@ -107,6 +107,6 @@
     return currentLang;
   }
 
-  window.I18N = { t, onReady, init, setLang, getLang, translate: translateDocument };
+  window.I18N = { t, onReady, init, setLang, getLang, translate: translateDocument, refresh: translateDocument };
   window.t = (key, vars) => t(key, vars);
 })();
