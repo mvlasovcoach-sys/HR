@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="./assets/css/devices.css?v=${APP_VERSION}">
 <script defer src="./assets/js/i18n.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/version.js?v=${APP_VERSION}"></script>
+<script defer src="./assets/js/site.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/nav.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/app-shell.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/date-controls.js?v=${APP_VERSION}"></script>
@@ -35,24 +36,26 @@
         <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
       </div>
     </div>
+    <div id="devices-coverage" class="devices-coverage" aria-live="polite"></div>
     <p id="devices-caption" class="header__caption" aria-live="polite"></p>
+
+    <section class="panel" id="fleet-table-panel">
+      <div class="panel__meta" data-i18n="devices.byTeam">Devices by team</div>
+      <div class="devices-layout">
+        <div class="devices-table" id="fleet-table" aria-live="polite"></div>
+        <div class="devices-distribution" aria-live="polite">
+          <h3 data-i18n="devices.battery.dist">Battery distribution</h3>
+          <div id="devices-histogram" class="devices-histogram"></div>
+        </div>
+      </div>
+    </section>
 
     <section class="panel" id="fleet-summary-panel">
       <div class="panel__meta" data-i18n="section.devicesOverview">Fleet status</div>
       <div class="kpi-grid" id="fleet-cards" aria-live="polite"></div>
     </section>
-
-    <section class="panel" id="fleet-table-panel">
-      <div class="panel__meta" data-i18n="section.devicesTable">Devices by team</div>
-      <div class="devices-layout">
-        <div class="devices-table" id="fleet-table" aria-live="polite"></div>
-        <div class="devices-distribution" aria-live="polite">
-          <h3 data-i18n="devices.distribution">Battery distribution</h3>
-          <div id="devices-histogram" class="devices-histogram"></div>
-        </div>
-      </div>
-    </section>
   </main>
 </div>
+  <div id="devices-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
   <script>document.addEventListener('DOMContentLoaded',()=>renderSideNav('devices'));</script>
 </body></html>

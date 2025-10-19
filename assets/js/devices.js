@@ -1,4 +1,76 @@
-function initPage(){
+(function(){
+  const STORAGE_KEYS = {
+    range: 'hr:range',
+    team: 'hr:team',
+    scenario: 'hr:scenario'
+  };
+
+  const STATUS_THRESHOLDS = {
+    good: {online: 60, sync: 80},
+    warn: {online: 40, sync: 60}
+  };
+
+  const METRIC_THRESHOLDS = {
+    devices_online_pct: {good: 60, warn: 40},
+    avg_battery_pct: {good: 60, warn: 40},
+    last_sync_24h_pct: {good: 80, warn: 60}
+  };
+
+  let sortState = {key: 'team', dir: 'asc'};
+  let renderToken = 0;
+  let lastData = null;
+  let lastTeam = 'all';
+  let siteState = null;
+  const integrityState = {coverage: false, aggregate: false};
+  let toastTimer = null;
+
+  function boot(){
+    const ready = [];
+    ready.push(waitForI18n());
+    ready.push(waitForSite());
+    ready.push(waitForDom());
+    Promise.all(ready).then(initPage).catch(err => {
+      console.error('devices: init failed', err);
+    });
+  }
+
+  function waitForDom(){
+    return new Promise(resolve => {
+      if (document.readyState !== 'loading') {
+        resolve();
+      } else {
+        document.addEventListener('DOMContentLoaded', resolve, {once: true});
+      }
+    });
+  }
+
+  function waitForI18n(){
+    return new Promise(resolve => {
+      if (window.I18N?.onReady) {
+        window.I18N.onReady(resolve);
+      } else {
+        resolve();
+      }
+    });
+  }
+
+  function waitForSite(){
+    return new Promise(resolve => {
+      if (window.SITE?.ready) {
+        resolve(window.SITE);
+        return;
+      }
+      const handler = event => {
+        window.removeEventListener('site:ready', handler);
+        resolve(event?.detail?.site || window.SITE || null);
+      };
+      window.addEventListener('site:ready', handler, {once: true});
+    });
+  }
+
+  function initPage(){
+    siteState = window.SITE || null;
+
     const cardsEl = document.getElementById('fleet-cards');
     if (!cardsEl) return;
     const tableEl = document.getElementById('fleet-table');
@@ -7,413 +79,597 @@ function initPage(){
     const exportBtn = document.getElementById('export-fleet');
     const summaryPanel = document.getElementById('fleet-summary-panel');
     const tablePanel = document.getElementById('fleet-table-panel');
+    const coverageEl = document.getElementById('devices-coverage');
+    const toastEl = document.getElementById('devices-toast');
 
-    const sortState = {key: 'team', dir: 'asc'};
-    let lastData = null;
-    let lastTeam = 'all';
+    cardsEl.classList.add('devices-kpis');
 
-    exportBtn?.addEventListener('click', exportCsv);
-    tableEl?.addEventListener('click', handleTableSort);
+    exportBtn?.addEventListener('click', () => exportCsv(tableEl));
+    tableEl?.addEventListener('click', evt => handleTableSort(evt, tableEl));
+
     window.addEventListener('storage', evt => {
       if (!evt) return;
-      if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
+      if (evt.key === STORAGE_KEYS.range || evt.key === STORAGE_KEYS.team || evt.key === STORAGE_KEYS.scenario) {
         render();
       }
     });
-    document.addEventListener('i18n:change', render);
+
+    document.addEventListener('i18n:change', () => render());
+    window.addEventListener('site:ready', event => {
+      siteState = event?.detail?.site || window.SITE || siteState;
+      render();
+    });
 
     render();
 
-    function t(key, vars){
-      return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
-    }
-
-    function readRange(){
-      try {
-        const raw = localStorage.getItem('hr:range');
-        if (!raw) return {preset: '7d'};
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.preset) return parsed;
-        if (parsed && parsed.start && parsed.end) return parsed;
-      } catch (e) {}
-      return {preset: '7d'};
-    }
-
-    function readTeam(){
-      try {
-        return localStorage.getItem('hr:team') || 'all';
-      } catch (e) {
-        return 'all';
-      }
-    }
-
-    function presetForRange(range){
-      if (range.preset) {
-        if (range.preset === 'month' || range.preset === 'year') return range.preset;
-        return '7d';
-      }
-      if (range.start && range.end) {
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        if (!isNaN(start) && !isNaN(end)) {
-          const diff = (end - start) / (1000 * 60 * 60 * 24);
-          if (diff > 120) return 'year';
-          if (diff > 21) return 'month';
-        }
-      }
-      return '7d';
-    }
-
     async function render(){
+      const token = ++renderToken;
       const range = readRange();
       const team = readTeam();
       const preset = presetForRange(range);
-      const data = await loadFleet(preset, range, team);
-      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
-      toggleInsufficient(insufficient);
-      if (exportBtn) {
-        exportBtn.disabled = insufficient;
+      lastTeam = team;
+      let data = null;
+      try {
+        data = await loadFleet(preset, range, team);
+      } catch (err) {
+        console.error('devices: data load failed', err);
       }
+      if (token !== renderToken) return;
+
       if (!data) {
-        const emptyText = t('status.noData');
-        cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
-        tableEl.innerHTML = '';
-        histogramEl.innerHTML = '';
-        if (captionEl) captionEl.textContent = '';
-        if (exportBtn) exportBtn.disabled = true;
+        renderEmpty();
         return;
       }
+
       lastData = data;
-      lastTeam = team;
-      renderCards(data, team);
-      const hasRows = renderTable(data, team);
-      renderHistogram(data);
-      if (captionEl) captionEl.textContent = buildCaption(range, team);
+      siteState = window.SITE || siteState || null;
+      const allRows = buildRows(siteState, data.by_team || []);
+      const rows = team === 'all' ? allRows : allRows.filter(row => row.id === team);
+      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
+      toggleInsufficient(insufficient, summaryPanel, tablePanel, t('guard.insufficient'));
       if (exportBtn) {
         const exportLabel = t('ui.exportCSV') || t('label.export.csv');
         exportBtn.setAttribute('aria-label', `${exportLabel} (${preset})`);
-        exportBtn.disabled = insufficient || !hasRows;
-      }
-    }
-
-    async function loadFleet(preset, range, team){
-      try {
-        const path = `./data/org/fleet_${preset}.json`;
-        return await window.dataLoader.fetch(path, {range, team});
-      } catch (e) {
-        console.error('Fleet data failed', e);
-        return null;
-      }
-    }
-
-    function renderCards(data, team){
-      const summary = data.summary || {};
-      const source = team !== 'all' ? data.teams?.find(entry => entry.team === team) || {} : summary;
-      const cards = [
-        {key: 'devices_online_pct', label: 'kpi.devicesOnline', value: valueOrFallback(source.devices_online_pct ?? source.online_pct, summary.devices_online_pct ?? summary.online_pct), unit: '%'},
-        {key: 'avg_battery_pct', label: 'kpi.avgBattery', value: valueOrFallback(source.avg_battery_pct ?? source.avg_battery, summary.avg_battery_pct ?? summary.avg_battery), unit: '%'},
-        {key: 'sync_fresh_pct', label: 'kpi.syncFresh', value: valueOrFallback(source.sync_fresh_pct ?? source.sync_fresh, summary.sync_fresh_pct ?? summary.sync_fresh), unit: '%'}
-      ];
-      cardsEl.classList.add('devices-cards');
-      cardsEl.innerHTML = cards.map(card => {
-        const value = card.value != null ? Math.round(card.value) : 0;
-        const tone = toneForValue(value);
-        return `<article class="tile">
-          <header class="tile__head">
-            <span class="tile__title">${t(card.label)}</span>
-            <span class="status-chip ${tone.className}">${tone.label}</span>
-          </header>
-          <div class="tile__kpi">${value}<span>${card.unit}</span></div>
-          <footer class="tile__foot">
-            <span>${t('status.value')}</span>
-            <span>${value}${card.unit}</span>
-          </footer>
-        </article>`;
-      }).join('');
-    }
-
-    function renderTable(data, team){
-      if (!tableEl) return false;
-      const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
-      if (insufficient) {
-        tableEl.innerHTML = '';
-        if (window.guardSmallN) {
-          window.guardSmallN(0, tableEl, t('guard.insufficient'));
+        exportBtn.disabled = insufficient || !rows.length;
+        if (!rows.length) {
+          exportBtn.setAttribute('aria-disabled', 'true');
+        } else {
+          exportBtn.removeAttribute('aria-disabled');
         }
-        return false;
       }
-      if (window.guardSmallN) {
-        window.guardSmallN(5, tableEl);
-      }
-      const rows = Array.isArray(data?.teams) ? data.teams : [];
-      const filtered = team !== 'all' ? rows.filter(row => row.team === team) : rows.slice();
-      if (!filtered.length) {
-        const emptyText = t('devices.empty');
-        tableEl.innerHTML = `<p role="status">${emptyText}</p>`;
-        return false;
-      }
+      runIntegrityChecks(data, allRows, siteState, toastEl);
 
-      const lang = window.I18N?.getLang?.() || 'en';
-      const columns = getTableColumns();
-      const active = columns.find(col => col.key === sortState.key) || columns[0];
-      const direction = sortState.dir === 'asc' ? 1 : -1;
-
-      const sortedRows = filtered
-        .map((row, index) => ({row, index}))
-        .sort((a, b) => {
-          const primary = compareValues(active.accessor(a.row), active.accessor(b.row), active.type, lang);
-          if (primary !== 0) return primary * direction;
-          const fallbackCol = columns[0];
-          const secondary = compareValues(fallbackCol.accessor(a.row), fallbackCol.accessor(b.row), fallbackCol.type, lang);
-          if (secondary !== 0) return secondary * direction;
-          return a.index - b.index;
-        })
-        .map(entry => entry.row);
-
-      const headerHtml = columns.map((col, index) => {
-        const isActive = sortState.key === col.key;
-        const dir = isActive ? sortState.dir : 'none';
-        const ariaSort = isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
-        const icon = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
-        return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort-key="${col.key}" data-sort-type="${col.type}" data-default-dir="${col.defaultDir || 'asc'}" data-sort-dir="${dir}" data-sort-index="${index}">${col.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
-      }).join('');
-
-      const bodyRows = sortedRows.map(row => {
-        const teamLabel = teamName(row.team);
-        const devicesCount = Number(row.devices || 0);
-        const onlineValue = Number(row.online_pct ?? row.devices_online_pct ?? 0);
-        const batteryValue = Number(row.avg_battery ?? row.avg_battery_pct ?? 0);
-        const syncValue = Date.parse(row.last_sync || '');
-        const syncLabel = formatSync(row.last_sync);
-        const statusInfo = toneForValue(onlineValue);
-        const onlineSort = Number.isFinite(onlineValue) ? onlineValue : Number.NEGATIVE_INFINITY;
-        const batterySort = Number.isFinite(batteryValue) ? batteryValue : Number.NEGATIVE_INFINITY;
-        const syncSort = Number.isFinite(syncValue) ? syncValue : Number.NEGATIVE_INFINITY;
-        const statusLabel = statusInfo.label;
-        return `<tr>
-          <td data-sort-type="text" data-sort-value="${escapeAttr(teamLabel)}">${escapeHtml(teamLabel)}</td>
-          <td data-sort-type="number" data-sort-value="${devicesCount}">${devicesCount}</td>
-          <td data-sort-type="number" data-sort-value="${onlineSort}">${Math.round(onlineValue)}%</td>
-          <td data-sort-type="number" data-sort-value="${batterySort}">${Math.round(batteryValue)}%</td>
-          <td data-sort-type="number" data-sort-value="${syncSort}">${escapeHtml(syncLabel)}</td>
-          <td data-sort-type="text" data-sort-value="${escapeAttr(statusLabel)}"><span class="status-chip ${statusInfo.className}">${escapeHtml(statusLabel)}</span></td>
-        </tr>`;
-      }).join('');
-
-      tableEl.innerHTML = `<table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyRows}</tbody></table>`;
-      return true;
-    }
-
-    function renderHistogram(data){
-      if (!Array.isArray(data.distribution)) {
-        histogramEl.innerHTML = '';
+      if (insufficient || !rows.length) {
+        renderCards(cardsEl, null, team, data, t);
+        renderTable(tableEl, rows, siteState, t, false);
+        renderHistogram(histogramEl, data, t);
+        updateCoverageBadge(coverageEl, siteState, allRows, t);
+        if (captionEl) captionEl.textContent = rows.length ? buildCaption(range, team, t) : '';
         return;
       }
-      histogramEl.innerHTML = data.distribution.map(item => {
-        const width = Math.min(100, Math.round((item.value || 0) * 2));
-        return `<div class="devices-histogram__bar">
-          <span>${item.bucket}</span>
-          <div class="devices-histogram__track"><div class="devices-histogram__fill" style="width:${width}%"></div></div>
-          <span class="devices-histogram__value">${item.value}</span>
-        </div>`;
-      }).join('');
+
+      renderCards(cardsEl, {rows, allRows, data, team}, team, data, t);
+      renderTable(tableEl, rows, siteState, t, true);
+      renderHistogram(histogramEl, data, t);
+      updateCoverageBadge(coverageEl, siteState, allRows, t);
+      if (captionEl) captionEl.textContent = buildCaption(range, team, t);
     }
 
-    function exportCsv(){
-      const range = readRange();
-      const team = readTeam();
-      const preset = presetForRange(range);
-      const data = Array.from(tableEl.querySelectorAll('tbody tr')).map(row => Array.from(row.children).map(cell => cell.textContent.trim()));
-      if (!data.length) return;
-      const headers = Array.from(tableEl.querySelectorAll('thead th')).map(th => {
-        const btn = th.querySelector('button');
-        if (btn) {
-          const textNode = Array.from(btn.childNodes || []).find(node => node.nodeType === Node.TEXT_NODE);
-          if (textNode) {
-            return textNode.textContent.trim();
+    function renderEmpty(){
+      const emptyText = t('status.noData');
+      cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
+      tableEl.innerHTML = '';
+      histogramEl.innerHTML = '';
+      if (captionEl) captionEl.textContent = '';
+      if (coverageEl) coverageEl.textContent = '';
+      if (exportBtn) exportBtn.disabled = true;
+    }
+  }
+
+  function t(key, vars){
+    return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
+  }
+
+  function readRange(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.range);
+      if (!raw) return {preset: '7d'};
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.preset) return parsed;
+      if (parsed && parsed.start && parsed.end) return parsed;
+    } catch (e) {}
+    return {preset: '7d'};
+  }
+
+  function readTeam(){
+    try {
+      return localStorage.getItem(STORAGE_KEYS.team) || 'all';
+    } catch (e) {
+      return 'all';
+    }
+  }
+
+  function presetForRange(range){
+    if (!range) return '7d';
+    if (range.preset) {
+      if (range.preset === 'month' || range.preset === 'year') return range.preset;
+      return '7d';
+    }
+    if (range.start && range.end) {
+      const start = new Date(range.start);
+      const end = new Date(range.end);
+      if (!isNaN(start) && !isNaN(end)) {
+        const diff = (end - start) / (1000 * 60 * 60 * 24);
+        if (diff > 120) return 'year';
+        if (diff > 21) return 'month';
+      }
+    }
+    return '7d';
+  }
+
+  async function loadFleet(preset, range, team){
+    const path = `./data/org/fleet_${preset}.json`;
+    return await window.dataLoader.fetch(path, {range, team});
+  }
+
+  function buildRows(site, rawRows){
+    const siteMap = site?.map || {};
+    const visible = Array.isArray(site?.visibleRows) ? site.visibleRows.slice() : [];
+    const dataMap = new Map();
+    rawRows.forEach(entry => {
+      if (!entry) return;
+      const id = String(entry.id || entry.team || '').trim();
+      if (!id) return;
+      dataMap.set(id, entry);
+      if (!visible.includes(id)) {
+        visible.push(id);
+      }
+    });
+
+    return visible.map(id => {
+      const siteEntry = siteMap[id] || {label: id, headcount: 0};
+      const dataEntry = dataMap.get(id) || {};
+      const headcount = Number(siteEntry.headcount);
+      const issued = Number(dataEntry.devices_issued ?? dataEntry.devices ?? headcount);
+      const online = Number(dataEntry.devices_online_pct ?? dataEntry.online_pct);
+      const battery = Number(dataEntry.avg_battery_pct ?? dataEntry.avg_battery);
+      const sync = Number(dataEntry.last_sync_24h_pct ?? dataEntry.sync_fresh_pct);
+      const lastSync = dataEntry.last_sync || dataEntry.last_sync_time || null;
+      return {
+        id,
+        label: siteEntry.label || id,
+        headcount: Number.isFinite(headcount) ? headcount : 0,
+        issued: Number.isFinite(issued) ? issued : (Number.isFinite(headcount) ? headcount : 0),
+        onlinePct: Number.isFinite(online) ? online : 0,
+        batteryPct: Number.isFinite(battery) ? battery : 0,
+        syncPct: Number.isFinite(sync) ? sync : 0,
+        lastSync,
+        raw: dataEntry
+      };
+    });
+  }
+
+  function renderCards(container, context, team, data, translate){
+    const rows = context?.rows || [];
+    const allRows = context?.allRows || rows;
+    const hasOrg = data?.org && typeof data.org === 'object';
+    const aggregates = team !== 'all'
+      ? {
+          devices_online_pct: rows[0]?.onlinePct ?? 0,
+          avg_battery_pct: rows[0]?.batteryPct ?? 0,
+          last_sync_24h_pct: rows[0]?.syncPct ?? 0
+        }
+      : hasOrg
+        ? {
+            devices_online_pct: Number(data.org.devices_online_pct),
+            avg_battery_pct: Number(data.org.avg_battery_pct),
+            last_sync_24h_pct: Number(data.org.last_sync_24h_pct)
           }
-          return btn.textContent.trim();
-        }
-        return th.textContent.trim();
-      });
-      const csvRows = [headers, ...data]
-        .map(row => row.map(value => `"${value.replace(/"/g, '""')}"`).join(','))
-        .join('\n');
-      const blob = new Blob([csvRows], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const teamSlug = team === 'all' ? 'all' : team;
-      const stamp = formatFileDate(new Date());
-      link.download = `fleet_${teamSlug}_${preset}_${stamp}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+        : weightedAggregate(allRows);
+
+    const cards = [
+      {key: 'devices_online_pct', label: 'kpi.devicesOnline', value: aggregates.devices_online_pct},
+      {key: 'avg_battery_pct', label: 'kpi.avgBattery', value: aggregates.avg_battery_pct},
+      {key: 'last_sync_24h_pct', label: 'kpi.syncFresh', value: aggregates.last_sync_24h_pct}
+    ];
+
+    container.innerHTML = cards.map(card => {
+      const numeric = Number(card.value);
+      const formatted = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+      const status = metricStatus(card.key, formatted, translate);
+      const valueText = Number.isFinite(numeric) ? formatted : '–';
+      return `<article class="tile tile--compact">
+        <header class="tile__head">
+          <span class="tile__title">${translate(card.label)}</span>
+          <span class="status-chip ${status.className}">${status.label}</span>
+        </header>
+        <div class="tile__kpi">${valueText}<span>%</span></div>
+      </article>`;
+    }).join('');
+  }
+
+  function metricStatus(key, value, translate){
+    const thresholds = METRIC_THRESHOLDS[key] || {good: 60, warn: 40};
+    if (Number(value) >= thresholds.good) {
+      return {className: 'status-chip--green', label: translate('devices.status.good')};
+    }
+    if (Number(value) >= thresholds.warn) {
+      return {className: 'status-chip--amber', label: translate('devices.status.warn')};
+    }
+    return {className: 'status-chip--red', label: translate('devices.status.crit')};
+  }
+
+  function weightedAggregate(rows){
+    const totals = rows.reduce((acc, row) => {
+      const issued = Number(row?.issued) || 0;
+      acc.issued += issued;
+      acc.online += (Number(row?.onlinePct) || 0) * issued;
+      acc.battery += (Number(row?.batteryPct) || 0) * issued;
+      acc.sync += (Number(row?.syncPct) || 0) * issued;
+      return acc;
+    }, {issued: 0, online: 0, battery: 0, sync: 0});
+    if (totals.issued <= 0) {
+      return {
+        devices_online_pct: 0,
+        avg_battery_pct: 0,
+        last_sync_24h_pct: 0
+      };
+    }
+    return {
+      devices_online_pct: totals.online / totals.issued,
+      avg_battery_pct: totals.battery / totals.issued,
+      last_sync_24h_pct: totals.sync / totals.issued
+    };
+  }
+
+  function renderTable(container, rows, site, translate, hasRows){
+    if (!container) return;
+    if (!hasRows || !rows.length) {
+      container.innerHTML = `<p role="status">${translate('devices.empty')}</p>`;
+      return;
     }
 
-    function handleTableSort(evt){
-      const trigger = evt.target.closest('[data-sort-key]');
-      if (!trigger) return;
-      evt.preventDefault();
-      const key = trigger.getAttribute('data-sort-key');
-      if (!key) return;
-      const columns = getTableColumns();
-      const column = columns.find(col => col.key === key) || null;
-      const defaultDir = trigger.getAttribute('data-default-dir') || column?.defaultDir || 'asc';
-      if (sortState.key === key) {
-        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    const lang = window.I18N?.getLang?.() || 'en';
+    const columns = getTableColumns(translate);
+    const active = columns.find(col => col.key === sortState.key) || columns[0];
+    const direction = sortState.dir === 'asc' ? 1 : -1;
+    const orderMap = new Map((site?.visibleRows || []).map((id, index) => [id, index]));
+
+    const sortedRows = rows
+      .map((row, index) => ({row, index}))
+      .sort((a, b) => {
+        if (active.key === 'team' && orderMap.size) {
+          const orderA = orderMap.has(a.row.id) ? orderMap.get(a.row.id) : Number.MAX_SAFE_INTEGER;
+          const orderB = orderMap.has(b.row.id) ? orderMap.get(b.row.id) : Number.MAX_SAFE_INTEGER;
+          if (orderA !== orderB) {
+            return (orderA - orderB) * direction;
+          }
+        }
+        const primary = compareValues(active.accessor(a.row), active.accessor(b.row), active.type, lang, site);
+        if (primary !== 0) return primary * direction;
+        const fallbackCol = columns[0];
+        const secondary = compareValues(fallbackCol.accessor(a.row), fallbackCol.accessor(b.row), fallbackCol.type, lang, site);
+        if (secondary !== 0) return secondary * direction;
+        return a.index - b.index;
+      })
+      .map(entry => entry.row);
+
+    const headerHtml = columns.map((col, index) => {
+      const isActive = sortState.key === col.key;
+      const dir = isActive ? sortState.dir : 'none';
+      const ariaSort = isActive ? (dir === 'asc' ? 'ascending' : 'descending') : 'none';
+      const icon = !isActive ? '⇅' : dir === 'asc' ? '▲' : '▼';
+      return `<th scope="col" aria-sort="${ariaSort}"><button type="button" class="table-sort${isActive ? ' is-active' : ''}" data-sort-key="${col.key}" data-sort-type="${col.type}" data-default-dir="${col.defaultDir || 'asc'}" data-sort-dir="${dir}" data-sort-index="${index}">${col.label}<span class="table-sort__icon" aria-hidden="true">${icon}</span></button></th>`;
+    }).join('');
+
+    const bodyRows = sortedRows.map(row => {
+      const status = resolveStatus(row.onlinePct, row.syncPct, translate);
+      const lastSyncLabel = formatSync(row.lastSync);
+      const syncPercent = Number.isFinite(Number(row.syncPct)) ? `${Math.round(Number(row.syncPct))}%` : '—';
+      const headcount = Number.isFinite(Number(row.headcount)) ? Number(row.headcount) : 0;
+      const issued = Number.isFinite(Number(row.issued)) ? Number(row.issued) : headcount;
+      const onlinePct = Number.isFinite(Number(row.onlinePct)) ? Math.round(Number(row.onlinePct)) : 0;
+      const batteryPct = Number.isFinite(Number(row.batteryPct)) ? Math.round(Number(row.batteryPct)) : 0;
+      const syncSort = Number.isFinite(Number(row.syncPct)) ? Number(row.syncPct) : Number.NEGATIVE_INFINITY;
+      return `<tr>
+        <td data-sort-type="text" data-sort-value="${escapeAttr(row.label)}">${escapeHtml(row.label)}</td>
+        <td data-sort-type="number" data-sort-value="${headcount}">${headcount}</td>
+        <td data-sort-type="number" data-sort-value="${issued}">${issued}</td>
+        <td data-sort-type="number" data-sort-value="${row.onlinePct}">${onlinePct}%</td>
+        <td data-sort-type="number" data-sort-value="${row.batteryPct}">${batteryPct}%</td>
+        <td data-sort-type="number" data-sort-value="${syncSort}">
+          <div class="devices-table__primary">${syncPercent}</div>
+          ${lastSyncLabel ? `<div class="devices-table__meta">${escapeHtml(lastSyncLabel)}</div>` : ''}
+        </td>
+        <td data-sort-type="text" data-sort-value="${escapeAttr(status.label)}"><span class="status-chip ${status.className}">${escapeHtml(status.label)}</span></td>
+      </tr>`;
+    }).join('');
+
+    container.innerHTML = `<table><thead><tr>${headerHtml}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  }
+
+  function getTableColumns(translate){
+    return [
+      {key: 'team', label: translate('devices.columns.team'), type: 'text', defaultDir: 'asc', accessor: row => row.label},
+      {key: 'headcount', label: translate('devices.columns.headcount'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.headcount)},
+      {key: 'issued', label: translate('devices.columns.issued'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.issued)},
+      {key: 'online_pct', label: translate('devices.columns.online'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.onlinePct)},
+      {key: 'avg_battery_pct', label: translate('devices.columns.battery'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.batteryPct)},
+      {key: 'last_sync', label: translate('devices.columns.lastsync'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.syncPct)},
+      {key: 'status', label: translate('devices.columns.status'), type: 'text', defaultDir: 'asc', accessor: row => resolveStatus(row.onlinePct, row.syncPct, translate).label}
+    ];
+  }
+
+  function handleTableSort(evt, container){
+    const trigger = evt.target.closest('[data-sort-key]');
+    if (!trigger) return;
+    evt.preventDefault();
+    const key = trigger.getAttribute('data-sort-key');
+    if (!key) return;
+    const defaultDir = trigger.getAttribute('data-default-dir') || 'asc';
+    if (sortState.key === key) {
+      sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortState = {key, dir: defaultDir};
+    }
+    if (lastData) {
+      const site = window.SITE || siteState;
+      const allRows = buildRows(site, lastData.by_team || []);
+      const rows = lastTeam === 'all' ? allRows : allRows.filter(row => row.id === lastTeam);
+      renderTable(container, rows, site, t, rows.length > 0);
+    }
+  }
+
+  function renderHistogram(container, data, translate){
+    if (!container) return;
+    const distribution = data?.battery_distribution;
+    if (!distribution || typeof distribution !== 'object') {
+      container.innerHTML = '';
+      return;
+    }
+    const entries = Object.entries(distribution).sort((a, b) => bucketOrder(a[0]) - bucketOrder(b[0]));
+    container.innerHTML = entries.map(([bucket, value]) => {
+      const width = Math.min(100, Math.round(Number(value || 0) * 2));
+      return `<div class="devices-histogram__bar">
+        <span>${escapeHtml(bucket)}</span>
+        <div class="devices-histogram__track"><div class="devices-histogram__fill" style="width:${width}%"></div></div>
+        <span class="devices-histogram__value">${Number(value || 0)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function bucketOrder(label){
+    const match = /^([0-9]+)/.exec(label);
+    return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+  }
+
+  function updateCoverageBadge(el, site, rows, translate){
+    if (!el) return;
+    const totalIssued = rows.reduce((sum, row) => sum + (Number(row.issued) || 0), 0);
+    const expected = Number(site?.totals?.headcount) || 0;
+    if (expected > 0 && totalIssued === expected) {
+      el.textContent = translate('devices.coverage.banner', {count: expected});
+      el.hidden = false;
+    } else {
+      el.textContent = '';
+      el.hidden = true;
+    }
+  }
+
+  function resolveStatus(online, sync, translate){
+    const onlineValue = Number(online) || 0;
+    const syncValue = Number(sync) || 0;
+    if (onlineValue >= STATUS_THRESHOLDS.good.online && syncValue >= STATUS_THRESHOLDS.good.sync) {
+      return {className: 'status-chip--green', label: translate('devices.status.good')};
+    }
+    if (onlineValue >= STATUS_THRESHOLDS.warn.online || syncValue >= STATUS_THRESHOLDS.warn.sync) {
+      return {className: 'status-chip--amber', label: translate('devices.status.warn')};
+    }
+    return {className: 'status-chip--red', label: translate('devices.status.crit')};
+  }
+
+  function compareValues(a, b, type, lang){
+    if (type === 'number') {
+      const numA = Number(a);
+      const numB = Number(b);
+      const finiteA = Number.isFinite(numA);
+      const finiteB = Number.isFinite(numB);
+      if (!finiteA && !finiteB) return 0;
+      if (!finiteA) return -1;
+      if (!finiteB) return 1;
+      if (numA === numB) return 0;
+      return numA < numB ? -1 : 1;
+    }
+    const textA = String(a ?? '').trim();
+    const textB = String(b ?? '').trim();
+    try {
+      return textA.localeCompare(textB, lang || undefined, {sensitivity: 'base'});
+    } catch (err) {
+      if (textA === textB) return 0;
+      return textA < textB ? -1 : 1;
+    }
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function escapeAttr(value){
+    return escapeHtml(value).replace(/"/g, '&quot;');
+  }
+
+  function formatSync(ts){
+    if (!ts) return '';
+    const date = new Date(ts);
+    if (isNaN(date)) return '';
+    const lang = window.I18N?.getLang?.() || 'en';
+    const datePart = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'}).format(date);
+    const timePart = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'}).format(date);
+    return `${datePart} · ${timePart}`;
+  }
+
+  function buildCaption(range, team, translate){
+    const rangeText = rangeLabel(range, translate);
+    const teamText = teamLabel(team, translate);
+    const prefix = translate('caption.orgAvg');
+    return `${scenarioPrefix(translate)}${prefix} · ${rangeText} · ${teamText}`;
+  }
+
+  function rangeLabel(range, translate){
+    if (!range) return translate('range.7d');
+    if (range.preset) {
+      const map = {
+        day: translate('range.day'),
+        '7d': translate('range.7d'),
+        month: translate('range.month'),
+        year: translate('range.year')
+      };
+      return map[range.preset] || translate('range.7d');
+    }
+    if (range.start && range.end) {
+      return `${range.start} → ${range.end}`;
+    }
+    return translate('range.7d');
+  }
+
+  function teamLabel(team, translate){
+    if (!team || team === 'all') return translate('caption.teamAll');
+    const site = window.SITE || siteState;
+    const label = site?.map?.[team]?.label;
+    if (label) return label;
+    return team;
+  }
+
+  function scenarioPrefix(translate){
+    return readScenario() === 'night' ? translate('caption.scenarioPrefix') : '';
+  }
+
+  function readScenario(){
+    try {
+      return localStorage.getItem(STORAGE_KEYS.scenario) || 'live';
+    } catch (err) {
+      return 'live';
+    }
+  }
+
+  function toggleInsufficient(active, summaryPanel, tablePanel, message){
+    [summaryPanel, tablePanel].forEach(panel => {
+      if (!panel) return;
+      if (active) {
+        panel.setAttribute('data-insufficient', 'true');
+        panel.setAttribute('data-guard-message', message);
       } else {
-        sortState.key = key;
-        sortState.dir = defaultDir;
+        panel.removeAttribute('data-insufficient');
+        panel.removeAttribute('data-guard-message');
       }
-      if (lastData) {
-        renderTable(lastData, lastTeam);
+    });
+  }
+
+  function exportCsv(container){
+    if (!container) return;
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    if (!rows.length) return;
+    const headers = Array.from(container.querySelectorAll('thead th')).map(th => {
+      const btn = th.querySelector('button');
+      if (btn) {
+        const textNode = Array.from(btn.childNodes || []).find(node => node.nodeType === Node.TEXT_NODE);
+        if (textNode) return textNode.textContent.trim();
+        return btn.textContent.trim();
       }
+      return th.textContent.trim();
+    });
+    const dataRows = rows.map(row => Array.from(row.children).map(cell => cell.textContent.replace(/\s+/g, ' ').trim()));
+    const csvRows = [headers, ...dataRows]
+      .map(line => line.map(value => `"${value.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvRows], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const team = readTeam();
+    const preset = presetForRange(readRange());
+    const stamp = formatFileDate(new Date());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fleet_${team}_${preset}_${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function formatFileDate(date){
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '0000-00-00';
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function runIntegrityChecks(data, rows, site, toastEl){
+    if (!data) return;
+    const expected = Number(site?.totals?.headcount) || 0;
+    const totalIssued = rows.reduce((sum, row) => sum + (Number(row.issued) || 0), 0);
+    let warningShown = false;
+
+    if (expected > 0 && totalIssued !== expected) {
+      if (!integrityState.coverage) {
+        showToast(toastEl, 'Devices: issued count != headcount.');
+      }
+      integrityState.coverage = true;
+      warningShown = true;
+      console.warn('Devices integrity: issued mismatch', {expected, actual: totalIssued});
+    } else {
+      integrityState.coverage = false;
     }
 
-    function getTableColumns(){
-      return [
-        {key: 'team', label: t('devices.table.team'), type: 'text', defaultDir: 'asc', accessor: row => teamName(row.team)},
-        {key: 'devices', label: t('devices.table.devices'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.devices || 0)},
-        {key: 'online_pct', label: t('devices.table.online'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.online_pct ?? row.devices_online_pct ?? 0)},
-        {key: 'avg_battery', label: t('devices.table.battery'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.avg_battery ?? row.avg_battery_pct ?? 0)},
-        {key: 'last_sync', label: t('devices.table.sync'), type: 'number', defaultDir: 'desc', accessor: row => Date.parse(row.last_sync || '')},
-        {key: 'status', label: t('devices.table.status'), type: 'text', defaultDir: 'asc', accessor: row => toneForValue(Number(row.online_pct ?? row.devices_online_pct ?? 0)).label}
-      ];
-    }
-
-    function toggleInsufficient(active){
-      [summaryPanel, tablePanel].forEach(panel => {
-        if (!panel) return;
-        if (active) {
-          panel.setAttribute('data-insufficient', 'true');
-          panel.setAttribute('data-guard-message', t('guard.insufficient'));
-        } else {
-          panel.removeAttribute('data-insufficient');
-          panel.removeAttribute('data-guard-message');
+    const org = data.org;
+    if (org && typeof org === 'object') {
+      const aggregate = weightedAggregate(rows);
+      const diffOnline = Math.abs((Number(org.devices_online_pct) || 0) - (aggregate.devices_online_pct || 0));
+      const diffBattery = Math.abs((Number(org.avg_battery_pct) || 0) - (aggregate.avg_battery_pct || 0));
+      const diffSync = Math.abs((Number(org.last_sync_24h_pct) || 0) - (aggregate.last_sync_24h_pct || 0));
+      const mismatch = diffOnline > 1 || diffBattery > 1 || diffSync > 1;
+      if (mismatch) {
+        if (!integrityState.aggregate) {
+          showToast(toastEl, 'Devices: org aggregate mismatch.');
         }
-      });
-    }
-
-    function compareValues(a, b, type, lang){
-      if (type === 'number') {
-        const numA = Number(a);
-        const numB = Number(b);
-        const finiteA = Number.isFinite(numA);
-        const finiteB = Number.isFinite(numB);
-        if (!finiteA && !finiteB) return 0;
-        if (!finiteA) return -1;
-        if (!finiteB) return 1;
-        if (numA === numB) return 0;
-        return numA < numB ? -1 : 1;
+        integrityState.aggregate = true;
+        warningShown = true;
+        console.warn('Devices integrity: aggregate mismatch', {
+          expected: org,
+          computed: aggregate,
+          deltas: {online: diffOnline, battery: diffBattery, sync: diffSync}
+        });
+      } else {
+        integrityState.aggregate = false;
       }
-      const textA = String(a ?? '').trim();
-      const textB = String(b ?? '').trim();
-      try {
-        return textA.localeCompare(textB, lang || undefined, {sensitivity: 'base'});
-      } catch (err) {
-        if (textA === textB) return 0;
-        return textA < textB ? -1 : 1;
-      }
+    } else {
+      integrityState.aggregate = false;
     }
 
-    function escapeHtml(value){
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    if (!warningShown && !integrityState.coverage && !integrityState.aggregate) {
+      hideToast(toastEl);
     }
+  }
 
-    function escapeAttr(value){
-      return escapeHtml(value).replace(/"/g, '&quot;');
-    }
+  function showToast(toastEl, message){
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.hidden = false;
+    toastEl.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => hideToast(toastEl), 5000);
+  }
 
-    function valueOrFallback(primary, fallback){
-      if (primary == null || Number.isNaN(primary)) {
-        return fallback ?? 0;
-      }
-      return primary;
-    }
+  function hideToast(toastEl){
+    if (!toastEl) return;
+    toastEl.classList.remove('is-visible');
+    toastEl.hidden = true;
+  }
 
-    function toneForValue(value){
-      if (value >= 60) return {className: 'status-chip--green', label: t('devices.status.good')};
-      if (value >= 30) return {className: 'status-chip--amber', label: t('devices.status.caution')};
-      return {className: 'status-chip--red', label: t('devices.status.poor')};
-    }
-
-    function formatSync(ts){
-      if (!ts) return '—';
-      const date = new Date(ts);
-      if (isNaN(date)) return ts;
-      const lang = window.I18N?.getLang?.() || 'en';
-      const datePart = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'}).format(date);
-      const timePart = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'}).format(date);
-      return `${datePart} · ${timePart}`;
-    }
-
-    function teamName(team){
-      try {
-        const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
-        if (map && map[team]) return map[team];
-      } catch (e) {}
-      return team;
-    }
-
-    function buildCaption(range, team){
-      const rangeText = rangeLabel(range);
-      const teamText = teamLabel(team);
-      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
-      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
-    }
-
-    function rangeLabel(range){
-      if (!range) return t('range.7d');
-      if (range.preset) {
-        const map = {
-          day: t('range.day'),
-          '7d': t('range.7d'),
-          month: t('range.month'),
-          year: t('range.year')
-        };
-        return map[range.preset] || t('range.7d');
-      }
-      if (range.start && range.end) {
-        return `${range.start} → ${range.end}`;
-      }
-      return t('range.7d');
-    }
-
-    function teamLabel(team){
-      if (!team || team === 'all') return t('caption.teamAll');
-      try {
-        const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
-        if (map && map[team]) return map[team];
-      } catch (e) {}
-      return team;
-    }
-
-    function formatFileDate(date){
-      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '0000-00-00';
-      const year = String(date.getFullYear());
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    function readScenario(){
-      try {
-        return localStorage.getItem('hr:scenario') || 'live';
-      } catch (err) {
-        return 'live';
-      }
-    }
-
-    function scenarioPrefix(){
-      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  window.I18N.onReady(initPage);
-});
+  if (typeof document !== 'undefined') {
+    boot();
+  }
+})();
