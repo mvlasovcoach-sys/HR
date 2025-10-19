@@ -8,15 +8,18 @@
 <link rel="stylesheet" href="./assets/css/ui.components.css?v=${APP_VERSION}">
 <!-- optional page CSS -->
 <link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=${APP_VERSION}">
+<link rel="stylesheet" href="./assets/css/summary.css?v=${APP_VERSION}">
 <script defer src="./assets/js/i18n.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/version.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/site.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/nav.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/app-shell.js?v=${APP_VERSION}"></script>
+<script defer src="./assets/js/config.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/date-controls.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/team-filter.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/guard.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/summary.js?v=${APP_VERSION}"></script>
+<script defer src="./assets/js/summary.legend.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/about.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/exporter.js?v=${APP_VERSION}"></script>
 <script defer src="./assets/js/data-loader.js?v=${APP_VERSION}"></script>
@@ -36,16 +39,23 @@
         <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
         <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
       </div>
+      <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" aria-controls="legend-pop" title="Legend">i</button>
+      <div id="legend-pop" class="popover" hidden></div>
       <div class="header__actions">
         <div id="team-filter" class="team-filter"></div>
         <div id="date-controls"></div>
         <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
       </div>
     </div>
+    <div class="page-subhead">
+      <span id="period-label"></span>
+      <span id="asof-label" class="muted"></span>
+    </div>
+    <span id="org-badge" class="pill" hidden></span>
+    <div id="demo-banner" class="banner banner--demo" hidden></div>
     <p id="global-caption" class="header__caption" aria-live="polite"></p>
-    <p id="sum-caption" class="caption" aria-live="polite"></p>
     <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label" aria-label="Scenario toggles">
-      <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="ui.loadScenario">Load Night-Shift Scenario</button>
+      <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="summary.applyDemo">Apply Night-Shift Demo</button>
       <button type="button" id="btn-night-reset" class="btn btn--ghost" data-i18n="ui.returnLive">Return to Live View</button>
     </div>
     <div id="sum-kpi-grid" class="grid grid-4"></div>

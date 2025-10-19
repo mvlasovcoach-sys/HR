@@ -1,0 +1,43 @@
+.tile--compact{min-height:150px;padding:16px 18px;position:relative}
+.tile--compact .tile__meta{display:none}
+.tile--compact .tile__value,
+.tile--compact .tile__kpi{font-size:42px;line-height:1}
+.tile--compact .tile__spark,
+.tile--compact .spark{height:36px;margin-top:8px}
+.tile--compact .tile__badge{position:absolute;top:12px;right:12px}
+
+.main .header{position:relative}
+.icon-btn{margin-left:8px;border-radius:50%;width:28px;height:28px;border:1px solid var(--stroke);background:transparent;color:var(--txt);display:flex;align-items:center;justify-content:center;font-weight:600;cursor:pointer}
+.icon-btn:hover{background:rgba(255,255,255,0.08)}
+.icon-btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.popover{position:absolute;top:56px;left:0;max-width:420px;padding:14px 16px;background:var(--surface-2);border:1px solid rgba(255,255,255,.12);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.42);z-index:20}
+.legend__header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.legend__title{font-weight:600}
+.legend__close{margin-left:auto;background:none;border:none;color:var(--txt);cursor:pointer;font-weight:600}
+.legend__close:hover{color:var(--cyan)}
+.legend__close:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.legend__metrics{display:grid;gap:4px;margin-bottom:12px;list-style:disc;padding-left:18px}
+.legend__colors{margin-bottom:12px}
+.legend-row{display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:12px;flex-wrap:wrap}
+.legend-row span{display:flex;align-items:center;gap:6px}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.dot-green{background:#1fe2c2}
+.dot-amber{background:#e3c14d}
+.dot-red{background:#e26666}
+.legend__footer{margin-top:12px;font-size:.85rem;opacity:.86}
+
+.page-subhead{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.9rem;color:var(--txt-muted)}
+.page-subhead .muted{opacity:.8}
+.muted{color:var(--txt-muted)}
+
+#org-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;width:max-content}
+
+.banner{margin-top:8px;padding:10px 14px;border-radius:12px;display:flex;align-items:center;gap:10px}
+.banner--demo{background:rgba(31,226,194,.08);border:1px solid rgba(31,226,194,.32)}
+.banner .close{margin-left:auto;color:var(--cyan);background:none;border:none;padding:0;cursor:pointer;font-weight:600}
+.banner .close:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+
+@media (max-width:768px){
+  .popover{left:16px;right:16px;max-width:none}
+  #org-badge{width:100%}
+}
