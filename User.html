@@ -28,21 +28,28 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
-    <div class="header">
-      <div class="header__title">
-        <span data-i18n="header.wellness">Wellness</span>
-        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-wellness">
-          Aggregates only · No raw biosignals
-          <span class="tooltip" id="tooltip-agg-wellness" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
-        </span>
-        <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-ml-wellness">
-          Fixed thresholds · No ML
-          <span class="tooltip" id="tooltip-ml-wellness" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
-        </span>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="header">
+          <div class="header__title">
+            <span data-i18n="header.wellness">Wellness</span>
+            <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-wellness">
+              Aggregates only · No raw biosignals
+              <span class="tooltip" id="tooltip-agg-wellness" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
+            </span>
+            <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-ml-wellness">
+              Fixed thresholds · No ML
+              <span class="tooltip" id="tooltip-ml-wellness" role="tooltip">Alerting uses fixed thresholds; no machine learning is used.</span>
+            </span>
+          </div>
+          <div class="header__actions">
+            <div id="date-controls"></div>
+            <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+          </div>
+        </div>
       </div>
-      <div class="header__actions">
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <section id="wellness-root" class="wellness-grid" aria-live="polite">

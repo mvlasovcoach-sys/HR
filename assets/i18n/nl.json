@@ -95,6 +95,8 @@
   "range.7d": "7 dagen",
   "range.month": "Maand",
   "range.year": "Jaar",
+  "date.from": "Van",
+  "date.to": "Tot",
   "range.start": "Startdatum",
   "range.end": "Einddatum",
   "kpi.onboarding": "Onboarding %",

@@ -27,13 +27,20 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--pilot">
-    <div class="header header--pilot">
-      <div class="header__title" data-i18n="header.pilot">Pilot Dashboard</div>
-      <div class="header__actions">
-        <button class="btn btn--ghost" type="button" id="btn-export-pilot" data-i18n="label.export.pdf">Export Pilot Summary (PDF)</button>
-        <div id="team-filter" class="team-filter"></div>
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="header header--pilot">
+          <div class="header__title" data-i18n="header.pilot">Pilot Dashboard</div>
+          <div class="header__actions">
+            <button class="btn btn--ghost" type="button" id="btn-export-pilot" data-i18n="label.export.pdf">Export Pilot Summary (PDF)</button>
+            <div id="team-filter" class="team-filter"></div>
+            <div id="date-controls"></div>
+            <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <p id="pilot-caption" class="header__caption" aria-live="polite"></p>

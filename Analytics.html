@@ -28,12 +28,19 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--analytics">
-    <div class="header header--analytics">
-      <div class="header__title" data-i18n="header.analytics">Analytics</div>
-      <div class="header__actions">
-        <div id="team-filter" class="team-filter"></div>
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="header header--analytics">
+          <div class="header__title" data-i18n="header.analytics">Analytics</div>
+          <div class="header__actions">
+            <div id="team-filter" class="team-filter"></div>
+            <div id="date-controls"></div>
+            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <p id="analytics-caption" class="header__caption" aria-live="polite"></p>
