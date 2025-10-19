@@ -1,74 +1,85 @@
 (function(){
-  function ensureToolsContainer(){
-    if (document.getElementById('app-tools')) return;
-    const tools = document.createElement('div');
-    tools.id = 'app-tools';
-    tools.innerHTML = '<div id="lang-switch" class="lang-switch" role="group" aria-label="Language"></div>';
-    document.body.appendChild(tools);
-  }
-
-  function renderLang(){
-    ensureToolsContainer();
+  function initLang(){
     const host = document.getElementById('lang-switch');
-    if (!host || host.dataset.bound === 'true') return;
+    if (!host) return;
 
     host.innerHTML = `
-      <button type="button" data-lang="en" class="pill" aria-pressed="false">EN</button>
-      <button type="button" data-lang="nl" class="pill" aria-pressed="false">NL</button>`;
+      <button class="pill" data-lang="en" id="btn-lang-en" type="button">EN</button>
+      <button class="pill" data-lang="nl" id="btn-lang-nl" type="button">NL</button>
+    `;
 
-    host.addEventListener('click', evt => {
-      const btn = evt.target.closest('button[data-lang]');
-      if (!btn) return;
-      const lang = btn.dataset.lang;
-      if (!lang) return;
-      window.I18N?.set?.(lang);
+    const updateActive = (lang)=>{
+      host.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+        btn.setAttribute('aria-pressed', String(btn.dataset.lang === lang));
+      });
+    };
+
+    const apply = (lang)=>{
+      const run = (resolvedLang)=>{
+        const nextLang = resolvedLang || lang;
+        if (typeof document !== 'undefined') {
+          if (window.I18N?.refresh) {
+            window.I18N.refresh(document.body);
+          }
+        }
+        document.dispatchEvent(new CustomEvent('language:changed', {detail: {lang: nextLang}}));
+        updateActive(nextLang);
+      };
+
       try {
         localStorage.setItem('lang', lang);
+        localStorage.setItem('hr:lang', lang);
       } catch (err) {
-        // ignore storage issues
+        // storage is optional
       }
-      if (window.I18N?.refresh) {
-        window.I18N.refresh(document.body);
-      }
-      updateActive();
-    });
 
-    host.dataset.bound = 'true';
+      if (typeof window.I18N?.setLang === 'function') {
+        Promise.resolve(window.I18N.setLang(lang))
+          .then(() => run(window.I18N?.getLang?.()))
+          .catch(() => run(window.I18N?.getLang?.() || lang));
+      } else if (typeof window.I18N?.set === 'function') {
+        try {
+          window.I18N.set(lang);
+        } catch (err) {
+          // ignore set errors
+        }
+        run(window.I18N?.getLang?.() || lang);
+      } else {
+        run(lang);
+      }
+    };
 
     const saved = (() => {
       try {
-        return localStorage.getItem('lang') || localStorage.getItem('hr:lang');
+        return localStorage.getItem('lang') || localStorage.getItem('hr:lang') || window.I18N?.getLang?.() || 'en';
       } catch (err) {
-        return null;
+        return window.I18N?.getLang?.() || 'en';
       }
     })();
-    if (saved && window.I18N?.getLang?.() !== saved) {
-      window.I18N?.set?.(saved);
-    }
-    updateActive();
-  }
 
-  function updateActive(){
-    const host = document.getElementById('lang-switch');
-    if (!host) return;
-    const lang = window.I18N?.getLang?.() || (() => {
-      try {
-        return localStorage.getItem('lang') || localStorage.getItem('hr:lang') || 'en';
-      } catch (err) {
-        return 'en';
+    apply(saved);
+
+    host.addEventListener('click', event => {
+      const lang = event.target?.dataset?.lang;
+      if (!lang) return;
+      if (host.querySelector(`button[data-lang="${lang}"]`)?.classList.contains('active')) {
+        return;
       }
-    })();
-    host.querySelectorAll('button[data-lang]').forEach(btn => {
-      const isActive = btn.dataset.lang === lang;
-      btn.classList.toggle('is-active', isActive);
-      btn.setAttribute('aria-pressed', String(isActive));
+      apply(lang);
+    });
+
+    window.addEventListener('i18n:change', evt => {
+      const lang = evt?.detail?.lang || window.I18N?.getLang?.();
+      if (lang) {
+        updateActive(lang);
+      }
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    ensureToolsContainer();
-    renderLang();
-  });
-
-  document.addEventListener('i18n:change', updateActive);
+  if (document.readyState !== 'loading') {
+    initLang();
+  } else {
+    document.addEventListener('DOMContentLoaded', initLang);
+  }
 })();

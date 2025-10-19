@@ -95,6 +95,8 @@
   "range.7d": "7 Days",
   "range.month": "Month",
   "range.year": "Year",
+  "date.from": "From",
+  "date.to": "To",
   "range.start": "Start date",
   "range.end": "End date",
   "kpi.onboarding": "Onboarding %",

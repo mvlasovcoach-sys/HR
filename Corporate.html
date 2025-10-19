@@ -26,12 +26,19 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--corporate">
-    <div class="toolbar">
-      <div class="toolbar__filters">
-        <div id="team-filter" class="toolbar__filter"></div>
-        <div id="date-controls" class="toolbar__filter"></div>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="toolbar">
+          <div class="toolbar__filters">
+            <div id="team-filter" class="toolbar__filter"></div>
+            <div id="date-controls" class="toolbar__filter"></div>
+          </div>
+          <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+        </div>
       </div>
-      <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
+      </div>
     </div>
 
     <header class="page-head">

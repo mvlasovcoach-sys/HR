@@ -4,26 +4,35 @@
 
   const SUMMARY = window.SUMMARY = window.SUMMARY || {};
   const RANGE = window.RANGE = window.RANGE || {};
+  const selectionState = SUMMARY.state = SUMMARY.state || {range: '7d', start: null, end: null};
 
-  const state = {
+  const runtime = {
     loading: false,
     rangeStart: null,
-    rangeEnd: null,
-    asOfIso: null
+    rangeEnd: null
+  };
+
+  const getToday = () => new Date();
+  const fmt = (date, opts) => {
+    const lang = window.I18N?.getLang?.() || 'en';
+    return new Intl.DateTimeFormat(lang, opts).format(date);
   };
 
   SUMMARY.computePeriodLabel = computePeriodLabel;
-  SUMMARY.getAsOfIso = () => state.asOfIso;
-  SUMMARY.fmtAsOf = fmtAsOf;
+  SUMMARY.setPeriodAndAsOf = setPeriodAndAsOf;
+  SUMMARY.setDemoState = setDemoState;
+  SUMMARY.clearDemo = () => setScenario('live');
 
   document.addEventListener('DOMContentLoaded', () => {
     applyScenarioFromUrl();
     bindTileNavigation();
     bindScenarioControls();
+    applyRangeSelection(readRange());
 
     const start = () => {
       updateLegendButtonLabel();
       updateOrgBadge();
+      setPeriodAndAsOf(selectionState);
       renderSkeleton();
       loadAndRender();
     };
@@ -37,21 +46,27 @@
     window.addEventListener('storage', evt => {
       if (!evt) return;
       if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
+        if (evt.key === 'hr:range') {
+          applyRangeSelection(readRange());
+        }
         renderSkeleton();
         if (evt.key === 'hr:scenario') updateScenarioButtons();
         loadAndRender();
       }
     });
 
-    document.addEventListener('i18n:change', () => {
+    const onLangRefresh = () => {
       updateLegendButtonLabel();
       updateOrgBadge();
       updateScenarioButtons();
-      refreshHeaderMeta();
-      if (!state.loading) {
+      setPeriodAndAsOf(selectionState);
+      if (!runtime.loading) {
         loadAndRender();
       }
-    });
+    };
+
+    document.addEventListener('i18n:change', onLangRefresh);
+    document.addEventListener('language:changed', () => setPeriodAndAsOf(selectionState));
 
     window.addEventListener('site:ready', updateOrgBadge);
   });
@@ -67,6 +82,7 @@
   function bindScenarioControls(){
     const loadBtn = document.getElementById('btn-night-scenario');
     const resetBtn = document.getElementById('btn-night-reset');
+    const returnLink = document.getElementById('btn-return-live');
     if (loadBtn) {
       loadBtn.addEventListener('click', () => {
         setScenario('night');
@@ -75,6 +91,12 @@
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         setScenario('live');
+      });
+    }
+    if (returnLink) {
+      returnLink.addEventListener('click', evt => {
+        evt.preventDefault();
+        SUMMARY.clearDemo();
       });
     }
     updateScenarioButtons();
@@ -117,24 +139,20 @@
       resetBtn?.classList.add('is-active');
       loadBtn?.classList.remove('is-active');
     }
-    syncScenarioBanner(scenario);
+    updateScenarioParam(scenario === 'night');
+    setDemoState(scenario === 'night');
   }
 
-  function syncScenarioBanner(scenario){
+  function setDemoState(active){
     const banner = document.getElementById('demo-banner');
     if (!banner) return;
-    if (scenario === 'night') {
-      const message = window.I18N?.t('summary.demoActive') || 'Demo scenario active — simulated night-shift data';
-      const action = window.I18N?.t('summary.returnAction') || 'Return to live';
-      banner.innerHTML = `<span>${message}</span><button type="button" class="close">${action}</button>`;
-      banner.hidden = false;
-      banner.querySelector('.close')?.addEventListener('click', () => setScenario('live'), {once: true});
-      updateScenarioParam(true);
-    } else {
-      banner.hidden = true;
-      banner.textContent = '';
-      updateScenarioParam(false);
+    banner.hidden = !active;
+    if (active) {
+      if (window.I18N?.refresh) {
+        window.I18N.refresh(banner);
+      }
     }
+    document.querySelectorAll('.banner-legacy').forEach(node => node.remove());
   }
 
   function updateScenarioParam(active){
@@ -178,6 +196,22 @@
     return {preset: '7d'};
   }
 
+  function applyRangeSelection(range){
+    const preset = typeof range?.preset === 'string' ? range.preset : null;
+    const parseDate = value => {
+      if (!value) return null;
+      if (value instanceof Date) {
+        return isNaN(value) ? null : value;
+      }
+      const parsed = new Date(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+    selectionState.range = preset || (range?.start && range?.end ? 'custom' : '7d');
+    selectionState.start = parseDate(range?.start);
+    selectionState.end = parseDate(range?.end);
+    setPeriodAndAsOf(selectionState);
+  }
+
   function getRangeKey(range){
     if (range?.preset) {
       if (range.preset === 'day') return '7d';
@@ -211,16 +245,16 @@
   }
 
   async function loadAndRender(){
-    state.loading = true;
+    runtime.loading = true;
     if (document?.body) {
       document.body.classList.add('is-loading');
     }
     const range = readRange();
     RANGE.current = range;
-    refreshHeaderMeta();
+    applyRangeSelection(range);
     const grid = document.getElementById('sum-kpi-grid');
     if (!grid) {
-      state.loading = false;
+      runtime.loading = false;
       if (document?.body) {
         document.body.classList.remove('is-loading');
       }
@@ -233,17 +267,15 @@
         window.dataLoader.fetch('./data/org/metrics_7d.json')
       ]);
       updateRangeMetadata(metrics);
-      refreshHeaderMeta();
       renderKpis(metrics, trend);
     }catch(err){
       console.error('Summary metrics failed', err);
       grid.innerHTML = '';
-      state.rangeStart = state.rangeEnd = null;
-      state.asOfIso = null;
-      refreshHeaderMeta();
+      runtime.rangeStart = runtime.rangeEnd = null;
+      setPeriodAndAsOf(selectionState);
       toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
     } finally {
-      state.loading = false;
+      runtime.loading = false;
       if (document?.body) {
         document.body.classList.remove('is-loading');
       }
@@ -252,29 +284,8 @@
 
   function updateRangeMetadata(metrics){
     const dates = Array.isArray(metrics?.heatmap?.dates) ? metrics.heatmap.dates.filter(Boolean) : [];
-    state.rangeStart = dates.length ? dates[0] : null;
-    state.rangeEnd = dates.length ? dates[dates.length - 1] : null;
-    let asOf = metrics?.meta?.as_of || metrics?.meta?.updated || metrics?.meta?.generated_at || metrics?.updated_at || metrics?.updated;
-    if (!asOf && state.rangeEnd) {
-      asOf = state.rangeEnd;
-    }
-    state.asOfIso = asOf || null;
-  }
-
-  function refreshHeaderMeta(){
-    const periodEl = document.getElementById('period-label');
-    const asofEl = document.getElementById('asof-label');
-    const range = RANGE.current || readRange();
-    if (periodEl) {
-      const period = computePeriodLabel(range);
-      const label = window.I18N?.t('summary.period', {period}) || `Period: ${period}`;
-      periodEl.textContent = label;
-    }
-    if (asofEl) {
-      const iso = SUMMARY.getAsOfIso() || new Date().toISOString();
-      const ts = fmtAsOf(iso);
-      asofEl.textContent = window.I18N?.t('summary.asof', {ts}) || `updated ${ts}`;
-    }
+    runtime.rangeStart = dates.length ? dates[0] : null;
+    runtime.rangeEnd = dates.length ? dates[dates.length - 1] : null;
   }
 
   function renderKpis(metrics, trend){
@@ -409,94 +420,62 @@
     btn.setAttribute('aria-label', label);
   }
 
-  function computePeriodLabel(range){
-    const lang = window.I18N?.getLang?.() || navigator.language || 'en';
-    const fallback = (key, def) => window.I18N?.t(key) || def;
-    if (!range) {
-      return fallback('range.7d', '7 Days');
-    }
-    let startIso = range.start || state.rangeStart;
-    let endIso = range.end || state.rangeEnd;
-    if (range.preset === 'day') {
-      const target = endIso || startIso;
-      if (!target) {
-        return fallback('range.day', 'Day');
+  function computePeriodLabel(stateLike){
+    const target = stateLike || selectionState;
+    const ensureDate = value => {
+      if (!value) return null;
+      if (value instanceof Date && !isNaN(value)) {
+        return new Date(value.getTime());
       }
-      return formatSingleDate(target, lang);
-    }
-    if (!startIso && !endIso) {
-      if (range.preset) {
-        return fallback(`range.${range.preset}`, range.preset);
-      }
-      return fallback('range.7d', '7 Days');
-    }
-    if (startIso && !endIso) endIso = startIso;
-    if (endIso && !startIso) startIso = endIso;
-    if (startIso && endIso) {
-      return formatRange(startIso, endIso, lang);
-    }
-    if (range.preset) {
-      return fallback(`range.${range.preset}`, range.preset);
-    }
-    return fallback('range.7d', '7 Days');
+      const parsed = new Date(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+    const today = getToday();
+    const range = target?.range || '7d';
+    const selectedStart = ensureDate(target?.start);
+    const selectedEnd = ensureDate(target?.end);
+
+    const defaultStart = (() => {
+      if (range === '7d') return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+      if (range === 'month') return new Date(today.getFullYear(), today.getMonth(), 1);
+      if (range === 'year') return new Date(today.getFullYear(), 0, 1);
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    })();
+
+    const defaultEnd = (() => {
+      if (range === 'day' || range === '7d') return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      if (range === 'month') return new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      return new Date(today.getFullYear(), 11, 31);
+    })();
+
+    const start = selectedStart || defaultStart;
+    const end = selectedEnd || defaultEnd;
+    const opts = {month: 'short', day: 'numeric', year: 'numeric'};
+    return start.getTime() === end.getTime()
+      ? fmt(end, opts)
+      : `${fmt(start, opts)} – ${fmt(end, opts)}`;
   }
 
-  function formatSingleDate(iso, lang){
-    try {
-      const formatter = new Intl.DateTimeFormat(lang, {month: 'short', day: 'numeric', year: 'numeric'});
-      return formatter.format(new Date(iso));
-    } catch (err) {
-      return iso;
+  function setPeriodAndAsOf(stateLike){
+    const periodEl = document.getElementById('period-label');
+    const asofEl = document.getElementById('asof-label');
+    const label = computePeriodLabel(stateLike);
+    if (periodEl) {
+      periodEl.textContent = window.I18N?.t('summary.period', {period: label}) || `Period: ${label}`;
     }
-  }
-
-  function formatRange(startIso, endIso, lang){
-    try {
-      const start = new Date(startIso);
-      const end = new Date(endIso);
-      if (isNaN(start) || isNaN(end)) throw new Error('Invalid dates');
-      const sameDay = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate();
-      if (sameDay) {
-        return formatSingleDate(endIso, lang);
-      }
-      const sameYear = start.getFullYear() === end.getFullYear();
-      const sameMonth = sameYear && start.getMonth() === end.getMonth();
-      const monthDay = new Intl.DateTimeFormat(lang, {month: 'short', day: 'numeric'});
-      const dayFmt = new Intl.DateTimeFormat(lang, {day: 'numeric'});
-      const yearFmt = new Intl.DateTimeFormat(lang, {year: 'numeric'});
-      const fullFmt = new Intl.DateTimeFormat(lang, {month: 'short', day: 'numeric', year: 'numeric'});
-      if (sameMonth) {
-        return `${monthDay.format(start)}\u2013${dayFmt.format(end)}, ${yearFmt.format(end)}`;
-      }
-      if (sameYear) {
-        return `${monthDay.format(start)} – ${monthDay.format(end)}, ${yearFmt.format(end)}`;
-      }
-      return `${fullFmt.format(start)} – ${fullFmt.format(end)}`;
-    } catch (err) {
-      return `${startIso} – ${endIso}`;
+    if (asofEl) {
+      const stamp = fmt(new Date(), {month: 'short', day: 'numeric', year: 'numeric'});
+      asofEl.textContent = window.I18N?.t('summary.asof', {ts: stamp}) || `updated ${stamp}`;
     }
-  }
-
-  function fmtAsOf(iso){
-    if (!iso) return '';
-    const lang = window.I18N?.getLang?.() || navigator.language || 'en';
-    try {
-      const hasTime = typeof iso === 'string' && iso.includes('T');
-      const date = new Date(iso);
-      if (isNaN(date)) return iso;
-      if (!hasTime) {
-        return new Intl.DateTimeFormat(lang, {month: 'short', day: 'numeric', year: 'numeric'}).format(date);
-      }
-      const now = new Date();
-      const sameDay = date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
-      const timeFmt = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'});
-      if (sameDay) {
-        return timeFmt.format(date);
-      }
-      const dateFmt = new Intl.DateTimeFormat(lang, {month: 'short', day: 'numeric', year: 'numeric'});
-      return `${dateFmt.format(date)} ${timeFmt.format(date)}`;
-    } catch (err) {
-      return iso;
+    const startInput = document.getElementById('dc-start');
+    const endInput = document.getElementById('dc-end');
+    const fromText = window.I18N?.t('date.from') || window.I18N?.t('range.start') || 'From';
+    const toText = window.I18N?.t('date.to') || window.I18N?.t('range.end') || 'To';
+    if (startInput) {
+      startInput.setAttribute('placeholder', fromText);
+    }
+    if (endInput) {
+      endInput.setAttribute('placeholder', toText);
     }
   }
 })();

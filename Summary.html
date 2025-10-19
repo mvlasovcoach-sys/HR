@@ -31,19 +31,26 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
-    <div class="header">
-      <div class="header__title" data-i18n="header.summary">Summary</div>
-      <div class="header__badges" aria-hidden="true">
-        <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
-        <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
-        <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
-        <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="header summary-toolbar">
+          <div class="header__title" data-i18n="header.summary">Summary</div>
+          <div class="header__badges" aria-hidden="true">
+            <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
+            <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
+            <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
+            <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
+          </div>
+          <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" title="Legend">i</button>
+          <div class="header__actions">
+            <div id="team-filter" class="team-filter"></div>
+            <div id="date-controls"></div>
+            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+          </div>
+        </div>
       </div>
-      <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" title="Legend">i</button>
-      <div class="header__actions">
-        <div id="team-filter" class="team-filter"></div>
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <div class="page-subhead">
@@ -51,7 +58,10 @@
       <span id="asof-label" class="muted"></span>
     </div>
     <span id="org-badge" class="pill" hidden></span>
-    <div id="demo-banner" class="banner banner--demo" hidden></div>
+    <div id="demo-banner" class="banner banner--demo" hidden>
+      <span data-i18n="summary.demoActive">Demo scenario active — simulated night-shift data</span>
+      <a id="btn-return-live" href="#" class="link-quiet" data-i18n="summary.returnAction">Return to live</a>
+    </div>
     <p id="global-caption" class="header__caption" aria-live="polite"></p>
     <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label" aria-label="Scenario toggles">
       <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="summary.applyDemo">Apply Night-Shift Demo</button>

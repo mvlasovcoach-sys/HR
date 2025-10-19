@@ -27,13 +27,20 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--devices">
-    <div class="header header--devices">
-      <div class="header__title" data-i18n="header.devices">Devices</div>
-      <div class="header__actions">
-        <button class="btn btn--ghost" type="button" id="export-fleet" data-i18n="ui.exportCSV">Export CSV</button>
-        <div id="team-filter" class="team-filter"></div>
-        <div id="date-controls"></div>
-        <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+    <div id="app-topbar">
+      <div class="topbar-left">
+        <div class="header header--devices">
+          <div class="header__title" data-i18n="header.devices">Devices</div>
+          <div class="header__actions">
+            <button class="btn btn--ghost" type="button" id="export-fleet" data-i18n="ui.exportCSV">Export CSV</button>
+            <div id="team-filter" class="team-filter"></div>
+            <div id="date-controls"></div>
+            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+          </div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <div id="devices-coverage" class="devices-coverage" aria-live="polite"></div>
