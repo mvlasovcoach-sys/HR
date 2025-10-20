@@ -234,7 +234,7 @@
     if (!grid) return;
     const skeleton = [];
     for (let i = 0; i < TILE_COUNT; i++) {
-      skeleton.push(`<div class="tile tile--skeleton skeleton tile--compact" aria-hidden="true">
+      skeleton.push(`<div class="tile tile--skeleton skeleton tile--compact kpi-tile" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
         <div class="tile__meta"><span class="skeleton skeleton--pill"></span></div>
         <div class="tile__kpi tile__value"><span class="skeleton skeleton--value"></span></div>
@@ -320,7 +320,7 @@
       const del  = Number.isFinite(dRaw) ? dRaw : null;
       const badge = del!==null ? `<span class="tile__badge pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${Math.abs(Math.round(del))}</span>`:'';
       const spark = sparkline(sparkSeries);
-      return `<div class="tile tile--interactive tile--compact kpi" data-index="${index}">
+      return `<div class="tile tile--interactive tile--compact kpi kpi-tile" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
         <div class="tile__meta">${updatedLabel}</div>
         <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>

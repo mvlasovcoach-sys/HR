@@ -1,3 +1,12 @@
+document.addEventListener('click', event => {
+    const trigger = event.target;
+    if (!(trigger instanceof Element)) return;
+    if (!trigger.classList.contains('x-expand')) return;
+    const card = trigger.closest('.chart-card');
+    if (!card) return;
+    card.classList.toggle('expanded');
+});
+
 function initPage(){
     const chartEl = document.getElementById('wlb-chart');
     if (!chartEl) return;
