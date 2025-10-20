@@ -48,24 +48,22 @@
       <div id="org-table"></div>
     </section>
 
-    <section id="demo-demographics" class="panel" aria-live="polite">
-      <div class="panel__head" data-i18n="demo.demographics">Demographics</div>
-      <div class="grid grid-2">
-        <div>
-          <div class="subhead" data-i18n="demo.genderOverall">Gender — Overall</div>
-          <div id="chart-gender-overall" class="chart-donut donut-chart" role="img"></div>
+    <section id="demo-demographics" class="section">
+
+      <article class="card">
+        <h3 data-i18n="demo.ageOverall">Age — Overall</h3>
+        <div class="chart-block">
+          <div id="chart-age-overall" class="chart-root"></div>
         </div>
-        <div>
-          <div class="subhead" data-i18n="demo.ageOverall">Age — Overall</div>
-          <div class="chart-block">
-            <div id="chart-age-overall" class="chart-bars bar-chart" role="img"></div>
-          </div>
+      </article>
+
+      <article class="card">
+        <h3 data-i18n="demo.byDepartment">By Department</h3>
+        <div class="chart-block">
+          <div id="chart-by-dept" class="chart-root"></div>
         </div>
-      </div>
-      <div class="subhead" data-i18n="demo.byDepartment">By department</div>
-      <div class="chart-block">
-        <div id="chart-by-dept" class="chart-bars bar-chart" role="img"></div>
-      </div>
+      </article>
+
     </section>
 
     <section id="demo-shifts" class="panel" aria-live="polite">
