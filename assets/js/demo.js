@@ -3,7 +3,7 @@
   if (!heroEl) return;
 
   const state = { data: null, version: null };
-  const DEMO_CHARTS = Object.create(null);
+  const DEMO_CHARTS = {};
   const els = {
     badge: document.getElementById('site-badge'),
     cards: {
@@ -20,6 +20,21 @@
     toast: document.getElementById('demo-toast'),
     exportBtn: document.getElementById('btn-export-brief')
   };
+
+  function mountChart(selector, drawFn, data, opts={}){
+    const root = document.querySelector(selector);
+    if (!root) return;
+    root.replaceChildren();
+    const prev = DEMO_CHARTS[selector];
+    if (prev && typeof prev.destroy === 'function') {
+      try {
+        prev.destroy();
+      } catch (err) {
+        console.warn('demo: chart cleanup failed', err);
+      }
+    }
+    DEMO_CHARTS[selector] = drawFn(root, data, opts) || null;
+  }
 
   const HERO_SRC = './assets/img/aurora-platform-hero.svg';
 
@@ -331,37 +346,45 @@
     container.setAttribute('aria-label', getText('demo.genderOverall', 'Gender — Overall'));
   }
 
-  function resetChartInstance(key, container){
-    const instance = DEMO_CHARTS[key];
-    if (instance && typeof instance.destroy === 'function') {
-      try {
-        instance.destroy();
-      } catch (err) {
-        console.warn('demo: chart cleanup failed', err);
-      }
-    } else if (container) {
-      container.innerHTML = '';
-    }
-    DEMO_CHARTS[key] = null;
-  }
-
   function renderAgeOverall(ageData){
     const container = els.ageOverall;
     if (!container) return;
-    resetChartInstance('age', container);
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
+    mountChart('#chart-age-overall', drawAgeOverall, ageData);
+  }
+
+  function renderByDepartment(departments, genderByDept){
+    const container = els.byDept;
+    if (!container) return;
+    container.classList.remove('is-loading');
+    container.removeAttribute('aria-busy');
+    mountChart('#chart-by-dept', drawByDept, { departments, genderByDept });
+  }
+
+  function drawAgeOverall(root, ageData){
     const entries = Object.entries(ageData || {});
     const descId = 'age-overall-desc';
     if (!entries.length) {
       const noData = window.I18N?.t?.('status.noData') || 'No data available';
-      container.innerHTML = `<p id="${descId}" class="sr-only">${noData}</p>`;
-      container.setAttribute('role', 'group');
-      container.setAttribute('tabindex', '0');
-      container.setAttribute('aria-describedby', descId);
-      container.setAttribute('aria-label', `${getText('demo.ageOverall', 'Age — Overall')}: ${noData}`);
-      DEMO_CHARTS.age = { destroy: () => { container.innerHTML = ''; } };
-      return;
+      const empty = document.createElement('p');
+      empty.id = descId;
+      empty.className = 'sr-only';
+      empty.textContent = noData;
+      root.appendChild(empty);
+      root.setAttribute('role', 'group');
+      root.setAttribute('tabindex', '0');
+      root.setAttribute('aria-describedby', descId);
+      root.setAttribute('aria-label', `${getText('demo.ageOverall', 'Age — Overall')}: ${noData}`);
+      return {
+        destroy(){
+          root.replaceChildren();
+          root.removeAttribute('role');
+          root.removeAttribute('tabindex');
+          root.removeAttribute('aria-describedby');
+          root.removeAttribute('aria-label');
+        }
+      };
     }
     const totals = entries.map(([, value]) => Number(value) || 0);
     const max = Math.max(1, ...totals);
@@ -371,38 +394,68 @@
     const margin = 32;
     const gap = 16;
     const barWidth = (width - margin * 2 - gap * (entries.length - 1)) / entries.length;
-    let bars = '';
-    entries.forEach(([bucket, value], index) => {
+    const bars = entries.map(([bucket, value], index) => {
       const val = Number(value) || 0;
       const barHeight = (val / max) * chartHeight;
       const x = margin + index * (barWidth + gap);
       const y = height - margin - barHeight;
-      bars += `
+      return `
         <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6" class="age-bar"></rect>
         <text x="${x + barWidth / 2}" y="${y - 8}" class="age-bar__value">${val}</text>
-        <text x="${x + barWidth / 2}" y="${height - margin + 18}" class="age-bar__label">${bucket}</text>
+        <text x="${x + barWidth / 2}" y="${height - margin + 18}" class="age-bar__label">${escapeHtml(bucket)}</text>
       `;
-    });
-    const svg = `
+    }).join('');
+    root.innerHTML = `
       <svg viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">
         <line x1="${margin - 8}" y1="${height - margin}" x2="${width - margin + 8}" y2="${height - margin}" class="age-axis"></line>
         ${bars}
       </svg>
     `;
-    container.innerHTML = `${svg}<p id="${descId}" class="sr-only">${entries.map(([bucket, value]) => `${bucket}: ${value}`).join('; ')}</p>`;
-    container.setAttribute('role', 'group');
-    container.setAttribute('tabindex', '0');
-    container.setAttribute('aria-describedby', descId);
-    container.setAttribute('aria-label', getText('demo.ageOverall', 'Age — Overall'));
-    DEMO_CHARTS.age = { destroy: () => { container.innerHTML = ''; } };
+    const desc = document.createElement('p');
+    desc.id = descId;
+    desc.className = 'sr-only';
+    desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${value}`).join('; ');
+    root.appendChild(desc);
+    root.setAttribute('role', 'group');
+    root.setAttribute('tabindex', '0');
+    root.setAttribute('aria-describedby', descId);
+    root.setAttribute('aria-label', getText('demo.ageOverall', 'Age — Overall'));
+    return {
+      destroy(){
+        root.replaceChildren();
+        root.removeAttribute('role');
+        root.removeAttribute('tabindex');
+        root.removeAttribute('aria-describedby');
+        root.removeAttribute('aria-label');
+      }
+    };
   }
 
-  function renderByDepartment(departments, genderByDept){
-    const container = els.byDept;
-    if (!container) return;
-    resetChartInstance('byDept', container);
-    container.classList.remove('is-loading');
-    container.removeAttribute('aria-busy');
+  function drawByDept(root, payload){
+    const departments = Array.isArray(payload?.departments) ? payload.departments : [];
+    const genderByDept = payload?.genderByDept || {};
+    const descId = 'gender-by-dept-desc';
+    if (!departments.length) {
+      const noData = window.I18N?.t?.('status.noData') || 'No data available';
+      const empty = document.createElement('p');
+      empty.id = descId;
+      empty.className = 'sr-only';
+      empty.textContent = noData;
+      root.appendChild(empty);
+      root.setAttribute('role', 'group');
+      root.setAttribute('tabindex', '0');
+      root.setAttribute('aria-describedby', descId);
+      root.setAttribute('aria-label', `${getText('demo.byDepartment', 'By department')}: ${noData}`);
+      return {
+        destroy(){
+          root.replaceChildren();
+          root.removeAttribute('role');
+          root.removeAttribute('tabindex');
+          root.removeAttribute('aria-describedby');
+          root.removeAttribute('aria-label');
+        }
+      };
+    }
     const rows = departments.map(dept => {
       const stats = genderByDept?.[dept.id] || {};
       const entries = Object.entries(stats).filter(([, value]) => Number(value) > 0);
@@ -410,7 +463,8 @@
       const segments = entries.map(([key, value]) => {
         const val = Number(value) || 0;
         const percent = Math.round((val / total) * 100);
-        return `<span class="stack--${key}" style="flex:${Math.max(val, 1)}" aria-label="${getGenderLabel(key)} ${val} (${percent}%)"><span>${percent}%</span></span>`;
+        const ariaLabel = `${getGenderLabel(key)} ${val} (${percent}%)`;
+        return `<span class="stack--${key}" style="flex:${Math.max(val, 1)}" aria-label="${escapeHtml(ariaLabel)}"><span>${percent}%</span></span>`;
       }).join('');
       return `
         <div class="chart-bars__row">
@@ -419,17 +473,30 @@
         </div>
       `;
     }).join('');
-    const descId = 'gender-by-dept-desc';
-    container.innerHTML = `<div class="chart-bars__grid">${rows}</div><p id="${descId}" class="sr-only">${departments.map(dept => {
+    const description = departments.map(dept => {
       const stats = genderByDept?.[dept.id] || {};
       const parts = Object.entries(stats).map(([key, value]) => `${getGenderLabel(key)} ${value}`);
       return `${dept.name}: ${parts.join(', ')}`;
-    }).join('; ')}</p>`;
-    container.setAttribute('role', 'group');
-    container.setAttribute('tabindex', '0');
-    container.setAttribute('aria-describedby', descId);
-    container.setAttribute('aria-label', getText('demo.byDepartment', 'By department'));
-    DEMO_CHARTS.byDept = { destroy: () => { container.innerHTML = ''; } };
+    }).join('; ');
+    root.innerHTML = `<div class="chart-bars__grid">${rows}</div>`;
+    const desc = document.createElement('p');
+    desc.id = descId;
+    desc.className = 'sr-only';
+    desc.textContent = description;
+    root.appendChild(desc);
+    root.setAttribute('role', 'group');
+    root.setAttribute('tabindex', '0');
+    root.setAttribute('aria-describedby', descId);
+    root.setAttribute('aria-label', getText('demo.byDepartment', 'By department'));
+    return {
+      destroy(){
+        root.replaceChildren();
+        root.removeAttribute('role');
+        root.removeAttribute('tabindex');
+        root.removeAttribute('aria-describedby');
+        root.removeAttribute('aria-label');
+      }
+    };
   }
 
   function renderShiftGrid(departments){
