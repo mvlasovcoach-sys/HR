@@ -4,6 +4,8 @@
 .tile--compact .tile__spark{height:36px;margin-top:8px}
 .tile--compact .tile__badge{position:absolute;top:12px;right:12px}
 
+.kpi-grid--legacy{display:none!important}
+
 body.density--compact .kpi-tile{min-height:var(--tile-min-h);padding:var(--card-pad)}
 body.density--compact .kpi-tile .tile__value{font-size:var(--kpi-value-fs);line-height:1}
 body.density--compact .kpi-tile .tile__meta{display:none}
