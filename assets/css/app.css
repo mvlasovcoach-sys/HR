@@ -1,3 +1,14 @@
+/* global density tokens */
+body.density--compact {
+  --card-pad: 14px;
+  --card-radius: 12px;
+  --tile-min-h: 132px;
+  --kpi-value-fs: 40px;
+  --spark-h: 32px;
+  --section-gap: 12px;
+  --chart-h: 300px;
+  --hero-h: 240px;
+}
 .sidebar,.side{height:100vh;display:flex;flex-direction:column}
 .side .menu{list-style:none;margin:0;padding:0}
 .side .menu.top{overflow:auto}
@@ -13,3 +24,6 @@
 .lang-switch .pill{padding:.35rem .7rem;border-radius:999px;border:1px solid var(--stroke);background:rgba(11,31,41,.55);color:var(--txt);font-weight:600;cursor:pointer;transition:background .2s,box-shadow .2s}
 .lang-switch .pill.active{box-shadow:inset 0 0 0 2px var(--cyan-700)}
 .lang-switch .pill:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+body.density--compact .card{padding:var(--card-pad);border-radius:var(--card-radius)}
+body.density--compact .section{margin-bottom:var(--section-gap)}
+body.density--compact .card+.card{margin-top:var(--section-gap)}

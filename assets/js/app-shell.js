@@ -1,4 +1,10 @@
 (function(){
+  function initDensity(){
+    if (document?.body) {
+      document.body.classList.add('density--compact');
+    }
+  }
+
   function initLang(){
     const host = document.getElementById('lang-switch');
     if (!host) return;
@@ -77,9 +83,14 @@
     });
   }
 
-  if (document.readyState !== 'loading') {
+  function init(){
+    initDensity();
     initLang();
+  }
+
+  if (document.readyState !== 'loading') {
+    init();
   } else {
-    document.addEventListener('DOMContentLoaded', initLang);
+    document.addEventListener('DOMContentLoaded', init);
   }
 })();

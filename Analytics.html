@@ -45,7 +45,7 @@
     </div>
     <p id="analytics-caption" class="header__caption" aria-live="polite"></p>
     <section class="analytics-tracker">
-      <div class="panel" id="analytics-tracker-panel">
+      <div class="panel chart-card" id="analytics-tracker-panel">
         <div class="panel__head">
           <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
           <span id="wellbeing-delta" class="delta-badge" aria-live="polite"></span>
@@ -53,10 +53,11 @@
             <input id="maToggle" type="checkbox">
             <span data-i18n="label.movingAverage">MA(3)</span>
           </label>
+          <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
         </div>
         <div class="panel__body analytics-tracker__body">
           <div class="tracker-legend" id="wellbeing-legend"></div>
-          <div id="wlb-chart" class="analytics-chart" role="img" aria-live="polite"></div>
+          <div id="wlb-chart" class="analytics-chart hero-chart" role="img" aria-live="polite"></div>
         </div>
         <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
       </div>

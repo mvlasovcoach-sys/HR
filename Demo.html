@@ -36,11 +36,11 @@
 
     <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
 
-    <section id="demo-overview" class="grid grid-4" aria-live="polite">
-      <div id="card-site" class="tile"></div>
-      <div id="card-headcount" class="tile"></div>
-      <div id="card-rotation" class="tile"></div>
-      <div id="card-shifts" class="tile"></div>
+    <section id="demo-overview" class="grid grid-4 demo-info-grid" aria-live="polite">
+      <div id="card-site" class="tile card"></div>
+      <div id="card-headcount" class="tile card"></div>
+      <div id="card-rotation" class="tile card"></div>
+      <div id="card-shifts" class="tile card"></div>
     </section>
 
     <section id="demo-org" class="panel" aria-live="polite">
@@ -53,15 +53,15 @@
       <div class="grid grid-2">
         <div>
           <div class="subhead" data-i18n="demo.genderOverall">Gender — Overall</div>
-          <div id="chart-gender-overall" class="chart-donut" role="img"></div>
+          <div id="chart-gender-overall" class="chart-donut donut-chart" role="img"></div>
         </div>
         <div>
           <div class="subhead" data-i18n="demo.ageOverall">Age — Overall</div>
-          <div id="chart-age-overall" class="chart-bars" role="img"></div>
+          <div id="chart-age-overall" class="chart-bars bar-chart" role="img"></div>
         </div>
       </div>
       <div class="subhead" data-i18n="demo.byDepartment">By department</div>
-      <div id="chart-gender-by-dept" class="chart-bars" role="img"></div>
+      <div id="chart-gender-by-dept" class="chart-bars bar-chart" role="img"></div>
     </section>
 
     <section id="demo-shifts" class="panel" aria-live="polite">
