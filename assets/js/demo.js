@@ -3,6 +3,7 @@
   if (!heroEl) return;
 
   const state = { data: null, version: null };
+  const DEMO_CHARTS = Object.create(null);
   const els = {
     badge: document.getElementById('site-badge'),
     cards: {
@@ -14,7 +15,7 @@
     orgTable: document.getElementById('org-table'),
     genderOverall: document.getElementById('chart-gender-overall'),
     ageOverall: document.getElementById('chart-age-overall'),
-    genderByDept: document.getElementById('chart-gender-by-dept'),
+    byDept: document.getElementById('chart-by-dept'),
     shiftGrid: document.getElementById('shift-grid'),
     toast: document.getElementById('demo-toast'),
     exportBtn: document.getElementById('btn-export-brief')
@@ -93,7 +94,7 @@
         '<span class="skeleton skeleton--text"></span>'
       ].join('');
     });
-    [els.genderOverall, els.ageOverall, els.genderByDept].forEach(chart => {
+    [els.genderOverall, els.ageOverall, els.byDept].forEach(chart => {
       if (!chart) return;
       chart.classList.add('is-loading');
       chart.setAttribute('aria-busy', 'true');
@@ -128,7 +129,7 @@
     renderOrgTable(departments);
     renderGenderOverall(data.gender_overall, headcount);
     renderAgeOverall(data.age_overall);
-    renderGenderByDepartment(departments, data.gender_by_dept);
+    renderByDepartment(departments, data.gender_by_dept);
     renderShiftGrid(departments);
   }
 
@@ -330,9 +331,24 @@
     container.setAttribute('aria-label', getText('demo.genderOverall', 'Gender — Overall'));
   }
 
+  function resetChartInstance(key, container){
+    const instance = DEMO_CHARTS[key];
+    if (instance && typeof instance.destroy === 'function') {
+      try {
+        instance.destroy();
+      } catch (err) {
+        console.warn('demo: chart cleanup failed', err);
+      }
+    } else if (container) {
+      container.innerHTML = '';
+    }
+    DEMO_CHARTS[key] = null;
+  }
+
   function renderAgeOverall(ageData){
     const container = els.ageOverall;
     if (!container) return;
+    resetChartInstance('age', container);
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
     const entries = Object.entries(ageData || {});
@@ -344,6 +360,7 @@
       container.setAttribute('tabindex', '0');
       container.setAttribute('aria-describedby', descId);
       container.setAttribute('aria-label', `${getText('demo.ageOverall', 'Age — Overall')}: ${noData}`);
+      DEMO_CHARTS.age = { destroy: () => { container.innerHTML = ''; } };
       return;
     }
     const totals = entries.map(([, value]) => Number(value) || 0);
@@ -377,11 +394,13 @@
     container.setAttribute('tabindex', '0');
     container.setAttribute('aria-describedby', descId);
     container.setAttribute('aria-label', getText('demo.ageOverall', 'Age — Overall'));
+    DEMO_CHARTS.age = { destroy: () => { container.innerHTML = ''; } };
   }
 
-  function renderGenderByDepartment(departments, genderByDept){
-    const container = els.genderByDept;
+  function renderByDepartment(departments, genderByDept){
+    const container = els.byDept;
     if (!container) return;
+    resetChartInstance('byDept', container);
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
     const rows = departments.map(dept => {
@@ -410,6 +429,7 @@
     container.setAttribute('tabindex', '0');
     container.setAttribute('aria-describedby', descId);
     container.setAttribute('aria-label', getText('demo.byDepartment', 'By department'));
+    DEMO_CHARTS.byDept = { destroy: () => { container.innerHTML = ''; } };
   }
 
   function renderShiftGrid(departments){

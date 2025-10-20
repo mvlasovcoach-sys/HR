@@ -173,7 +173,7 @@
     await addSectionImage(document.querySelector('#org-table table') || document.getElementById('org-table'), {maxHeight: 140, spacing: 10});
     await addSectionImage(document.getElementById('chart-gender-overall'), {maxHeight: 110, spacing: 6});
     await addSectionImage(document.getElementById('chart-age-overall'), {maxHeight: 110, spacing: 10});
-    await addSectionImage(document.getElementById('chart-gender-by-dept'), {maxHeight: 130, spacing: 10});
+    await addSectionImage(document.getElementById('chart-by-dept'), {maxHeight: 130, spacing: 10});
     await addSectionImage(document.getElementById('shift-grid'), {maxHeight: 140, spacing: 10});
 
     const note = 'Fictional demo data; aggregates only; no PII.';
