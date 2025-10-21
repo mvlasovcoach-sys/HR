@@ -4,8 +4,25 @@ document.addEventListener('click', event => {
     if (!trigger.classList.contains('x-expand')) return;
     const card = trigger.closest('.chart-card');
     if (!card) return;
-    card.classList.toggle('expanded');
+    const expanded = card.classList.toggle('expanded');
+    trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    setExpandLabel(trigger, expanded);
 });
+
+document.addEventListener('i18n:change', () => {
+    document.querySelectorAll('.x-expand').forEach(btn => {
+        const card = btn.closest('.chart-card');
+        const expanded = card?.classList.contains('expanded');
+        setExpandLabel(btn, expanded);
+    });
+});
+
+function setExpandLabel(button, expanded){
+    if (!button) return;
+    const key = expanded ? 'analytics.collapse' : 'analytics.expand';
+    const fallback = expanded ? 'Collapse' : 'Expand';
+    button.textContent = window.I18N?.t?.(key) || fallback;
+}
 
 function initPage(){
     const chartEl = document.getElementById('wlb-chart');
@@ -64,6 +81,8 @@ function initPage(){
       }
     });
     document.addEventListener('i18n:change', render);
+    const expandBtn = document.querySelector('.chart-card .x-expand');
+    setExpandLabel(expandBtn, expandBtn?.closest('.chart-card')?.classList.contains('expanded'));
 
     function t(key, vars){
       return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');

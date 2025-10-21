@@ -21,8 +21,9 @@
 .demo-hero {
   position: relative;
   width: 100%;
-  min-height: clamp(220px, 38vw, 360px);
-  border-radius: var(--radius-panel);
+  min-height: clamp(200px, 32vw, 340px);
+  max-height: var(--demo-hero-h, 240px);
+  border-radius: var(--radius-18);
   overflow: hidden;
   background: linear-gradient(135deg, rgba(24, 72, 94, 0.75), rgba(7, 23, 32, 0.85));
   box-shadow: var(--shadow-panel);
@@ -32,7 +33,7 @@
   padding: var(--space-6);
   margin-bottom: var(--space-6);
 }
-body.density--compact .demo-hero{max-height:var(--hero-h);padding:12px;margin-bottom:var(--section-gap)}
+body.density--compact .demo-hero{padding:12px;margin-bottom:var(--section-gap)}
 
 .demo-hero img {
   width: 100%;
@@ -82,10 +83,11 @@ body.density--compact .demo-hero{max-height:var(--hero-h);padding:12px;margin-bo
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
 }
+.demo-info-grid{display:grid;gap:var(--space-6)}
 @media (min-width:1280px){
-  body.density--compact .demo-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--section-gap)}
-  body.density--compact .demo-info-grid .card{margin:0;padding:var(--card-pad)}
+  .demo-info-grid{grid-template-columns:1fr 1fr;gap:var(--section-gap)}
 }
+body.density--compact .demo-info-grid .card{margin:0;padding:var(--card-pad);border-radius:var(--card-radius);box-shadow:var(--shadow,0 6px 24px rgba(0,0,0,.25))}
 body.density--compact .card h2{font-size:22px;margin-bottom:6px}
 body.density--compact .card .sub{margin-top:4px;opacity:.8}
 body.density--compact .demo-card__label{margin-bottom:6px}
@@ -152,8 +154,8 @@ body.density--compact .demo-card__meta{margin-top:4px;opacity:.8}
   position: relative;
 }
 
-.chart-block{ position:relative; height:300px; margin:12px 0; }
-.chart-root{ position:absolute; inset:0; }
+.chart-block{position:relative;height:300px;margin:12px 0;border-radius:var(--card-radius);overflow:hidden}
+.chart-root{position:absolute;inset:0;}
 #chart-age-overall svg, #chart-by-dept svg, .chart-root svg{ width:100%; height:auto; display:block; }
 #chart-age-overall, #chart-by-dept{ margin:0 !important; }
 .chart-stacked, .chart-overall{ position:static !important; }

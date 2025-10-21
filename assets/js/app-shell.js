@@ -1,7 +1,19 @@
 (function(){
   function initDensity(){
-    if (document?.body) {
+    if (!document?.body) return;
+    let density = 'compact';
+    try {
+      density = localStorage.getItem('hr:density') || 'compact';
+    } catch (err) {
+      density = 'compact';
+    }
+    if (density === 'compact') {
       document.body.classList.add('density--compact');
+    }
+    try {
+      localStorage.setItem('hr:density', 'compact');
+    } catch (err) {
+      // ignore storage failures
     }
   }
 
@@ -13,6 +25,13 @@
       <button class="pill" data-lang="en" id="btn-lang-en" type="button">EN</button>
       <button class="pill" data-lang="nl" id="btn-lang-nl" type="button">NL</button>
     `;
+    host.setAttribute('role', 'group');
+
+    const updateGroupLabel = () => {
+      const label = window.I18N?.t?.('label.language');
+      host.setAttribute('aria-label', label || 'Language');
+    };
+    updateGroupLabel();
 
     const updateActive = (lang)=>{
       host.querySelectorAll('button').forEach(btn => {
@@ -80,6 +99,7 @@
       if (lang) {
         updateActive(lang);
       }
+      updateGroupLabel();
     });
   }
 

@@ -34,23 +34,27 @@
     <div id="app-topbar">
       <div class="topbar-left">
         <div class="header summary-toolbar">
-          <div class="header__title" data-i18n="header.summary">Summary</div>
-          <div class="header__badges" aria-hidden="true">
-            <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
-            <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
-            <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
-            <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
+          <div class="summary-toolbar__left">
+            <div class="summary-toolbar__title-row">
+              <div class="header__title" data-i18n="header.summary">Summary</div>
+              <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" title="Legend">i</button>
+            </div>
+            <div class="header__badges" aria-hidden="true">
+              <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
+              <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
+              <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
+              <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
+            </div>
           </div>
-          <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" title="Legend">i</button>
-          <div class="header__actions">
-            <div id="team-filter" class="team-filter"></div>
-            <div id="date-controls"></div>
-            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+          <div class="summary-toolbar__right">
+            <div id="lang-switch" class="lang-switch"></div>
+            <div class="header__actions">
+              <div id="team-filter" class="team-filter"></div>
+              <div id="date-controls"></div>
+              <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
       </div>
     </div>
     <div class="page-subhead">

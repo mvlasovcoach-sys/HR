@@ -294,6 +294,8 @@
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
+    const lang = window.I18N?.getLang?.() || 'en';
+    const numberFmt = new Intl.NumberFormat(lang, {maximumFractionDigits: 0});
     grid.innerHTML = '';
     if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, grid)) {
       return;
@@ -315,10 +317,13 @@
 
     grid.innerHTML = defs.map((d, index)=>{
       const raw = Number(kpi?.[d.key]);
-      const val = Number.isFinite(raw) ? d.fmt(raw) : '—';
+      const formattedValue = Number.isFinite(raw) ? d.fmt(raw) : null;
+      const val = formattedValue != null ? numberFmt.format(formattedValue) : '—';
       const dRaw = Number(delta?.[d.key]);
       const del  = Number.isFinite(dRaw) ? dRaw : null;
-      const badge = del!==null ? `<span class="tile__badge pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${Math.abs(Math.round(del))}</span>`:'';
+      const badgeValue = del !== null ? Math.abs(Math.round(del)) : null;
+      const badgeLabel = badgeValue !== null ? numberFmt.format(badgeValue) : '';
+      const badge = del!==null ? `<span class="tile__badge pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${badgeLabel}</span>`:'';
       const spark = sparkline(sparkSeries);
       return `<div class="tile tile--interactive tile--compact kpi kpi-tile" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
@@ -402,11 +407,13 @@
       badge.hidden = true;
       return;
     }
+    const lang = window.I18N?.getLang?.() || 'en';
+    const numberFmt = new Intl.NumberFormat(lang, {maximumFractionDigits: 0});
     const name = window.SITE.name || 'Org';
     const headcount = Number(window.SITE.totals?.headcount) || 0;
     const staffLabel = window.I18N?.t('summary.staff') || 'staff';
-    const equipped = headcount ? (window.I18N?.t('summary.equipped', {count: headcount}) || '') : '';
-    const parts = [`${name}`, `${headcount} ${staffLabel}`];
+    const equipped = headcount ? (window.I18N?.t('summary.equipped', {count: numberFmt.format(headcount)}) || '') : '';
+    const parts = [`${name}`, `${numberFmt.format(headcount)} ${staffLabel}`];
     if (equipped) parts.push(equipped);
     badge.textContent = parts.join(' · ');
     badge.hidden = false;
@@ -434,6 +441,8 @@
     const range = target?.range || '7d';
     const selectedStart = ensureDate(target?.start);
     const selectedEnd = ensureDate(target?.end);
+    const dataStart = ensureDate(runtime.rangeStart);
+    const dataEnd = ensureDate(runtime.rangeEnd);
 
     const defaultStart = (() => {
       if (range === '7d') return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
@@ -448,8 +457,8 @@
       return new Date(today.getFullYear(), 11, 31);
     })();
 
-    const start = selectedStart || defaultStart;
-    const end = selectedEnd || defaultEnd;
+    const start = dataStart || selectedStart || defaultStart;
+    const end = dataEnd || selectedEnd || defaultEnd;
     const opts = {month: 'short', day: 'numeric', year: 'numeric'};
     return start.getTime() === end.getTime()
       ? fmt(end, opts)
@@ -464,7 +473,7 @@
       periodEl.textContent = window.I18N?.t('summary.period', {period: label}) || `Period: ${label}`;
     }
     if (asofEl) {
-      const stamp = fmt(new Date(), {month: 'short', day: 'numeric', year: 'numeric'});
+      const stamp = fmt(getToday(), {month: 'short', day: 'numeric', year: 'numeric'});
       asofEl.textContent = window.I18N?.t('summary.asof', {ts: stamp}) || `updated ${stamp}`;
     }
     const startInput = document.getElementById('dc-start');
