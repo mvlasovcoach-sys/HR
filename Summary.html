@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Summary</title>
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=${APP_VERSION}">
+<link rel="stylesheet" href="./assets/css/nav.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/app.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/ui.tokens.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/ui.components.css?v=${APP_VERSION}">
@@ -35,10 +36,10 @@
       <div class="topbar-left">
         <div class="header summary-toolbar">
           <div class="summary-toolbar__left">
-            <div class="summary-toolbar__title-row">
-              <div class="header__title" data-i18n="header.summary">Summary</div>
-              <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" title="Legend">i</button>
-            </div>
+          <div class="summary-toolbar__title-row">
+            <h1 class="header__title" data-i18n="header.summary">Summary</h1>
+            <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" data-i18n="legend.title" data-i18n-attr="aria-label,title" aria-label="Legend" title="Legend">i</button>
+          </div>
             <div class="header__badges" aria-hidden="true">
               <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
               <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
@@ -64,7 +65,7 @@
     <span id="org-badge" class="pill" hidden></span>
     <div id="demo-banner" class="banner banner--demo" hidden>
       <span data-i18n="summary.demoActive">Demo scenario active — simulated night-shift data</span>
-      <a id="btn-return-live" href="#" class="link-quiet" data-i18n="summary.returnAction">Return to live</a>
+      <a id="btn-return-live" href="#" class="link-quiet" data-i18n="summary.return">Return to live</a>
     </div>
     <p id="global-caption" class="header__caption" aria-live="polite"></p>
     <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label" aria-label="Scenario toggles">

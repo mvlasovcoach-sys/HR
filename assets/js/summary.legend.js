@@ -82,7 +82,7 @@
       const title = t('legend.title', 'Legend');
       const closeLabel = t('legend.close', 'Close');
       return `
-        <div class="legend-modal" role="dialog" aria-modal="true" aria-labelledby="legend-title">
+        <div class="legend-modal summary-legend" role="dialog" aria-modal="true" aria-labelledby="legend-title">
           <div class="legend-header">
             <h3 id="legend-title">${title}</h3>
             <button type="button" class="legend-close" aria-label="${closeLabel}">×</button>

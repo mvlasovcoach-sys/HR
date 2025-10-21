@@ -87,11 +87,11 @@ body.density--compact .demo-hero{padding:12px;margin-bottom:var(--section-gap)}
 @media (min-width:1280px){
   .demo-info-grid{grid-template-columns:1fr 1fr;gap:var(--section-gap)}
 }
-body.density--compact .demo-info-grid .card{margin:0;padding:var(--card-pad);border-radius:var(--card-radius);box-shadow:var(--shadow,0 6px 24px rgba(0,0,0,.25))}
-body.density--compact .card h2{font-size:22px;margin-bottom:6px}
-body.density--compact .card .sub{margin-top:4px;opacity:.8}
-body.density--compact .demo-card__label{margin-bottom:6px}
-body.density--compact .demo-card__meta{margin-top:4px;opacity:.8}
+.demo-info-grid .card{margin:0}
+.demo-info-grid .card h2{font-size:22px;margin-bottom:6px}
+.demo-info-grid .card .sub{margin-top:4px;opacity:.8}
+.demo-card__label{margin-bottom:6px}
+.demo-card__meta{margin-top:4px;opacity:.8}
 
 .demo-card__label {
   font-size: 0.95rem;
@@ -154,7 +154,7 @@ body.density--compact .demo-card__meta{margin-top:4px;opacity:.8}
   position: relative;
 }
 
-.chart-block{position:relative;height:300px;margin:12px 0;border-radius:var(--card-radius);overflow:hidden}
+.chart-block{position:relative;height:300px;margin:12px 0;border-radius:var(--radius);overflow:hidden}
 .chart-root{position:absolute;inset:0;}
 #chart-age-overall svg, #chart-by-dept svg, .chart-root svg{ width:100%; height:auto; display:block; }
 #chart-age-overall, #chart-by-dept{ margin:0 !important; }

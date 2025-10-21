@@ -12,6 +12,15 @@
     rangeEnd: null
   };
 
+  function ensureDate(value){
+    if (!value) return null;
+    if (value instanceof Date && !isNaN(value)) {
+      return new Date(value.getTime());
+    }
+    const parsed = new Date(value);
+    return isNaN(parsed) ? null : parsed;
+  }
+
   const getToday = () => new Date();
   const fmt = (date, opts) => {
     const lang = window.I18N?.getLang?.() || 'en';
@@ -429,14 +438,6 @@
 
   function computePeriodLabel(stateLike){
     const target = stateLike || selectionState;
-    const ensureDate = value => {
-      if (!value) return null;
-      if (value instanceof Date && !isNaN(value)) {
-        return new Date(value.getTime());
-      }
-      const parsed = new Date(value);
-      return isNaN(parsed) ? null : parsed;
-    };
     const today = getToday();
     const range = target?.range || '7d';
     const selectedStart = ensureDate(target?.start);
@@ -473,7 +474,8 @@
       periodEl.textContent = window.I18N?.t('summary.period', {period: label}) || `Period: ${label}`;
     }
     if (asofEl) {
-      const stamp = fmt(getToday(), {month: 'short', day: 'numeric', year: 'numeric'});
+      const updatedDate = ensureDate(runtime.rangeEnd) || ensureDate(stateLike?.end) || getToday();
+      const stamp = fmt(updatedDate, {month: 'short', day: 'numeric', year: 'numeric'});
       asofEl.textContent = window.I18N?.t('summary.asof', {ts: stamp}) || `updated ${stamp}`;
     }
     const startInput = document.getElementById('dc-start');
