@@ -1,0 +1,9 @@
+:root{
+  --cyan:#21E2C2;
+  --cyan-700:#1FB9A1;
+  --bg:#08161C;
+  --surface:#0E1E27;
+  --border:rgba(255,255,255,.06);
+  --radius-12:12px;
+  --radius-18:18px;
+}

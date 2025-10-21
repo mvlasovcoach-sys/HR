@@ -3,13 +3,14 @@
   "rotation": "14/14",
   "shift_hours": 12,
   "shift_pattern_ops": "2-2-2",
+  "devicesIssued": 90,
   "departments": [
-    {"id":"ops","name":"Production","headcount":30,"brigades":3,"pattern":"2-2-2"},
-    {"id":"it","name":"Maintenance & IT","headcount":18,"brigades":3,"pattern":"2-2-2"},
-    {"id":"lab","name":"Lab & HSE","headcount":16,"brigades":3,"pattern":"2-2-2"},
-    {"id":"adm","name":"Admin","headcount":6,"brigades":1,"pattern":"day-only"},
-    {"id":"cat","name":"Catering/Accommodation","headcount":10,"brigades":1,"pattern":"day-only"},
-    {"id":"oim","name":"OIM / Control Room / Tech Mgmt","headcount":10,"brigades":1,"pattern":"day-only"}
+    {"id":"ops","name":"Production","headcount":30,"devicesIssued":30,"brigades":3,"pattern":"2-2-2"},
+    {"id":"it","name":"Maintenance & IT","headcount":18,"devicesIssued":18,"brigades":3,"pattern":"2-2-2"},
+    {"id":"lab","name":"Lab & HSE","headcount":16,"devicesIssued":16,"brigades":3,"pattern":"2-2-2"},
+    {"id":"adm","name":"Admin","headcount":6,"devicesIssued":6,"brigades":1,"pattern":"day-only"},
+    {"id":"cat","name":"Catering/Accommodation","headcount":10,"devicesIssued":10,"brigades":1,"pattern":"day-only"},
+    {"id":"oim","name":"OIM / Control Room / Tech Mgmt","headcount":10,"devicesIssued":10,"brigades":1,"pattern":"day-only"}
   ],
   "gender_overall": {"male":70,"female":20},
   "gender_by_dept": {

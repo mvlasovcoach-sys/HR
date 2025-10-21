@@ -71,7 +71,7 @@
     const ver = window.APP_VERSION || '';
     ready = false;
     try {
-      const response = await fetch(`./assets/i18n/${target}.json?v=${ver}`);
+      const response = await fetch(`./assets/locales/${target}.json?v=${ver}`);
       if (!response.ok) {
         throw new Error(`i18n: failed ${target}`);
       }
@@ -103,10 +103,14 @@
     return init(lang);
   }
 
+  function set(lang){
+    return setLang(lang);
+  }
+
   function getLang(){
     return currentLang;
   }
 
-  window.I18N = { t, onReady, init, setLang, getLang, translate: translateDocument, refresh: translateDocument };
+  window.I18N = { t, onReady, init, setLang, set, getLang, translate: translateDocument, refresh: translateDocument };
   window.t = (key, vars) => t(key, vars);
 })();

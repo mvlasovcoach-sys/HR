@@ -38,6 +38,21 @@
 
   const HERO_SRC = './assets/img/aurora-platform-hero.svg';
 
+  const getLang = () => window.I18N?.getLang?.() || 'en';
+
+  function formatInteger(value){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    return new Intl.NumberFormat(getLang(), {maximumFractionDigits: 0}).format(num);
+  }
+
+  function formatPercent(value, fractionDigits = 0){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '–';
+    const ratio = num / 100;
+    return new Intl.NumberFormat(getLang(), {style: 'percent', maximumFractionDigits: fractionDigits}).format(ratio);
+  }
+
   init();
 
   function init(){
@@ -150,7 +165,7 @@
 
   function renderBadge(name, headcount){
     if (!els.badge) return;
-    const text = getText('demo.badge', `Demo · ${name} · ${headcount} staff · 24/7`, {name, headcount});
+    const text = getText('demo.badge', `Demo · ${name} · ${formatInteger(headcount)} staff · 24/7`, {name, headcount: formatInteger(headcount)});
     els.badge.textContent = text;
     els.badge.setAttribute('aria-label', text);
   }
@@ -209,11 +224,12 @@
       aria: `${getText('demo.site', 'Site')}: ${data.site}`
     }, {skipMetaWhenEmpty: true});
 
+    const formattedHeadcount = formatInteger(headcount);
     renderCard(els.cards.headcount, {
       label: getText('demo.headcount', 'Headcount'),
-      value: headcount.toLocaleString(),
-      meta: getText('demo.departmentCount', '{count} departments', {count: departments.length}),
-      aria: `${getText('demo.headcount', 'Headcount')}: ${headcount.toLocaleString()}`
+      value: formattedHeadcount,
+      meta: getText('demo.departmentCount', '{count} departments', {count: formatInteger(departments.length)}),
+      aria: `${getText('demo.headcount', 'Headcount')}: ${formattedHeadcount}`
     });
 
     const rotationParts = String(data.rotation || '').split('/').map(part => part.trim());
@@ -227,11 +243,13 @@
       aria: `${getText('demo.rotation', 'Rotation')}: ${data.rotation}${rotationMeta ? `. ${rotationMeta}` : ''}`
     });
 
+    const shiftHours = Number(data.shift_hours) || 0;
+    const formattedHours = formatInteger(shiftHours);
     renderCard(els.cards.shifts, {
       label: getText('demo.shifts', 'Shifts'),
-      value: `${Number(data.shift_hours) || 0}h`,
+      value: `${formattedHours}h`,
       meta: shiftMetaParts.join(' · '),
-      aria: `${getText('demo.shifts', 'Shifts')}: ${Number(data.shift_hours) || 0}h. ${shiftMetaParts.join('. ')}`
+      aria: `${getText('demo.shifts', 'Shifts')}: ${formattedHours}h. ${shiftMetaParts.join('. ')}`
     });
   }
 
@@ -258,12 +276,14 @@
     const rows = departments.map(dept => {
       const name = escapeHtml(dept.name);
       const head = Number(dept.headcount) || 0;
-      const brigades = dept.brigades != null ? escapeHtml(String(dept.brigades)) : '—';
+      const brigadesRaw = Number(dept.brigades);
+      const headLabel = formatInteger(head);
+      const brigades = Number.isFinite(brigadesRaw) ? escapeHtml(formatInteger(brigadesRaw)) : '—';
       const pattern = escapeHtml(String(dept.pattern || '').replace(/-/g, '–'));
       return `
         <tr>
           <th scope="row">${name}</th>
-          <td data-sort-value="${head}">${head}</td>
+          <td data-sort-value="${head}">${headLabel}</td>
           <td>${brigades}</td>
           <td>${pattern}</td>
         </tr>
@@ -285,7 +305,7 @@
     `;
     els.orgTable.innerHTML = table;
     els.orgTable.removeAttribute('aria-busy');
-    const summary = departments.map(dept => getText('demo.departmentSummary', '{name}: {headcount}', {name: dept.name, headcount: dept.headcount})).join('; ');
+    const summary = departments.map(dept => getText('demo.departmentSummary', '{name}: {headcount}', {name: dept.name, headcount: formatInteger(dept.headcount)})).join('; ');
     setDescription(els.orgTable, 'org-desc', `${getText('demo.orgStructure', 'Organization')}. ${summary}`);
   }
 
@@ -323,22 +343,24 @@
       </svg>
     `;
     const legendItems = entries.map(([key, value]) => {
-      const percent = total ? Math.round((Number(value) || 0) / total * 100) : 0;
+      const count = Number(value) || 0;
+      const percent = total ? Math.round(count / total * 100) : 0;
       const label = getGenderLabel(key);
-      return `<span class="chart-legend__item"><span class="chart-legend__swatch stack--${key}"></span>${label} · ${value} (${percent}%)</span>`;
+      return `<span class="chart-legend__item"><span class="chart-legend__swatch stack--${key}"></span>${label} · ${formatInteger(count)} (${formatPercent(percent)})</span>`;
     }).join('');
     container.innerHTML = `
       <div class="chart-donut__inner">${svg}
         <div class="chart-donut__value">
-          <span class="chart-donut__number">${totalHeadcount}</span>
+          <span class="chart-donut__number">${formatInteger(totalHeadcount)}</span>
           <span class="chart-donut__caption">${getText('demo.headcount', 'Headcount')}</span>
         </div>
       </div>
       <div class="chart-legend">${legendItems}</div>
       <p id="${descId}" class="sr-only">${entries.map(([key, value]) => {
-        const percent = total ? Math.round((Number(value) || 0) / total * 100) : 0;
-        return `${getGenderLabel(key)} ${value} (${percent}%)`;
-      }).join('; ')}. ${getText('demo.headcount', 'Headcount')}: ${totalHeadcount}.</p>
+        const count = Number(value) || 0;
+        const percent = total ? Math.round(count / total * 100) : 0;
+        return `${getGenderLabel(key)} ${formatInteger(count)} (${formatPercent(percent)})`;
+      }).join('; ')}. ${getText('demo.headcount', 'Headcount')}: ${formatInteger(totalHeadcount)}.</p>
     `;
     container.setAttribute('role', 'group');
     container.setAttribute('tabindex', '0');
@@ -401,7 +423,7 @@
       const y = height - margin - barHeight;
       return `
         <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6" class="age-bar"></rect>
-        <text x="${x + barWidth / 2}" y="${y - 8}" class="age-bar__value">${val}</text>
+        <text x="${x + barWidth / 2}" y="${y - 8}" class="age-bar__value">${formatInteger(val)}</text>
         <text x="${x + barWidth / 2}" y="${height - margin + 18}" class="age-bar__label">${escapeHtml(bucket)}</text>
       `;
     }).join('');
@@ -414,7 +436,7 @@
     const desc = document.createElement('p');
     desc.id = descId;
     desc.className = 'sr-only';
-    desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${value}`).join('; ');
+    desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${formatInteger(value)}`).join('; ');
     root.appendChild(desc);
     root.setAttribute('role', 'group');
     root.setAttribute('tabindex', '0');
@@ -463,8 +485,8 @@
       const segments = entries.map(([key, value]) => {
         const val = Number(value) || 0;
         const percent = Math.round((val / total) * 100);
-        const ariaLabel = `${getGenderLabel(key)} ${val} (${percent}%)`;
-        return `<span class="stack--${key}" style="flex:${Math.max(val, 1)}" aria-label="${escapeHtml(ariaLabel)}"><span>${percent}%</span></span>`;
+        const ariaLabel = `${getGenderLabel(key)} ${formatInteger(val)} (${formatPercent(percent)})`;
+        return `<span class="stack--${key}" style="flex:${Math.max(val, 1)}" aria-label="${escapeHtml(ariaLabel)}"><span>${formatPercent(percent)}</span></span>`;
       }).join('');
       return `
         <div class="chart-bars__row">
@@ -475,7 +497,7 @@
     }).join('');
     const description = departments.map(dept => {
       const stats = genderByDept?.[dept.id] || {};
-      const parts = Object.entries(stats).map(([key, value]) => `${getGenderLabel(key)} ${value}`);
+      const parts = Object.entries(stats).map(([key, value]) => `${getGenderLabel(key)} ${formatInteger(value)}`);
       return `${dept.name}: ${parts.join(', ')}`;
     }).join('; ');
     root.innerHTML = `<div class="chart-bars__grid">${rows}</div>`;

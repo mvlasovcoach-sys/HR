@@ -62,7 +62,8 @@
       visibleRows: visibleRows.slice(),
       map,
       totals: {headcount: totalHeadcount},
-      raw: payload || null
+      raw: payload || null,
+      name: payload?.site || 'Org'
     };
   }
 

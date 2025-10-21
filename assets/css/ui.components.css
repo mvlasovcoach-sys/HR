@@ -99,7 +99,11 @@
 .tile--interactive:focus-visible {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-  outline: none;
+}
+
+.tile--interactive:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
 }
 
 .tile__head {
@@ -390,8 +394,12 @@
 .btn:hover,
 .btn:focus-visible {
   background: var(--surface-button-active);
-  outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
 }
 
 .btn--primary {

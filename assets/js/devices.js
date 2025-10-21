@@ -24,6 +24,21 @@
   const integrityState = {coverage: false, aggregate: false};
   let toastTimer = null;
 
+  const getLang = () => window.I18N?.getLang?.() || 'en';
+
+  function formatInteger(value){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    return new Intl.NumberFormat(getLang(), {maximumFractionDigits: 0}).format(num);
+  }
+
+  function formatPercent(value, fractionDigits = 0){
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '–';
+    const ratio = num / 100;
+    return new Intl.NumberFormat(getLang(), {style: 'percent', maximumFractionDigits: fractionDigits}).format(ratio);
+  }
+
   function boot(){
     const ready = [];
     ready.push(waitForI18n());
@@ -161,7 +176,10 @@
       tableEl.innerHTML = '';
       histogramEl.innerHTML = '';
       if (captionEl) captionEl.textContent = '';
-      if (coverageEl) coverageEl.textContent = '';
+      if (coverageEl) {
+        coverageEl.textContent = '';
+        coverageEl.hidden = true;
+      }
       if (exportBtn) exportBtn.disabled = true;
     }
   }
@@ -275,15 +293,14 @@
 
     container.innerHTML = cards.map(card => {
       const numeric = Number(card.value);
-      const formatted = Number.isFinite(numeric) ? Math.round(numeric) : 0;
-      const status = metricStatus(card.key, formatted, translate);
-      const valueText = Number.isFinite(numeric) ? formatted : '–';
+      const status = metricStatus(card.key, numeric, translate);
+      const valueText = Number.isFinite(numeric) ? formatPercent(numeric) : '–';
       return `<article class="tile tile--compact">
         <header class="tile__head">
           <span class="tile__title">${translate(card.label)}</span>
           <span class="status-chip ${status.className}">${status.label}</span>
         </header>
-        <div class="tile__kpi">${valueText}<span>%</span></div>
+        <div class="tile__kpi">${valueText}</div>
       </article>`;
     }).join('');
   }
@@ -329,7 +346,7 @@
       return;
     }
 
-    const lang = window.I18N?.getLang?.() || 'en';
+    const lang = getLang();
     const columns = getTableColumns(translate);
     const active = columns.find(col => col.key === sortState.key) || columns[0];
     const direction = sortState.dir === 'asc' ? 1 : -1;
@@ -365,18 +382,18 @@
     const bodyRows = sortedRows.map(row => {
       const status = resolveStatus(row.onlinePct, row.syncPct, translate);
       const lastSyncLabel = formatSync(row.lastSync);
-      const syncPercent = Number.isFinite(Number(row.syncPct)) ? `${Math.round(Number(row.syncPct))}%` : '—';
       const headcount = Number.isFinite(Number(row.headcount)) ? Number(row.headcount) : 0;
       const issued = Number.isFinite(Number(row.issued)) ? Number(row.issued) : headcount;
-      const onlinePct = Number.isFinite(Number(row.onlinePct)) ? Math.round(Number(row.onlinePct)) : 0;
-      const batteryPct = Number.isFinite(Number(row.batteryPct)) ? Math.round(Number(row.batteryPct)) : 0;
-      const syncSort = Number.isFinite(Number(row.syncPct)) ? Number(row.syncPct) : Number.NEGATIVE_INFINITY;
+      const onlineValue = Number.isFinite(Number(row.onlinePct)) ? Number(row.onlinePct) : null;
+      const batteryValue = Number.isFinite(Number(row.batteryPct)) ? Number(row.batteryPct) : null;
+      const syncValue = Number.isFinite(Number(row.syncPct)) ? Number(row.syncPct) : null;
+      const syncPercent = syncValue !== null ? formatPercent(syncValue) : '–';
+      const syncSort = syncValue !== null ? syncValue : Number.NEGATIVE_INFINITY;
       return `<tr>
         <td data-sort-type="text" data-sort-value="${escapeAttr(row.label)}">${escapeHtml(row.label)}</td>
-        <td data-sort-type="number" data-sort-value="${headcount}">${headcount}</td>
-        <td data-sort-type="number" data-sort-value="${issued}">${issued}</td>
-        <td data-sort-type="number" data-sort-value="${row.onlinePct}">${onlinePct}%</td>
-        <td data-sort-type="number" data-sort-value="${row.batteryPct}">${batteryPct}%</td>
+        <td data-sort-type="number" data-sort-value="${issued}">${formatInteger(issued)}</td>
+        <td data-sort-type="number" data-sort-value="${row.onlinePct}">${onlineValue !== null ? formatPercent(onlineValue) : '–'}</td>
+        <td data-sort-type="number" data-sort-value="${row.batteryPct}">${batteryValue !== null ? formatPercent(batteryValue) : '–'}</td>
         <td data-sort-type="number" data-sort-value="${syncSort}">
           <div class="devices-table__primary">${syncPercent}</div>
           ${lastSyncLabel ? `<div class="devices-table__meta">${escapeHtml(lastSyncLabel)}</div>` : ''}
@@ -391,8 +408,7 @@
   function getTableColumns(translate){
     return [
       {key: 'team', label: translate('devices.columns.team'), type: 'text', defaultDir: 'asc', accessor: row => row.label},
-      {key: 'headcount', label: translate('devices.columns.headcount'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.headcount)},
-      {key: 'issued', label: translate('devices.columns.issued'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.issued)},
+      {key: 'devices', label: translate('devices.columns.devices'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.issued)},
       {key: 'online_pct', label: translate('devices.columns.online'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.onlinePct)},
       {key: 'avg_battery_pct', label: translate('devices.columns.battery'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.batteryPct)},
       {key: 'last_sync', label: translate('devices.columns.lastsync'), type: 'number', defaultDir: 'desc', accessor: row => Number(row.syncPct)},
@@ -429,11 +445,12 @@
     }
     const entries = Object.entries(distribution).sort((a, b) => bucketOrder(a[0]) - bucketOrder(b[0]));
     container.innerHTML = entries.map(([bucket, value]) => {
-      const width = Math.min(100, Math.round(Number(value || 0) * 2));
+      const amount = Number(value || 0);
+      const width = Math.min(100, Math.round(amount * 2));
       return `<div class="devices-histogram__bar">
         <span>${escapeHtml(bucket)}</span>
         <div class="devices-histogram__track"><div class="devices-histogram__fill" style="width:${width}%"></div></div>
-        <span class="devices-histogram__value">${Number(value || 0)}</span>
+        <span class="devices-histogram__value">${formatInteger(amount)}</span>
       </div>`;
     }).join('');
   }
@@ -447,13 +464,20 @@
     if (!el) return;
     const totalIssued = rows.reduce((sum, row) => sum + (Number(row.issued) || 0), 0);
     const expected = Number(site?.totals?.headcount) || 0;
-    if (expected > 0 && totalIssued === expected) {
-      el.textContent = translate('devices.coverage.banner', {count: expected});
-      el.hidden = false;
-    } else {
+    if (!expected) {
       el.textContent = '';
       el.hidden = true;
+      return;
     }
+    const coveragePct = expected ? Math.round((totalIssued / expected) * 100) : 0;
+    const orgName = site?.raw?.site || site?.name || '';
+    const orgToken = translate('devices.coverage.orgLabel');
+    const orgLabel = translate('devices.coverage.org', {label: orgToken, site: orgName || orgToken});
+    const staffLabel = translate('devices.coverage.staff', {count: formatInteger(expected)});
+    const equippedLabel = translate('devices.coverage.equipped', {value: formatPercent(coveragePct)});
+    const issuedLabel = translate('devices.coverage.issued', {count: formatInteger(totalIssued)});
+    el.textContent = translate('devices.coverage.summary', {org: orgLabel, staff: staffLabel, equipped: equippedLabel, issued: issuedLabel});
+    el.hidden = false;
   }
 
   function resolveStatus(online, sync, translate){
@@ -505,7 +529,7 @@
     if (!ts) return '';
     const date = new Date(ts);
     if (isNaN(date)) return '';
-    const lang = window.I18N?.getLang?.() || 'en';
+    const lang = getLang();
     const datePart = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'}).format(date);
     const timePart = new Intl.DateTimeFormat(lang, {hour: '2-digit', minute: '2-digit'}).format(date);
     return `${datePart} · ${timePart}`;
