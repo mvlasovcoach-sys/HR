@@ -1,9 +1,28 @@
 :root{
-  --cyan:#21E2C2;
-  --cyan-700:#1FB9A1;
   --bg:#08161C;
   --surface:#0E1E27;
   --border:rgba(255,255,255,.06);
+  --cyan:#21E2C2;
+  --cyan-700:#1FB9A1;
   --radius-12:12px;
   --radius-18:18px;
+  --radius:var(--radius-18);
+  --card-pad:20px;
+  --section-gap:20px;
+  --kpi-h:180px;
+  --spark-h:44px;
+  --hero-chart-h:360px;
+  --demo-hero-h:280px;
+  --shadow:0 12px 32px rgba(0,0,0,.28);
+}
+
+body.density--compact{
+  --card-pad:14px;
+  --section-gap:12px;
+  --radius:12px;
+  --kpi-h:140px;
+  --spark-h:34px;
+  --hero-chart-h:300px;
+  --demo-hero-h:240px;
+  --shadow:0 6px 24px rgba(0,0,0,.25);
 }

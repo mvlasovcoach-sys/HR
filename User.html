@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="./assets/css/ui.tokens.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/ui.components.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=${APP_VERSION}">
+<link rel="stylesheet" href="./assets/css/nav.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/app.css?v=${APP_VERSION}">
 <link rel="stylesheet" href="./assets/css/wellness.css?v=${APP_VERSION}">
 <script defer src="./assets/js/i18n.js?v=${APP_VERSION}"></script>
@@ -31,8 +32,8 @@
     <div id="app-topbar">
       <div class="topbar-left">
         <div class="header">
-          <div class="header__title">
-            <span data-i18n="header.wellness">Wellness</span>
+          <h1 class="header__title" data-i18n="header.wellness">Wellness</h1>
+          <div class="header__badges">
             <span class="pill pill--neutral has-tooltip" tabindex="0" aria-describedby="tooltip-agg-wellness">
               Aggregates only · No raw biosignals
               <span class="tooltip" id="tooltip-agg-wellness" role="tooltip">Aggregates only; no raw ECG/HRV, no person-level drilldown.</span>
@@ -44,7 +45,7 @@
           </div>
           <div class="header__actions">
             <div id="date-controls"></div>
-            <button class="header__icon" type="button" data-about-trigger aria-label="About"></button>
+            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
           </div>
         </div>
       </div>

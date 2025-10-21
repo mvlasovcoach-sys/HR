@@ -37,13 +37,21 @@
     NAV_ITEMS.forEach(item=>{
       const li = document.createElement('li');
       const a  = document.createElement('a');
+      const fallback = LABEL_EN[item.id] || item.id;
       a.href = item.href;
       a.dataset.id = item.id;
-
-      // show English immediately, then let i18n replace via data-i18n
-      a.textContent = LABEL_EN[item.id] || item.id;
+      a.dataset.short = (item.short || fallback.charAt(0) || item.id).toUpperCase();
+      a.setAttribute('aria-label', fallback);
+      a.setAttribute('title', fallback);
       a.setAttribute('data-i18n', item.i18n);
+      a.setAttribute('data-i18n-attr', 'aria-label,title');
 
+      const label = document.createElement('span');
+      label.className = 'nav-label';
+      label.textContent = fallback;
+      label.setAttribute('data-i18n', item.i18n);
+
+      a.appendChild(label);
       li.appendChild(a);
       (item.position === 'bottom' ? bottom : top).appendChild(li);
     });
@@ -57,6 +65,13 @@
 
     // Translate just-in-time (if i18n is present)
     try { window.I18N?.refresh?.(host); } catch(e){/* noop */}
+
+    host.querySelectorAll('a').forEach(link => {
+      const labelText = link.querySelector('.nav-label')?.textContent?.trim?.();
+      if (labelText) {
+        link.dataset.short = labelText.charAt(0).toUpperCase();
+      }
+    });
 
     // Self-check in console to debug
     console.debug('nav:', [...host.querySelectorAll('a')].map(a=>a.textContent.trim()));

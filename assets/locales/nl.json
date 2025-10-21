@@ -82,6 +82,7 @@
   "summary.equipped": "100% uitgerust · {count} apparaten uitgegeven",
   "summary.applyDemo": "Nachtdienstdemo toepassen",
   "summary.demoActive": "Demoscenario actief — gesimuleerde nachtdienstdata",
+  "summary.return": "Terug naar live",
   "summary.returnAction": "Terug naar live",
   "label.updatedAt": "Bijgewerkt {date}",
   "label.range": "Bereik",

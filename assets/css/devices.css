@@ -191,25 +191,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
+  border: 1px solid transparent;
 }
 
 .status-chip--green {
-  background: rgba(15, 247, 177, 0.18);
-  color: #89ffd2;
+  background: rgba(10, 56, 50, 0.92);
+  color: #7fffe3;
+  border-color: rgba(33, 226, 194, 0.4);
 }
 
 .status-chip--amber {
-  background: rgba(255, 217, 102, 0.18);
-  color: #ffe277;
+  background: rgba(74, 54, 16, 0.92);
+  color: #ffe8a6;
+  border-color: rgba(255, 217, 102, 0.4);
 }
 
 .status-chip--red {
-  background: rgba(255, 111, 111, 0.18);
-  color: #ff9b9b;
+  background: rgba(82, 24, 33, 0.9);
+  color: #ffb3b3;
+  border-color: rgba(255, 111, 111, 0.4);
 }
 
 @media (max-width: 768px) {

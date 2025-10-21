@@ -2,25 +2,25 @@
   "range": "month",
   "updated": "2025-10-13T07:30:00Z",
   "org": {
-    "devices_issued": 90,
+    "devices_issued": 100,
     "devices_online_pct": 88,
-    "avg_battery_pct": 62,
-    "last_sync_24h_pct": 93
+    "avg_battery_pct": 63,
+    "last_sync_24h_pct": 94
   },
   "by_team": [
     {
       "id": "ops",
-      "devices_issued": 30,
+      "devices_issued": 32,
       "devices_online_pct": 86,
-      "avg_battery_pct": 60,
-      "last_sync_24h_pct": 90,
+      "avg_battery_pct": 61,
+      "last_sync_24h_pct": 91,
       "last_sync": "2025-10-12T19:45:00Z"
     },
     {
       "id": "it",
       "devices_issued": 18,
       "devices_online_pct": 94,
-      "avg_battery_pct": 69,
+      "avg_battery_pct": 70,
       "last_sync_24h_pct": 97,
       "last_sync": "2025-10-12T21:20:00Z"
     },
@@ -28,24 +28,24 @@
       "id": "lab",
       "devices_issued": 16,
       "devices_online_pct": 92,
-      "avg_battery_pct": 65,
+      "avg_battery_pct": 66,
       "last_sync_24h_pct": 96,
       "last_sync": "2025-10-12T20:55:00Z"
     },
     {
       "id": "cs",
-      "devices_issued": 26,
-      "devices_online_pct": 84,
-      "avg_battery_pct": 59,
-      "last_sync_24h_pct": 92,
+      "devices_issued": 34,
+      "devices_online_pct": 85,
+      "avg_battery_pct": 60,
+      "last_sync_24h_pct": 93,
       "last_sync": "2025-10-12T20:05:00Z"
     }
   ],
   "battery_distribution": {
     "0-20": 4,
     "21-40": 12,
-    "41-60": 24,
-    "61-80": 36,
-    "81-100": 24
+    "41-60": 26,
+    "61-80": 38,
+    "81-100": 20
   }
 }

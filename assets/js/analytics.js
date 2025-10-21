@@ -21,7 +21,9 @@ function setExpandLabel(button, expanded){
     if (!button) return;
     const key = expanded ? 'analytics.collapse' : 'analytics.expand';
     const fallback = expanded ? 'Collapse' : 'Expand';
-    button.textContent = window.I18N?.t?.(key) || fallback;
+    const label = window.I18N?.t?.(key) || fallback;
+    button.textContent = label;
+    button.setAttribute('aria-label', label);
 }
 
 function initPage(){
