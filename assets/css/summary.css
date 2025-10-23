@@ -63,9 +63,9 @@
   #org-badge{width:100%}
 }
 
-/* Defensive: hide legacy KPI footer/meta fragments if they reappear */
-#kpi-compare,
-.kpi-card .kpi-footer,
-.kpi-card .kpi-meta,
+/* Kill any secondary KPI rows and footers if markup slips through */
+#summary-kpi-secondary,
 .kpi-row--details,
-.kpi-tiles--detail{display:none!important}
+.kpi-tiles--detail,
+.kpi-card .kpi-footer,
+.kpi-card .kpi-meta{display:none!important}

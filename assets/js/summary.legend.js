@@ -16,7 +16,7 @@
         t('legend.stress', 'High Stress % — share of employees with elevated stress.'),
         t('legend.fatigue', 'Elevated Fatigue % — share with elevated fatigue.')
       ];
-      const hasEngagement = Boolean(document.querySelector('#sum-kpi-grid .tile[data-index="3"]'));
+      const hasEngagement = Boolean(document.querySelector('#summary-kpi-primary .tile[data-index="3"]'));
       if (hasEngagement) {
         metrics.push(t('legend.engagement', 'Engagement Active % — share of employees engaging weekly.'));
       }
