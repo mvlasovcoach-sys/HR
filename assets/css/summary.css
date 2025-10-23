@@ -10,6 +10,10 @@
 .kpi-tile .tile__value small{font-size:1rem;margin-left:6px;color:var(--muted)}
 .kpi-tile .tile__spark{height:var(--spark-h);margin-top:4px;order:4}
 
+#kpi-compare,
+.kpi-row--details,
+.kpi-tiles--detail { display: none !important; }
+
 #page-progress,.summary-progress{display:none}
 .is-loading #page-progress,.is-loading .summary-progress{display:block}
 
