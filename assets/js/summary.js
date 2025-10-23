@@ -1,6 +1,9 @@
 (function(){
   console.info('Summary init');
   const TILE_COUNT = 4;
+  const KPI_PRIMARY_ID = 'summary-kpi-primary';
+  const SHOW_SUMMARY_SECOND_ROW = false;
+  window.SHOW_SUMMARY_SECOND_ROW = SHOW_SUMMARY_SECOND_ROW;
 
   const SUMMARY = window.SUMMARY = window.SUMMARY || {};
   const RANGE = window.RANGE = window.RANGE || {};
@@ -33,11 +36,50 @@
   SUMMARY.setDemoState = setDemoState;
   SUMMARY.clearDemo = () => setScenario('live');
 
+  function pruneKpiFooters(scope){
+    const root = scope || document;
+    root.querySelectorAll('.kpi-card .kpi-footer, .kpi-card .kpi-meta, .kpi-footer, .kpi-meta').forEach(node => {
+      if (node && node.parentNode) {
+        node.remove();
+      }
+    });
+  }
+
+  function removeDuplicateKpiRows(){
+    const primary = document.getElementById(KPI_PRIMARY_ID);
+    if (window.SHOW_SUMMARY_SECOND_ROW) {
+      pruneKpiFooters(primary || document);
+      return;
+    }
+    const grids = Array.from(document.querySelectorAll('.kpi-grid'));
+    if (primary) {
+      grids.forEach(grid => {
+        if (grid === primary) return;
+        if (grid.closest(`#${KPI_PRIMARY_ID}`)) return;
+        grid.remove();
+      });
+    }
+
+    const host = primary || document;
+    const cards = Array.from(host.querySelectorAll('.kpi-card, .kpi-tile'));
+    if (cards.length > TILE_COUNT) {
+      cards.slice(TILE_COUNT).forEach(card => card.remove());
+    }
+
+    pruneKpiFooters(primary || document);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     applyScenarioFromUrl();
     bindTileNavigation();
     bindScenarioControls();
     applyRangeSelection(readRange());
+
+    removeDuplicateKpiRows();
+    if (typeof MutationObserver === 'function' && document?.body) {
+      const mo = new MutationObserver(() => removeDuplicateKpiRows());
+      mo.observe(document.body, {childList: true, subtree: true});
+    }
 
     const start = () => {
       updateLegendButtonLabel();
@@ -82,7 +124,7 @@
   });
 
   function bindTileNavigation(){
-    document.getElementById('sum-kpi-grid')?.addEventListener('click', evt => {
+    document.getElementById(KPI_PRIMARY_ID)?.addEventListener('click', evt => {
       const tile = evt.target.closest('.tile');
       if (!tile) return;
       window.location.href = './Analytics.html';
@@ -240,7 +282,7 @@
   }
 
   function renderSkeleton(){
-    const grid = document.getElementById('sum-kpi-grid');
+    const grid = document.getElementById(KPI_PRIMARY_ID);
     if (!grid) return;
     const skeleton = [];
     for (let i = 0; i < TILE_COUNT; i++) {
@@ -261,7 +303,7 @@
     const range = readRange();
     RANGE.current = range;
     applyRangeSelection(range);
-    const grid = document.getElementById('sum-kpi-grid');
+    const grid = document.getElementById(KPI_PRIMARY_ID);
     if (!grid) {
       runtime.loading = false;
       if (document?.body) {
@@ -277,6 +319,7 @@
       ]);
       updateRangeMetadata(metrics);
       renderKpis(metrics, trend);
+      removeDuplicateKpiRows();
     }catch(err){
       console.error('Summary metrics failed', err);
       grid.innerHTML = '';
@@ -298,7 +341,7 @@
   }
 
   function renderKpis(metrics, trend){
-    const grid = document.getElementById('sum-kpi-grid');
+    const grid = document.getElementById(KPI_PRIMARY_ID);
     if(!grid) return;
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
