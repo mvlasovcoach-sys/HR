@@ -4,11 +4,10 @@
   .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 
-.kpi-tile{min-height:var(--kpi-h);padding:var(--card-pad);border-radius:var(--radius);box-shadow:var(--shadow,0 12px 32px rgba(0,0,0,.28));border:1px solid var(--border);background:var(--surface);position:relative;display:flex;flex-direction:column;gap:10px}
-.kpi-tile .tile__meta{font-size:.82rem;color:var(--muted);order:3}
-.kpi-tile .tile__value{font-size:40px;line-height:1;order:2}
+.kpi-tile{min-height:var(--kpi-h);padding:var(--card-pad);padding-bottom:var(--card-pad);border-radius:var(--radius);box-shadow:var(--shadow,0 12px 32px rgba(0,0,0,.28));border:1px solid var(--border);background:var(--surface);position:relative;display:flex;flex-direction:column;gap:12px}
+.kpi-tile .tile__value{font-size:40px;line-height:1;order:2;margin-bottom:0}
 .kpi-tile .tile__value small{font-size:1rem;margin-left:6px;color:var(--muted)}
-.kpi-tile .tile__spark{height:var(--spark-h);margin-top:4px;order:4}
+.kpi-tile .tile__spark{height:var(--spark-h);margin-top:4px;order:3}
 
 #kpi-compare,
 .kpi-row--details,

@@ -12,6 +12,8 @@
     rangeEnd: null
   };
 
+  const SHOW_KPI_DETAILS = window.SHOW_KPI_DETAILS === true;
+
   function ensureDate(value){
     if (!value) return null;
     if (value instanceof Date && !isNaN(value)) {
@@ -34,6 +36,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     applyScenarioFromUrl();
+    if (!SHOW_KPI_DETAILS) {
+      removeLegacyFooters();
+    }
     bindTileNavigation();
     bindScenarioControls();
     applyRangeSelection(readRange());
@@ -245,7 +250,6 @@
     for (let i = 0; i < TILE_COUNT; i++) {
       skeleton.push(`<div class="tile tile--skeleton skeleton tile--compact kpi-tile" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
-        <div class="tile__meta"><span class="skeleton skeleton--pill"></span></div>
         <div class="tile__kpi tile__value"><span class="skeleton skeleton--value"></span></div>
         <div class="tile__spark spark"><span class="skeleton skeleton--spark"></span></div>
       </div>`);
@@ -300,6 +304,9 @@
   function renderKpis(metrics, trend){
     const grid = document.getElementById('sum-kpi-grid');
     if(!grid) return;
+    if (!SHOW_KPI_DETAILS) {
+      removeLegacyFooters();
+    }
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
@@ -313,8 +320,6 @@
       grid.removeAttribute('data-guard');
     }
 
-    const updatedDate = lastDate(metrics?.heatmap?.dates);
-    const updatedLabel = updatedDate ? `${window.I18N?.t('ui.updated') || window.I18N?.t('label.updated') || 'Updated'} ${formatDate(updatedDate)}` : '';
     const sparkSeries = buildSparkSeries(trend?.heatmap);
 
     const defs = [
@@ -336,11 +341,14 @@
       const spark = sparkline(sparkSeries);
       return `<div class="tile tile--interactive tile--compact kpi kpi-tile" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
-        <div class="tile__meta">${updatedLabel}</div>
         <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>
         <div class="tile__spark spark">${spark}</div>
       </div>`;
     }).join('');
+  }
+
+  function removeLegacyFooters(){
+    document.querySelectorAll('.kpi-footer').forEach(node => node.remove());
   }
 
   function buildSparkSeries(heatmap){
@@ -376,21 +384,6 @@
       return `${idx === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
     }).join(' ');
     return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
-  }
-
-  function formatDate(dateStr){
-    try {
-      const lang = window.I18N?.getLang?.() || navigator.language || 'en';
-      const formatter = new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit'});
-      return formatter.format(new Date(dateStr));
-    } catch (err) {
-      return dateStr;
-    }
-  }
-
-  function lastDate(dates){
-    if (!Array.isArray(dates) || !dates.length) return null;
-    return dates[dates.length - 1];
   }
 
   function toast(message){
