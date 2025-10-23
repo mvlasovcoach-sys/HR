@@ -12,7 +12,6 @@
     rangeEnd: null
   };
 
-  const SHOW_KPI_DETAILS = window.SHOW_KPI_DETAILS === true;
 
   function ensureDate(value){
     if (!value) return null;
@@ -36,9 +35,6 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     applyScenarioFromUrl();
-    if (!SHOW_KPI_DETAILS) {
-      removeLegacyFooters();
-    }
     bindTileNavigation();
     bindScenarioControls();
     applyRangeSelection(readRange());
@@ -304,9 +300,6 @@
   function renderKpis(metrics, trend){
     const grid = document.getElementById('sum-kpi-grid');
     if(!grid) return;
-    if (!SHOW_KPI_DETAILS) {
-      removeLegacyFooters();
-    }
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
@@ -345,10 +338,6 @@
         <div class="tile__spark spark">${spark}</div>
       </div>`;
     }).join('');
-  }
-
-  function removeLegacyFooters(){
-    document.querySelectorAll('.kpi-footer').forEach(node => node.remove());
   }
 
   function buildSparkSeries(heatmap){

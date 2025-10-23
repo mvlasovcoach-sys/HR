@@ -1,5 +1,5 @@
 (function(){
-  window.ASSET_VERSION = '2025.10.19-03';
+  window.ASSET_VERSION = '2025.10.19-04';
   if (typeof window.APP_VERSION === 'undefined' || !window.APP_VERSION) {
     window.APP_VERSION = window.ASSET_VERSION;
   }
