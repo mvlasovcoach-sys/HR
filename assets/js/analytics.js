@@ -33,7 +33,7 @@ function initPage(){
     const breakdownEl = document.getElementById('analytics-breakdown');
     const captionEl = document.getElementById('global-caption');
     const maToggle = document.getElementById('maToggle');
-    const deltaBadgeEl = document.getElementById('wellbeing-delta');
+    const deltaBadgeEl = document.getElementById('trk-delta');
     const miniGrid = document.getElementById('analytics-mini-kpis');
     const trackerPanel = document.getElementById('analytics-tracker-panel');
     const breakdownPanel = document.querySelector('.analytics-breakdown');
@@ -203,9 +203,11 @@ function initPage(){
         if (deltaBadgeEl) {
           deltaBadgeEl.textContent = '';
           deltaBadgeEl.className = 'delta-badge';
+          deltaBadgeEl.removeAttribute('aria-label');
         }
-        if (captionEl && window.Caption?.render) {
-          window.Caption?.render(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+        const insight = buildCaption(range, team);
+        if (window.Caption?.render) {
+          window.Caption.render('#global-caption', {asOf: new Date(), insight});
         } else if (captionEl) {
           captionEl.textContent = buildCaption(range, team);
         }
@@ -215,10 +217,11 @@ function initPage(){
       renderTracker(metrics, team);
       renderBreakdown(metrics, team);
       renderMiniKpis(metrics, team);
-      if (captionEl && window.Caption?.render) {
-        window.Caption?.render(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+      const insight = buildCaption(range, team);
+      if (window.Caption?.render) {
+        window.Caption.render('#global-caption', {asOf: new Date(), insight});
       } else if (captionEl) {
-        captionEl.textContent = buildCaption(range, team);
+        captionEl.textContent = insight;
       }
     }
 
@@ -251,28 +254,7 @@ function initPage(){
         ].join('');
       }
 
-      if (deltaBadgeEl) {
-        const baseSeries = Array.isArray(info.series)
-          ? info.series.map(val => Number(val)).filter(Number.isFinite)
-          : [];
-        const trendDelta = baseSeries.length ? deltaVsPrior(baseSeries) : 0;
-        const label = trendDelta > 0
-          ? (window.I18N?.t('analytics.deltaImproved') || 'Improved')
-          : trendDelta < 0
-            ? (window.I18N?.t('analytics.deltaDeclined') || 'Declined')
-            : (window.I18N?.t('analytics.deltaNoChange') || 'No change');
-        const symbol = trendDelta > 0 ? '+' : trendDelta < 0 ? '−' : '±';
-        const magnitude = Math.abs(Math.round(trendDelta));
-        const text = `${label} ${symbol}${magnitude}`;
-        const className = trendDelta > 0
-          ? 'delta-badge--up'
-          : trendDelta < 0
-            ? 'delta-badge--down'
-            : 'delta-badge--neutral';
-        deltaBadgeEl.textContent = text;
-        deltaBadgeEl.className = `delta-badge ${className}`.trim();
-        deltaBadgeEl.setAttribute('aria-label', `${t('delta.header')}: ${text}`);
-      }
+      updateTrackerDelta(deltaBadgeEl, info, metrics, team);
 
       chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
 
@@ -702,7 +684,8 @@ function initPage(){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
       const prefix = t('caption.orgAvg') || t('caption.orgAverage');
-      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
+      const base = `${prefix} • ${rangeText} • ${teamText}`;
+      return `${scenarioPrefix()}${base}`;
     }
 
     function rangeLabel(range){
@@ -725,6 +708,97 @@ function initPage(){
         return `${start} – ${end}`;
       }
       return t('range.7d');
+    }
+
+    function updateTrackerDelta(el, info, metrics, team){
+      if (!el) return;
+      const currentAvg = Number.isFinite(info?.current) ? info.current : null;
+      const previousAvg = Number.isFinite(info?.previous) ? info.previous : null;
+      const explicitDelta = Number.isFinite(info?.delta) ? info.delta : null;
+      const deltaValue = Number.isFinite(explicitDelta)
+        ? explicitDelta
+        : (currentAvg != null && previousAvg != null ? currentAvg - previousAvg : null);
+      if (!Number.isFinite(deltaValue)) {
+        el.textContent = '';
+        el.className = 'delta-badge';
+        el.removeAttribute('aria-label');
+        return;
+      }
+      const currentSample = trackerSample(currentAvg, metrics, team);
+      const previousSample = trackerSample(previousAvg, metrics, team);
+      const significant = currentSample && previousSample
+        ? wilsonDiffSig(currentSample, previousSample)
+        : false;
+      const vsPrev = t('analytics.delta.vsPrev', 'vs prev');
+      const sigLabel = t('analytics.delta.significant', 'significant');
+      const rounded = Math.round(deltaValue);
+      const prefix = deltaValue > 0 ? '+' : '';
+      const text = `${prefix}${Number.isFinite(rounded) ? rounded : 0} ${vsPrev}${significant ? ` • ${sigLabel}` : ''}`;
+      const direction = deltaValue > 0 ? 'is-up' : deltaValue < 0 ? 'is-down' : 'is-flat';
+      el.textContent = text;
+      el.className = `delta-badge ${direction}`.trim();
+      el.setAttribute('aria-label', `${t('analytics.delta.aria', 'Delta vs previous period')}: ${text}`);
+    }
+
+    function trackerSample(avg, metrics, team){
+      if (!Number.isFinite(avg)) return null;
+      const total = sampleSize(metrics, team);
+      if (!Number.isFinite(total) || total <= 0) return null;
+      const proportion = avg / 100;
+      const ok = Math.round(Math.max(0, Math.min(1, proportion)) * total);
+      return {avg, n: total, ok};
+    }
+
+    function sampleSize(metrics, team){
+      if (!metrics) return NaN;
+      if (team && team !== 'all') {
+        const list = metrics?.headcount?.teams;
+        if (list && typeof list === 'object' && Number.isFinite(list[team])) {
+          return Number(list[team]);
+        }
+      }
+      if (Number.isFinite(Number(metrics?.n))) {
+        return Number(metrics.n);
+      }
+      return NaN;
+    }
+
+    function wilsonDiffSig(curr, prev){
+      if (!curr || !prev) return false;
+      const result = twoPropZ(curr.ok, curr.n, prev.ok, prev.n);
+      return result.p < 0.05;
+    }
+
+    function twoPropZ(ok1, n1, ok0, n0){
+      const o1 = Number(ok1);
+      const total1 = Number(n1);
+      const o0 = Number(ok0);
+      const total0 = Number(n0);
+      if (!Number.isFinite(o1) || !Number.isFinite(o0) || !Number.isFinite(total1) || !Number.isFinite(total0)) {
+        return {z: 0, p: 1};
+      }
+      if (total1 <= 0 || total0 <= 0) return {z: 0, p: 1};
+      const pPool = (o1 + o0) / (total1 + total0);
+      const se = Math.sqrt(pPool * (1 - pPool) * (1 / total1 + 1 / total0));
+      if (!Number.isFinite(se) || se === 0) return {z: 0, p: 1};
+      const z = ((o1 / total1) - (o0 / total0)) / se;
+      const p = 2 * (1 - 0.5 * (1 + erf(Math.abs(z) / Math.SQRT2)));
+      return {z, p};
+    }
+
+    function erf(x){
+      // Abramowitz and Stegun approximation
+      const sign = x >= 0 ? 1 : -1;
+      const absX = Math.abs(x);
+      const a1 = 0.254829592;
+      const a2 = -0.284496736;
+      const a3 = 1.421413741;
+      const a4 = -1.453152027;
+      const a5 = 1.061405429;
+      const p = 0.3275911;
+      const t = 1 / (1 + p * absX);
+      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
+      return sign * y;
     }
 
     function teamLabel(team){
