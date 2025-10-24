@@ -602,9 +602,7 @@ function initCorporatePage(){
         window.guardSmallN(0, table, t('guard.insufficient', 'Insufficient group size'));
       }
       state.activityCsvRows = [];
-      if (els.exportBtn) {
-        els.exportBtn.disabled = true;
-      }
+      updateExportState(true);
       return;
     }
 
@@ -825,14 +823,14 @@ function initCorporatePage(){
     if (!table) return;
     const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => row.dataset.emptyRow !== 'true');
     state.activityCsvRows = rows.map(row => Array.from(row.cells).map(cell => cell.textContent.trim()));
-    if (els.exportBtn) {
-      const disabled = state.insufficient || !state.activityCsvRows.length;
-      els.exportBtn.disabled = disabled;
-    }
+    updateExportState(state.insufficient || !state.activityCsvRows.length);
   }
 
   function exportActivity(){
     if (!state.activityCsvRows.length) return;
+    if (els.exportBtn) {
+      window.exporter?.notifyStart?.(els.exportBtn);
+    }
     const lang = window.I18N?.getLang?.() || 'en';
     const headers = buildActivityColumns(lang).map(col => csvEscape(col.label));
     const lines = [headers.join(',')].concat(state.activityCsvRows.map(row => row.map(csvEscape).join(',')));
@@ -858,6 +856,19 @@ function initCorporatePage(){
       return `"${text.replace(/"/g, '""')}"`;
     }
     return text;
+  }
+
+  function updateExportState(disabled){
+    if (!els.exportBtn) return;
+    els.exportBtn.disabled = !!disabled;
+    if (disabled) {
+      els.exportBtn.setAttribute('aria-disabled', 'true');
+    } else {
+      els.exportBtn.removeAttribute('aria-disabled');
+    }
+    const baseLabel = els.exportBtn.getAttribute('data-export-label') || t('ui.exportCSV', 'Export CSV');
+    els.exportBtn.setAttribute('aria-label', baseLabel);
+    els.exportBtn.setAttribute('title', baseLabel);
   }
 
   function updateCaption(){

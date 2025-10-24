@@ -28,6 +28,7 @@
     host.innerHTML = `
       <button class="pill" data-lang="en" id="btn-lang-en" type="button">EN</button>
       <button class="pill" data-lang="nl" id="btn-lang-nl" type="button">NL</button>
+      <button class="pill" data-lang="ru" id="btn-lang-ru" type="button">RU</button>
     `;
     host.setAttribute('role', 'group');
 

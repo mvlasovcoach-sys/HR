@@ -26,10 +26,21 @@
   }
 
   const getToday = () => new Date();
-  const fmt = (date, opts) => {
-    const lang = window.I18N?.getLang?.() || 'en';
-    return new Intl.DateTimeFormat(lang, opts).format(date);
+  const getLang = () => window.I18N?.getLang?.() || 'en';
+  const defaultDateOptions = lang => (lang === 'ru'
+    ? {day: '2-digit', month: '2-digit', year: 'numeric'}
+    : {day: 'numeric', month: 'short', year: 'numeric'});
+  const formatLocaleDate = (date, opts) => {
+    if (!(date instanceof Date) || Number.isNaN(date)) return '';
+    const lang = getLang();
+    const options = opts || defaultDateOptions(lang);
+    try {
+      return new Intl.DateTimeFormat(lang, options).format(date);
+    } catch (err) {
+      return date.toLocaleDateString();
+    }
   };
+  const fmt = (date, opts) => formatLocaleDate(date, opts);
 
   SUMMARY.computePeriodLabel = computePeriodLabel;
   SUMMARY.setPeriodAndAsOf = setPeriodAndAsOf;
@@ -284,12 +295,14 @@
   function renderSkeleton(){
     const grid = document.getElementById(KPI_PRIMARY_ID);
     if (!grid) return;
+    grid.classList.add('is-skeleton');
+    grid.setAttribute('aria-busy', 'true');
     const skeleton = [];
     for (let i = 0; i < TILE_COUNT; i++) {
-      skeleton.push(`<div class="tile tile--skeleton skeleton tile--compact kpi-tile" aria-hidden="true">
+      skeleton.push(`<div class="tile tile--skeleton tile--compact kpi-tile" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
-        <div class="tile__kpi tile__value"><span class="skeleton skeleton--value"></span></div>
-        <div class="tile__spark spark"><span class="skeleton skeleton--spark"></span></div>
+        <div class="tile__value tile__value--skeleton"><span class="skeleton skeleton--value"></span></div>
+        <div class="tile__spark tile__spark--skeleton"><span class="skeleton skeleton--spark"></span></div>
       </div>`);
     }
     grid.innerHTML = skeleton.join('');
@@ -323,6 +336,7 @@
     }catch(err){
       console.error('Summary metrics failed', err);
       grid.innerHTML = '';
+      clearLoadingState(grid);
       runtime.rangeStart = runtime.rangeEnd = null;
       setPeriodAndAsOf(selectionState);
       toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
@@ -340,9 +354,16 @@
     runtime.rangeEnd = dates.length ? dates[dates.length - 1] : null;
   }
 
+  function clearLoadingState(node){
+    if (!node) return;
+    node.classList.remove('is-skeleton');
+    node.removeAttribute('aria-busy');
+  }
+
   function renderKpis(metrics, trend){
     const grid = document.getElementById(KPI_PRIMARY_ID);
     if(!grid) return;
+    clearLoadingState(grid);
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
@@ -374,11 +395,20 @@
       const badgeValue = del !== null ? Math.abs(Math.round(del)) : null;
       const badgeLabel = badgeValue !== null ? numberFmt.format(badgeValue) : '';
       const badge = del!==null ? `<span class="tile__badge pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${badgeLabel}</span>`:'';
-      const spark = sparkline(sparkSeries);
+      const sparkInfo = buildSparkMeta(del);
+      const sparkGraphic = sparkline(sparkSeries);
+      let sparkMarkup;
+      if (sparkInfo) {
+        const tooltip = escapeHtml(sparkInfo.tooltip);
+        const aria = escapeHtml(sparkInfo.aria);
+        sparkMarkup = `<div class="tile__spark spark" role="img" tabindex="0" aria-label="${aria}" title="${tooltip}" data-tooltip="${tooltip}">${sparkGraphic}${tooltip ? `<div class=\"spark-tooltip\">${tooltip}</div>` : ''}</div>`;
+      } else {
+        sparkMarkup = `<div class="tile__spark spark" aria-hidden="true">${sparkGraphic}</div>`;
+      }
       return `<div class="tile tile--interactive tile--compact kpi kpi-tile" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
         <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>
-        <div class="tile__spark spark">${spark}</div>
+        ${sparkMarkup}
       </div>`;
     }).join('');
   }
@@ -400,6 +430,60 @@
       });
     });
     return series.map((sum, index) => counts[index] ? sum / counts[index] : null);
+  }
+
+  function sparkTrend(delta){
+    if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
+    return delta > 0 ? 'up' : 'down';
+  }
+
+  function sparkTrendLabel(key){
+    switch (key) {
+      case 'up':
+        return window.I18N?.t('spark.rising') || 'Rising';
+      case 'down':
+        return window.I18N?.t('spark.falling') || 'Falling';
+      default:
+        return window.I18N?.t('spark.stable') || 'Stable';
+    }
+  }
+
+  function formatSparkDelta(delta){
+    if (!Number.isFinite(delta)) return '';
+    const lang = getLang();
+    const abs = Math.abs(delta);
+    const decimals = abs >= 10 ? 0 : 1;
+    const baseOptions = {maximumFractionDigits: decimals, minimumFractionDigits: decimals};
+    try {
+      if (Math.abs(delta) < 0.05) {
+        return new Intl.NumberFormat(lang, baseOptions).format(0);
+      }
+      return new Intl.NumberFormat(lang, {...baseOptions, signDisplay: 'always'}).format(delta);
+    } catch (err) {
+      if (Math.abs(delta) < 0.05) return abs.toFixed(decimals);
+      const sign = delta >= 0 ? '+' : '−';
+      return `${sign}${abs.toFixed(decimals)}`;
+    }
+  }
+
+  function buildSparkMeta(delta){
+    if (!Number.isFinite(delta)) return null;
+    const trend = sparkTrend(delta);
+    const trendLabel = sparkTrendLabel(trend);
+    const deltaText = formatSparkDelta(delta);
+    const tooltip = window.I18N?.t('spark.delta', {delta: deltaText}) || `${deltaText} vs last period`;
+    const aria = `${trendLabel}. ${tooltip}`.trim();
+    return {trendLabel, deltaText, tooltip, aria};
+  }
+
+  function escapeHtml(value){
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char] || char);
   }
 
   function sparkline(values){
@@ -485,10 +569,11 @@
 
     const start = dataStart || selectedStart || defaultStart;
     const end = dataEnd || selectedEnd || defaultEnd;
-    const opts = {month: 'short', day: 'numeric', year: 'numeric'};
+    const startLabel = formatLocaleDate(start);
+    const endLabel = formatLocaleDate(end);
     return start.getTime() === end.getTime()
-      ? fmt(end, opts)
-      : `${fmt(start, opts)} – ${fmt(end, opts)}`;
+      ? endLabel
+      : `${startLabel} – ${endLabel}`;
   }
 
   function setPeriodAndAsOf(stateLike){
@@ -500,7 +585,7 @@
     }
     if (asofEl) {
       const updatedDate = ensureDate(runtime.rangeEnd) || ensureDate(stateLike?.end) || getToday();
-      const stamp = fmt(updatedDate, {month: 'short', day: 'numeric', year: 'numeric'});
+      const stamp = formatLocaleDate(updatedDate);
       asofEl.textContent = window.I18N?.t('summary.asof', {ts: stamp}) || `updated ${stamp}`;
     }
     const startInput = document.getElementById('dc-start');

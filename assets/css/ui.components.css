@@ -4,7 +4,7 @@
   border-radius: var(--radius-panel);
   padding: var(--space-6);
   box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(12px);
 }
 .panel[data-insufficient="true"] {
   position: relative;
@@ -157,6 +157,28 @@
   gap: var(--space-3);
 }
 
+.tile--skeleton .tile__head,
+.tile--skeleton .tile__value,
+.tile--skeleton .tile__spark {
+  min-height: 0;
+}
+
+.kpi-tile .tile__value--skeleton,
+.kpi-tile .tile__spark--skeleton {
+  display: flex;
+  align-items: center;
+}
+
+.kpi-tile .tile__value--skeleton .skeleton--value {
+  width: 60%;
+  height: 2.6rem;
+}
+
+.kpi-tile .tile__spark--skeleton .skeleton--spark {
+  width: 100%;
+  height: var(--spark-h, 1.5rem);
+}
+
 .skeleton {
   display: inline-block;
   border-radius: var(--radius-soft);
@@ -183,6 +205,81 @@
 .skeleton--spark {
   width: 100%;
   height: 1.5rem;
+}
+
+.spark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--spark-h, 24px);
+}
+
+.spark[data-tooltip] {
+  cursor: help;
+}
+
+.spark-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 6px);
+  background: rgba(7, 23, 32, 0.92);
+  color: #def6ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+}
+
+.spark-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(7, 23, 32, 0.92);
+}
+
+.spark:hover .spark-tooltip,
+.spark:focus-visible .spark-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.btn--export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn--export .btn__icon {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn--export .btn__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 520px) {
+  .btn--export .btn__label {
+    display: none;
+  }
 }
 
 @keyframes shimmer {
@@ -237,6 +334,13 @@
   margin-bottom: var(--space-4);
   flex-wrap: wrap;
   align-items: center;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .panel {
+    backdrop-filter: none;
+    background: rgba(7, 23, 32, 0.75);
+  }
 }
 
 .scenario-controls .btn.is-active {

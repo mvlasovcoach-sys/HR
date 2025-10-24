@@ -3,6 +3,7 @@
     {global: 'html2canvas', src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'},
     {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
   ];
+  const EXPORT_SELECTOR = '[data-export-key]';
 
   async function ensureLibs(){
     for (const lib of LIBS) {
@@ -318,7 +319,101 @@
     }
   }
 
-  const api = Object.assign({}, window.exporter, {exportPilotSummary, sortTable, exportSiteBriefPDF});
+  function ensureExportStructure(button, key){
+    if (typeof document === 'undefined' || !button) return;
+    if (!button.classList.contains('btn--export')) {
+      button.classList.add('btn--export');
+    }
+    if (!button.querySelector('.btn__icon')) {
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'btn__icon';
+      iconSpan.setAttribute('aria-hidden', 'true');
+      iconSpan.textContent = button.dataset.exportIcon || '⇩';
+      button.insertBefore(iconSpan, button.firstChild || null);
+    }
+    const iconEl = button.querySelector('.btn__icon');
+    if (iconEl) {
+      iconEl.textContent = button.dataset.exportIcon || iconEl.textContent || '⇩';
+    }
+    let labelSpan = button.querySelector('.btn__label');
+    if (!labelSpan) {
+      labelSpan = document.createElement('span');
+      labelSpan.className = 'btn__label';
+      button.appendChild(labelSpan);
+    }
+    if (key && !labelSpan.getAttribute('data-i18n')) {
+      labelSpan.setAttribute('data-i18n', key);
+    }
+  }
+
+  function updateExportButtons(){
+    if (typeof document === 'undefined') return;
+    const buttons = document.querySelectorAll(EXPORT_SELECTOR);
+    buttons.forEach(button => {
+      const key = button.dataset.exportKey;
+      if (!key) return;
+      ensureExportStructure(button, key);
+      const label = window.I18N?.t?.(key) || button.dataset.exportFallback || button.getAttribute('data-export-label') || button.textContent.trim() || 'Export';
+      const iconEl = button.querySelector('.btn__icon');
+      if (iconEl) {
+        iconEl.textContent = button.dataset.exportIcon || iconEl.textContent || '⇩';
+      }
+      const labelEl = button.querySelector('.btn__label');
+      if (labelEl) {
+        labelEl.textContent = label;
+      }
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
+      button.setAttribute('data-export-label', label);
+    });
+  }
+
+  function notifyStart(button, key){
+    if (button?.disabled) return;
+    const labelKey = key || button?.dataset?.exportKey;
+    const baseLabel = labelKey ? (window.I18N?.t?.(labelKey) || button?.getAttribute('data-export-label') || '') : (button?.getAttribute('data-export-label') || '');
+    const message = window.I18N?.t?.('toast.exportStarted', baseLabel ? {label: baseLabel} : undefined)
+      || window.I18N?.t?.('toast.exportStarted')
+      || 'Export started';
+    showExportToast(message);
+  }
+
+  function showExportToast(message){
+    if (!message || typeof document === 'undefined') return;
+    let stack = document.querySelector('.toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'toast-stack';
+      stack.setAttribute('aria-live', 'polite');
+      document.body.appendChild(stack);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.textContent = message;
+    stack.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => {
+      toast.classList.remove('is-visible');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    }, 2800);
+  }
+
+  if (typeof document !== 'undefined') {
+    const refresh = () => updateExportButtons();
+    if (document.readyState !== 'loading') {
+      refresh();
+    } else {
+      document.addEventListener('DOMContentLoaded', refresh, {once: true});
+    }
+    window.addEventListener?.('i18n:ready', updateExportButtons);
+    document.addEventListener('i18n:change', updateExportButtons);
+  }
+
+  const api = Object.assign({}, window.exporter, {exportPilotSummary, sortTable, exportSiteBriefPDF, notifyStart, updateExportButtons});
   window.exporter = api;
   window.EXPORTER = api;
 })();

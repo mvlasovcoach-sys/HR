@@ -23,6 +23,33 @@ function initPage(){
       return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
     }
 
+    const getLang = () => window.I18N?.getLang?.() || 'en';
+    const defaultDateOptions = lang => (lang === 'ru'
+      ? {day: '2-digit', month: '2-digit', year: 'numeric'}
+      : {day: 'numeric', month: 'short', year: 'numeric'});
+
+    function formatLocaleDate(value){
+      const date = value instanceof Date ? value : new Date(value);
+      if (!(date instanceof Date) || Number.isNaN(date)) return value;
+      const lang = getLang();
+      const options = defaultDateOptions(lang);
+      try {
+        return new Intl.DateTimeFormat(lang, options).format(date);
+      } catch (err) {
+        return date.toLocaleDateString();
+      }
+    }
+
+    function escapeHtml(input){
+      return String(input ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char] || char);
+    }
+
     function readRange(){
       try {
         const raw = localStorage.getItem('hr:range');
@@ -90,6 +117,50 @@ function initPage(){
       return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" points="${points}" /></svg>`;
     }
 
+    function sparkTrend(delta){
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
+      return delta > 0 ? 'up' : 'down';
+    }
+
+    function sparkTrendLabel(key){
+      switch (key) {
+        case 'up':
+          return window.I18N?.t('spark.rising') || 'Rising';
+        case 'down':
+          return window.I18N?.t('spark.falling') || 'Falling';
+        default:
+          return window.I18N?.t('spark.stable') || 'Stable';
+      }
+    }
+
+    function formatSparkDelta(delta){
+      if (!Number.isFinite(delta)) return '';
+      const lang = getLang();
+      const abs = Math.abs(delta);
+      const decimals = abs >= 10 ? 0 : 1;
+      const baseOptions = {maximumFractionDigits: decimals, minimumFractionDigits: decimals};
+      try {
+        if (Math.abs(delta) < 0.05) {
+          return new Intl.NumberFormat(lang, baseOptions).format(0);
+        }
+        return new Intl.NumberFormat(lang, {...baseOptions, signDisplay: 'always'}).format(delta);
+      } catch (err) {
+        if (Math.abs(delta) < 0.05) return abs.toFixed(decimals);
+        const sign = delta >= 0 ? '+' : '−';
+        return `${sign}${abs.toFixed(decimals)}`;
+      }
+    }
+
+    function buildSparkMeta(delta){
+      if (!Number.isFinite(delta)) return null;
+      const trendKey = sparkTrend(delta);
+      const trendLabel = sparkTrendLabel(trendKey);
+      const deltaText = formatSparkDelta(delta);
+      const tooltip = window.I18N?.t('spark.delta', {delta: deltaText}) || `${deltaText} vs last period`;
+      const aria = `${trendLabel}. ${tooltip}`.trim();
+      return {trendLabel, deltaText, tooltip, aria};
+    }
+
     function formatValue(value, decimals){
       return (value ?? 0).toFixed(decimals ?? 0);
     }
@@ -106,7 +177,10 @@ function initPage(){
         return mapping[range.preset] || t('caption.range', {range: '—'});
       }
       if (range.start && range.end) {
-        return `${range.start} → ${range.end}`;
+        const start = formatLocaleDate(range.start);
+        const end = formatLocaleDate(range.end);
+        if (start && start === end) return start;
+        return `${start} – ${end}`;
       }
       return t('caption.range', {range: '—'});
     }
@@ -172,13 +246,18 @@ function initPage(){
         const delta = value - previous;
         const series = resolveSeries(data, cfg.key, team);
         const badge = buildDelta(delta, cfg.positive);
+        const sparkInfo = buildSparkMeta(delta);
+        const sparkGraphic = sparkline(series);
+        const sparkMarkup = sparkInfo
+          ? `<div class="spark tile__spark" role="img" tabindex="0" aria-label="${escapeHtml(sparkInfo.aria)}" title="${escapeHtml(sparkInfo.tooltip)}" data-tooltip="${escapeHtml(sparkInfo.tooltip)}">${sparkGraphic}${sparkInfo.tooltip ? `<div class=\"spark-tooltip\">${escapeHtml(sparkInfo.tooltip)}</div>` : ''}</div>`
+          : `<div class="spark tile__spark" aria-hidden="true">${sparkGraphic}</div>`;
         return `<article class="tile">
           <header class="tile__head">
             <span class="tile__title">${labelFor(cfg.labelKey, cfg.key)}</span>
-            <span class="tile__badge pill ${badge.className}">${badge.label}</span>
+            <span class="tile__badge pill ${badge.className}">${escapeHtml(badge.label)}</span>
           </header>
-          <div class="tile__kpi">${formatValue(value, cfg.decimals)}<span>${cfg.unit}</span></div>
-          <div class="spark">${sparkline(series)}</div>
+          <div class="tile__kpi tile__value">${formatValue(value, cfg.decimals)}<span>${cfg.unit}</span></div>
+          ${sparkMarkup}
           <footer class="tile__foot">
             <span>${t('ui.updated') || t('label.updated')} ${updatedText(data.updated)}</span>
             <span>${series.length || 0} pts</span>
@@ -249,7 +328,7 @@ function initPage(){
       if (!input) return '';
       const date = new Date(input);
       if (isNaN(date)) return input;
-      return date.toLocaleDateString();
+      return formatLocaleDate(date);
     }
 }
 

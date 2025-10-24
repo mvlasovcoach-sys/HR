@@ -2,11 +2,11 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Summary</title>
+<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025.10.19-05">
+<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/nav.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/app.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025.10.19-05">
 <!-- optional page CSS -->
 <link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/summary.css?v=2025.10.19-05">
@@ -38,14 +38,8 @@
           <div class="summary-toolbar__left">
           <div class="summary-toolbar__title-row">
             <h1 class="header__title" data-i18n="header.summary">Summary</h1>
-            <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" data-i18n="legend.title" data-i18n-attr="aria-label,title" aria-label="Legend" title="Legend">i</button>
+            <button id="btn-legend" class="icon-btn" aria-haspopup="dialog" aria-expanded="false" data-i18n="legend.title" data-i18n-attr="aria-label,title" aria-label="Legend" title="Legend">i</button>
           </div>
-            <div class="header__badges" aria-hidden="true">
-              <span class="pill pill--neutral" data-i18n="badge.aggregatesOnly">AGGREGATES ONLY</span>
-              <span class="pill pill--neutral" data-i18n="badge.noBiosignals">NO RAW BIOSIGNALS</span>
-              <span class="pill pill--neutral" data-i18n="badge.fixedThresholds">FIXED THRESHOLDS</span>
-              <span class="pill pill--neutral" data-i18n="badge.noMl">NO ML</span>
-            </div>
           </div>
           <div class="summary-toolbar__right">
             <div id="lang-switch" class="lang-switch"></div>
