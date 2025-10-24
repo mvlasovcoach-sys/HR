@@ -26,6 +26,7 @@ body.density--compact .demo-hero{padding:12px;margin-bottom:var(--section-gap)}
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
   display: block;
 }
 
