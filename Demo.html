@@ -13,6 +13,8 @@
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
@@ -25,15 +27,25 @@
   <main class="main">
     <div id="app-topbar">
       <div class="topbar-left">
-        <div class="page-head">
-          <h1 data-i18n="demo.title">Demo</h1>
-          <span id="site-badge" class="pill" aria-live="polite"></span>
+        <div class="toolbar">
+          <div class="toolbar__title">
+            <h1 class="header__title" data-i18n="demo.title">Demo</h1>
+          </div>
+          <div class="toolbar__filters">
+            <div id="team-filter" class="toolbar__filter team-filter"></div>
+            <div id="date-controls" class="toolbar__filter"></div>
+          </div>
         </div>
       </div>
       <div class="topbar-right">
         <div id="lang-switch" class="lang-switch"></div>
+        <button class="header__icon" type="button" data-about-open
+                data-i18n="ui.about" data-i18n-attr="aria-label"
+                aria-label="About">i</button>
       </div>
     </div>
+
+    <span id="site-badge" class="pill" aria-live="polite"></span>
 
     <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
 

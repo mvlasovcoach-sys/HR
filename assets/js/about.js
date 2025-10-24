@@ -29,7 +29,7 @@
   let lastTrigger = null;
 
   document.body.addEventListener('click', evt => {
-    const trigger = evt.target.closest('[data-about-trigger]');
+    const trigger = evt.target.closest('[data-about-open]');
     if (trigger) {
       evt.preventDefault();
       openModal(trigger);

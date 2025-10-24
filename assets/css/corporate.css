@@ -5,20 +5,6 @@
   padding: var(--space-6);
 }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.toolbar__filters {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 .page-head {
   display: flex;
   flex-direction: column;
@@ -29,21 +15,6 @@
   font-size: 1.8rem;
   margin: 0;
   letter-spacing: 0.4px;
-}
-
-.badges {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.badges .pill {
-  background: var(--surface-pill);
-  border: 1px solid rgba(39, 224, 255, 0.35);
-  border-radius: var(--radius-pill);
-  padding: 0.35rem 0.85rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.28px;
 }
 
 .pill.green {

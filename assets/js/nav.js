@@ -63,6 +63,14 @@
       if (fname === here) a.classList.add('active');
     });
 
+    const active = host.querySelector('a.active');
+    if (active) {
+      const scrollHost = active.closest('.menu.top') || active.parentElement;
+      if (scrollHost && typeof active.scrollIntoView === 'function') {
+        active.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' });
+      }
+    }
+
     // Translate just-in-time (if i18n is present)
     try { window.I18N?.refresh?.(host); } catch(e){/* noop */}
 
@@ -75,6 +83,14 @@
 
     // Self-check in console to debug
     console.debug('nav:', [...host.querySelectorAll('a')].map(a=>a.textContent.trim()));
+
+    requestAnimationFrame(()=>{
+      const initialActive = document.querySelector('#side-nav a.active');
+      const topMenu = document.querySelector('#side-nav .menu.top');
+      if (initialActive && topMenu && initialActive.closest('.menu.top') === topMenu) {
+        initialActive.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
   };
 
   // 4) Last-resort auto-render if page forgot to call

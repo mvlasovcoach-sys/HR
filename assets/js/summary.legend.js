@@ -21,7 +21,6 @@
         metrics.push(t('legend.engagement', 'Engagement Active % — share of employees engaging weekly.'));
       }
       const metricList = metrics.map(item => `<li>${item}</li>`).join('');
-      const disclaimer = t('legend.disclaimer', 'Aggregated data only. Static thresholds. No ML. No raw biosignals.');
       const colorRows = [
         colorRow('wellbeing', window.I18N?.t('kpi.orgWellbeing') || 'Wellbeing /100'),
         colorRow('stressPct', window.I18N?.t('kpi.highStress') || 'High Stress %'),
@@ -30,7 +29,6 @@
       const privacy = t('legend.privacy', 'Privacy: aggregates only; k-anonymity n≥5; no raw biosignals; no ML.');
       return `
         <ul class="legend__metrics">${metricList}</ul>
-        <p class="legend__note">${disclaimer}</p>
         <div class="legend__colors">
           <div class="legend-row"><strong>${t('legend.colors', 'Colors')}</strong></div>
           ${colorRows}
@@ -74,6 +72,7 @@
       overlay.id = 'legend-overlay';
       overlay.innerHTML = template();
       document.body.appendChild(overlay);
+      insertDisclaimers(overlay.querySelector('.legend-body'));
       trigger.setAttribute('aria-expanded', 'true');
       overlay.addEventListener('click', handleOverlayClick);
       overlay.querySelector('.legend-close')?.addEventListener('click', closeLegend);
@@ -120,6 +119,7 @@
       if (!overlay) return;
       overlay.innerHTML = template();
       overlay.querySelector('.legend-close')?.addEventListener('click', closeLegend);
+      insertDisclaimers(overlay.querySelector('.legend-body'));
     }
 
     trigger.addEventListener('click', evt => {
@@ -136,5 +136,22 @@
         refreshOverlay();
       }
     });
+
+    function insertDisclaimers(container){
+      if (!container) return;
+      container.querySelector('.legend-disclaimer')?.remove?.();
+      const text = disclaimersText();
+      if (!text) return;
+      container.insertAdjacentHTML('beforeend', `<p class="legend-disclaimer">${text}</p>`);
+    }
+
+    function disclaimersText(){
+      return [
+        window.I18N?.t('badge.aggregatesOnly'),
+        window.I18N?.t('badge.noBiosignals'),
+        window.I18N?.t('badge.fixedThresholds'),
+        window.I18N?.t('badge.noMl')
+      ].filter(Boolean).join(' · ');
+    }
   });
 })();

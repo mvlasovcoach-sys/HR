@@ -4,11 +4,6 @@
   gap: var(--space-5);
 }
 
-.header--devices .header__actions {
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
 .devices-coverage {
   display: inline-flex;
   align-items: center;

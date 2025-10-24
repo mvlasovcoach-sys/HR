@@ -948,7 +948,7 @@ function initCorporatePage(){
   }
 
   function resolveRangeConfig(selection){
-    const lang = window.I18N?.getLang?.() || 'en';
+    const lang = getLang();
     const presets = {
       day: window.I18N?.t('range.day') || '1 Day',
       '7d': window.I18N?.t('range.7d') || '7 Days',
@@ -967,20 +967,33 @@ function initCorporatePage(){
     if (selection?.start && selection?.end) {
       const startLabel = formatDateLabel(selection.start, {lang});
       const endLabel = formatDateLabel(selection.end, {lang});
+      const rangeLabel = startLabel && endLabel
+        ? `${startLabel} – ${endLabel}`
+        : startLabel || endLabel || '';
       return {
         dataKey: 'month',
-        label: `${startLabel} → ${endLabel}`,
+        label: rangeLabel,
         rangeKey: 'custom'
       };
     }
     return {dataKey: '7d', label: presets['7d'], rangeKey: '7d'};
   }
 
+  function getLang(){
+    return window.I18N?.getLang?.() || 'en';
+  }
+
+  function defaultDateOptions(lang){
+    return lang === 'ru'
+      ? {day: '2-digit', month: '2-digit', year: 'numeric'}
+      : {day: 'numeric', month: 'short', year: 'numeric'};
+  }
+
   function formatDateLabel(dateStr, options={}){
     if (!dateStr) return '';
     try {
-      const lang = options.lang || window.I18N?.getLang?.() || 'en';
-      const formatter = options.formatter || new Intl.DateTimeFormat(lang, {month: 'short', day: '2-digit', year: 'numeric'});
+      const lang = options.lang || getLang();
+      const formatter = options.formatter || new Intl.DateTimeFormat(lang, defaultDateOptions(lang));
       const date = new Date(`${dateStr}T00:00:00`);
       if (Number.isNaN(date.getTime())) return dateStr;
       return formatter.format(date);

@@ -31,17 +31,21 @@
   <main class="main main--engagement">
     <div id="app-topbar">
       <div class="topbar-left">
-        <div class="header header--engagement">
-          <h1 class="header__title" data-i18n="header.engagement">Engagement</h1>
-          <div class="header__actions">
-            <div id="team-filter" class="team-filter"></div>
-            <div id="date-controls"></div>
-            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+        <div class="toolbar">
+          <div class="toolbar__title">
+            <h1 class="header__title" data-i18n="header.engagement">Engagement</h1>
+          </div>
+          <div class="toolbar__filters">
+            <div id="team-filter" class="toolbar__filter team-filter"></div>
+            <div id="date-controls" class="toolbar__filter"></div>
           </div>
         </div>
       </div>
       <div class="topbar-right">
         <div id="lang-switch" class="lang-switch"></div>
+        <button class="header__icon" type="button" data-about-open
+                data-i18n="ui.about" data-i18n-attr="aria-label"
+                aria-label="About">i</button>
       </div>
     </div>
     <p id="engagement-caption" class="header__caption" aria-live="polite"></p>
