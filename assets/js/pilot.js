@@ -142,8 +142,8 @@
       renderHeatmap(metrics);
       renderEvents(range, team);
       const insight = buildCaption(range, team);
-      if (captionEl && window.Caption?.renderCaption) {
-        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+      if (captionEl && window.Caption?.render) {
+        window.Caption?.render(captionEl, {asOf: new Date(), insight});
       } else if (captionEl) {
         captionEl.textContent = insight;
       }

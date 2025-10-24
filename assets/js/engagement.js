@@ -352,8 +352,8 @@ function initPage(){
     function applyCaption(range, team){
       if (!caption) return;
       const insight = buildCaption(range, team);
-      if (window.Caption?.renderCaption) {
-        window.Caption.renderCaption(caption, {asOf: new Date(), insight});
+      if (window.Caption?.render) {
+        window.Caption?.render(caption, {asOf: new Date(), insight});
       } else {
         caption.textContent = insight;
       }

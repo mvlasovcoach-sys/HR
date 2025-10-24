@@ -1,7 +1,6 @@
 .page{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-.sidebar{position:sticky;top:0;min-height:100vh;padding:20px;background:linear-gradient(180deg,var(--surface-glass-a),var(--surface-glass-b));border-right:1px solid var(--stroke);box-shadow:0 0 80px rgba(0,207,255,.06) inset}
 .main{padding:24px;min-width:0}
-.team-filter{display:flex;align-items:center;gap:8px}
+.team-filter,#team-filter{display:flex;align-items:center;gap:8px}
 .team-filter__label{font-size:.85rem;color:var(--muted)}
 .team-filter__select{background:rgba(11,31,41,.5);border:1px solid var(--stroke);color:var(--txt);border-radius:10px;padding:8px 12px;min-width:160px}
 .team-filter__select:focus-visible{outline:2px solid var(--cyan);box-shadow:none}
@@ -52,14 +51,12 @@ a:focus-visible,button:focus-visible,input[type="date"]:focus-visible,.tile:focu
 }
 @media(max-width:640px){
   .page{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto}
 }
 @media(max-width:480px){
   .main{padding:18px}
 }
 
 @media(prefers-reduced-transparency:reduce){
-  .sidebar{background:rgba(7,23,32,.92);box-shadow:none}
   .header__icon,
   .dc button,
   .team-filter__select,

@@ -204,8 +204,8 @@ function initPage(){
           deltaBadgeEl.textContent = '';
           deltaBadgeEl.className = 'delta-badge';
         }
-        if (captionEl && window.Caption?.renderCaption) {
-          window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+        if (captionEl && window.Caption?.render) {
+          window.Caption?.render(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
         } else if (captionEl) {
           captionEl.textContent = buildCaption(range, team);
         }
@@ -215,8 +215,8 @@ function initPage(){
       renderTracker(metrics, team);
       renderBreakdown(metrics, team);
       renderMiniKpis(metrics, team);
-      if (captionEl && window.Caption?.renderCaption) {
-        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+      if (captionEl && window.Caption?.render) {
+        window.Caption?.render(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
       } else if (captionEl) {
         captionEl.textContent = buildCaption(range, team);
       }

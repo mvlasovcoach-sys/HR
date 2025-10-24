@@ -14,6 +14,18 @@
   --hero-chart-h:360px;
   --demo-hero-h:280px;
   --shadow:0 12px 32px rgba(0,0,0,.28);
+  --font-h1: clamp(20px, 2.2vw, 32px);
+  --font-h2: clamp(18px, 1.8vw, 28px);
+  --font-body: clamp(14px, 1.2vw, 16px);
+  --risk-green:#30d158;
+  --risk-amber:#ffb020;
+  --risk-red:#ff453a;
+}
+
+body.light{
+  --risk-green:#0a7f2c;
+  --risk-amber:#b36a00;
+  --risk-red:#b00020;
 }
 
 body.density--compact{
@@ -26,3 +38,13 @@ body.density--compact{
   --demo-hero-h:240px;
   --shadow:0 6px 24px rgba(0,0,0,.25);
 }
+
+body{font-size:var(--font-body);}
+
+.header__title{font-size:var(--font-h1);}
+
+h2{font-size:var(--font-h2);}
+
+.badge--up{background:color-mix(in oklab,var(--risk-green) 18%,transparent);color:var(--risk-green);}
+.badge--down{background:color-mix(in oklab,var(--risk-red) 18%,transparent);color:var(--risk-red);}
+.badge--flat{background:color-mix(in oklab,var(--risk-amber) 18%,transparent);color:var(--risk-amber);}

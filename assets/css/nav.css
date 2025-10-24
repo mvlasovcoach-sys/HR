@@ -1,4 +1,4 @@
-.sidebar{height:100svh;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100svh;min-height:100vh;padding:20px;background:linear-gradient(180deg,var(--surface-glass-a),var(--surface-glass-b));border-right:1px solid var(--stroke);box-shadow:0 0 80px rgba(0,207,255,.06) inset;}
 .sidebar,.side{display:flex;flex-direction:column}
 .side{gap:16px;flex:1 1 auto;height:100%}
 .side .brand{font-weight:800;letter-spacing:.2px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
@@ -14,7 +14,7 @@
 
 @media (max-width:1200px){
   .page{grid-template-columns:92px 1fr}
-  .sidebar{padding:16px 12px}
+  .sidebar{position:sticky;top:0;padding:16px 12px}
   .side{gap:12px}
   .side .brand{display:none}
   .side .menu{align-items:center;padding:0;gap:8px}
@@ -26,7 +26,7 @@
 
 @media (max-width:640px){
   .page{grid-template-columns:1fr}
-  .sidebar{padding:16px}
+  .sidebar{position:relative;min-height:auto;padding:16px}
   .side{height:auto}
   .side .menu{align-items:flex-start}
   .side a{justify-content:flex-start}
