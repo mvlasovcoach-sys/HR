@@ -665,10 +665,13 @@
       return th.textContent.trim();
     });
     const dataRows = rows.map(row => Array.from(row.children).map(cell => cell.textContent.replace(/\s+/g, ' ').trim()));
-    const csvRows = [headers, ...dataRows]
+    const records = [headers, ...dataRows]
       .map(line => line.map(value => `"${value.replace(/"/g, '""')}"`).join(','))
       .join('\n');
-    const blob = new Blob([csvRows], {type: 'text/csv'});
+    const sources = window.exporter?.collectSourceSummaries?.(container) || [];
+    const attribution = window.exporter?.buildSourceCsvHeader?.(sources) || [];
+    const csvContent = attribution.length ? `${attribution.join('\n')}\n${records}` : records;
+    const blob = new Blob([csvContent], {type: 'text/csv'});
     const url = URL.createObjectURL(blob);
     const team = readTeam();
     const preset = presetForRange(readRange());

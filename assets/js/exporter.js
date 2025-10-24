@@ -4,6 +4,7 @@
     {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
   ];
   const EXPORT_SELECTOR = '[data-export-key]';
+  const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
 
   async function ensureLibs(){
     for (const lib of LIBS) {
@@ -139,6 +140,113 @@
     }
   }
 
+  function currentLang(){
+    return (window.I18N?.getLang?.() || document?.documentElement?.lang || 'en').slice(0, 2).toLowerCase();
+  }
+
+  function translate(key, fallback){
+    const value = window.I18N?.t?.(key);
+    if (typeof value === 'string' && value.trim()) return value;
+    return fallback;
+  }
+
+  function describePanelSource(panel, id, lang){
+    const sources = window.Sources;
+    if (!sources) return null;
+    const descriptor = typeof sources.describe === 'function' ? sources.describe(id, lang) : null;
+    const source = descriptor || (typeof sources.get === 'function' ? sources.get(id) : null);
+    if (!source) return null;
+    const statsLine = panel.dataset?.sourceStats
+      || (typeof sources.formatStats === 'function'
+        ? sources.formatStats(descriptor?.methodology?.stats || source.methodology?.stats)
+        : '');
+    const threshold = panel.dataset?.sourceThresholdDisplay
+      || panel.dataset?.sourceThreshold
+      || descriptor?.methodology?.threshold
+      || source.methodology?.threshold
+      || '';
+    const period = panel.dataset?.sourcePeriodDisplay
+      || panel.dataset?.sourcePeriod
+      || descriptor?.periodDefault
+      || source.periodDefault
+      || '';
+    const sampleN = panel.dataset?.sourceSampleN
+      || (descriptor?.sample?.nTotal != null ? descriptor.sample.nTotal : '');
+    const sampleUnit = panel.dataset?.sourceSampleUnit
+      || descriptor?.sample?.unit
+      || source.sample?.unit
+      || '';
+    const sampleText = sampleN || sampleUnit
+      ? `${sampleN ? `n=${sampleN}` : ''}${sampleN && sampleUnit ? ' ' : ''}${sampleUnit}`.trim()
+      : '';
+    return {
+      id,
+      title: panel.dataset?.sourceTitleDisplay
+        || descriptor?.title
+        || (typeof source.title === 'string' ? source.title : id),
+      publisher: panel.dataset?.sourcePublisher || descriptor?.publisher || '',
+      coverage: panel.dataset?.sourceCoverage || descriptor?.coverage || '',
+      updatedAt: panel.dataset?.sourceUpdated || descriptor?.updatedAt || source.updatedAt || '',
+      link: panel.dataset?.sourceLink || descriptor?.link || source.link || '',
+      threshold,
+      period,
+      stats: statsLine,
+      sample: sampleText,
+      disclaimer: panel.dataset?.sourceDisclaimer || descriptor?.disclaimer || '',
+      isDemo: descriptor?.isDemo ?? !!source.isDemo
+    };
+  }
+
+  function panelsWithin(scope){
+    if (typeof document === 'undefined') return [];
+    if (!scope) {
+      return Array.from(document.querySelectorAll(SOURCE_SELECTOR));
+    }
+    const isElement = typeof Element !== 'undefined' && scope instanceof Element;
+    if (isElement || (scope && scope.nodeType === 1)) {
+      const element = scope;
+      const direct = element.matches?.(SOURCE_SELECTOR) ? element : element.closest?.(SOURCE_SELECTOR);
+      if (direct) return [direct];
+      return Array.from(element.querySelectorAll?.(SOURCE_SELECTOR) || []);
+    }
+    return [];
+  }
+
+  function collectSourceSummaries(scope){
+    if (typeof document === 'undefined') return [];
+    window.Sources?.refresh?.();
+    const lang = currentLang();
+    const panels = panelsWithin(scope);
+    const seen = new Map();
+    panels.forEach(panel => {
+      const id = panel?.dataset?.sourceId;
+      if (!id || seen.has(id)) return;
+      const summary = describePanelSource(panel, id, lang);
+      if (summary) {
+        seen.set(id, summary);
+      }
+    });
+    return Array.from(seen.values());
+  }
+
+  function buildSourceCsvHeader(summaries){
+    if (!Array.isArray(summaries) || !summaries.length) return [];
+    const lines = [`# ${translate('source.section', 'Sources & Methodology')}`];
+    summaries.forEach(summary => {
+      lines.push(`# ${summary.title}`);
+      if (summary.publisher) lines.push(`#   ${translate('source.publisher', 'Publisher')}: ${summary.publisher}`);
+      if (summary.coverage) lines.push(`#   ${translate('source.coverage', 'Coverage')}: ${summary.coverage}`);
+      if (summary.period) lines.push(`#   ${translate('source.period', 'Period')}: ${summary.period}`);
+      if (summary.threshold) lines.push(`#   ${translate('source.threshold', 'Threshold')}: ${summary.threshold}`);
+      if (summary.stats) lines.push(`#   ${translate('source.methodology', 'Methodology')}: ${summary.stats}`);
+      if (summary.sample) lines.push(`#   ${translate('source.sample', 'Sample')}: ${summary.sample}`);
+      if (summary.updatedAt) lines.push(`#   ${translate('source.updated', 'Updated')}: ${summary.updatedAt}`);
+      if (summary.link) lines.push(`#   ${translate('source.link', 'Open source / methodology')}: ${summary.link}`);
+      if (summary.disclaimer) lines.push(`#   ${summary.disclaimer}`);
+    });
+    return lines;
+  }
+
   async function exportSiteBriefPDF(options={}){
     await ensureLibs();
     const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
@@ -176,6 +284,45 @@
     await addSectionImage(document.getElementById('chart-age-overall'), {maxHeight: 110, spacing: 10});
     await addSectionImage(document.getElementById('chart-by-dept'), {maxHeight: 130, spacing: 10});
     await addSectionImage(document.getElementById('shift-grid'), {maxHeight: 140, spacing: 10});
+
+    const sources = collectSourceSummaries();
+    if (sources.length) {
+      addHeading(translate('source.section', 'Sources & Methodology'));
+      sources.forEach(summary => {
+        ensureSpace(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text(summary.title, margin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        const details = [];
+        if (summary.publisher) details.push(`${translate('source.publisher', 'Publisher')}: ${summary.publisher}`);
+        if (summary.coverage) details.push(`${translate('source.coverage', 'Coverage')}: ${summary.coverage}`);
+        if (summary.period) details.push(`${translate('source.period', 'Period')}: ${summary.period}`);
+        if (summary.threshold) details.push(`${translate('source.threshold', 'Threshold')}: ${summary.threshold}`);
+        if (summary.stats) details.push(`${translate('source.methodology', 'Methodology')}: ${summary.stats}`);
+        if (summary.sample) details.push(`${translate('source.sample', 'Sample')}: ${summary.sample}`);
+        if (summary.updatedAt) details.push(`${translate('source.updated', 'Updated')}: ${summary.updatedAt}`);
+        if (summary.link) details.push(`${translate('source.link', 'Open source / methodology')}: ${summary.link}`);
+        if (details.length) {
+          const wrapped = details.flatMap(line => doc.splitTextToSize(line, contentWidth));
+          ensureSpace(wrapped.length * 4 + 2);
+          doc.text(wrapped, margin + 2, y);
+          y += wrapped.length * 4 + 2;
+        }
+        if (summary.disclaimer) {
+          const disclaimerLines = doc.splitTextToSize(summary.disclaimer, contentWidth);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(150, 170, 190);
+          ensureSpace(disclaimerLines.length * 4 + 2);
+          doc.text(disclaimerLines, margin + 2, y);
+          y += disclaimerLines.length * 4 + 2;
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+        }
+        y += 2;
+      });
+      y += 2;
+    }
 
     const note = 'Fictional demo data; aggregates only; no PII.';
     if (y > pageHeight - margin - 12) {
@@ -413,7 +560,15 @@
     document.addEventListener('i18n:change', updateExportButtons);
   }
 
-  const api = Object.assign({}, window.exporter, {exportPilotSummary, sortTable, exportSiteBriefPDF, notifyStart, updateExportButtons});
+  const api = Object.assign({}, window.exporter, {
+    exportPilotSummary,
+    sortTable,
+    exportSiteBriefPDF,
+    notifyStart,
+    updateExportButtons,
+    collectSourceSummaries,
+    buildSourceCsvHeader
+  });
   window.exporter = api;
   window.EXPORTER = api;
 })();

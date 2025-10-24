@@ -881,7 +881,11 @@ function initCorporatePage(){
     const lang = window.I18N?.getLang?.() || 'en';
     const headers = buildActivityColumns(lang).map(col => csvEscape(col.label));
     const lines = [headers.join(',')].concat(state.activityCsvRows.map(row => row.map(csvEscape).join(',')));
-    const csv = lines.join('\n');
+    const tableEl = els.activityTable;
+    const sources = window.exporter?.collectSourceSummaries?.(tableEl) || [];
+    const attribution = window.exporter?.buildSourceCsvHeader?.(sources) || [];
+    const csvBody = lines.join('\n');
+    const csv = attribution.length ? `${attribution.join('\n')}\n${csvBody}` : csvBody;
     const blob = new Blob([csv], {type: 'text/csv'});
     const team = state.teamSelection === 'all' ? 'all' : state.teamSelection;
     const range = state.rangeKey || '7d';
