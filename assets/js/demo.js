@@ -36,7 +36,7 @@
     DEMO_CHARTS[selector] = drawFn(root, data, opts) || null;
   }
 
-  const HERO_SRC = './assets/img/aurora-platform-hero.svg';
+  const HERO_SRC = './assets/img/demo-hero-offshore.svg';
 
   const getLang = () => window.I18N?.getLang?.() || 'en';
 

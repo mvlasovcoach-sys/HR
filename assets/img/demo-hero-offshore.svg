@@ -1,0 +1,95 @@
+<svg width="1400" height="420" viewBox="0 0 1400 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Stylized offshore platform illustration</title>
+  <desc id="desc">Vector illustration showing a futuristic offshore oil platform with helipad and crane in teal and navy colors.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#052640"/>
+      <stop offset="1" stop-color="#021322"/>
+    </linearGradient>
+    <linearGradient id="grid" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E5B7E" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#06F0FF" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="structure" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#32F5FF" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#0CE6B9" stop-opacity="0.75"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE45C" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#FF9D3B" stop-opacity="0.75"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3BFFFF" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#3BFFFF" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#3BFFFF" stop-opacity="0.18"/>
+    </linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="45"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="420" fill="url(#bg)"/>
+  <g opacity="0.4">
+    <path d="M0 300L1400 210V420H0V300Z" fill="url(#grid)"/>
+    <path d="M0 360L1400 310" stroke="#0A4E70" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="12 12"/>
+  </g>
+  <g filter="url(#blur)">
+    <ellipse cx="420" cy="290" rx="360" ry="120" fill="#04BFD3" fill-opacity="0.25"/>
+    <ellipse cx="980" cy="300" rx="320" ry="110" fill="#04BFD3" fill-opacity="0.2"/>
+  </g>
+  <g stroke="#52F9FF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M260 260H1140" opacity="0.3"/>
+    <path d="M220 280H1180" opacity="0.3"/>
+    <path d="M180 300H1220" opacity="0.25"/>
+  </g>
+  <g transform="translate(340 100)">
+    <rect x="-120" y="190" width="640" height="12" rx="6" fill="#0B3248" stroke="#1FBEE6" stroke-opacity="0.45"/>
+    <path d="M-80 190V140C-80 134.477 -75.5228 130 -70 130H210C215.523 130 220 134.477 220 140V190" fill="#04273D" stroke="#26E0FF" stroke-opacity="0.7" stroke-width="2"/>
+    <rect x="-60" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="20" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="100" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="180" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="260" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="340" y="150" width="60" height="24" rx="4" fill="url(#structure)" opacity="0.9"/>
+    <rect x="-60" y="80" width="460" height="60" rx="14" fill="#042739" stroke="#27D2F7" stroke-opacity="0.6"/>
+    <rect x="-40" y="100" width="80" height="28" rx="6" fill="#074867"/>
+    <rect x="80" y="92" width="180" height="18" rx="9" fill="#0A5F85"/>
+    <rect x="280" y="92" width="98" height="18" rx="9" fill="#0A5F85"/>
+    <rect x="280" y="118" width="72" height="12" rx="6" fill="#0A5F85" opacity="0.7"/>
+    <rect x="-120" y="200" width="640" height="12" rx="6" fill="#0B3248" stroke="#1FBEE6" stroke-opacity="0.45"/>
+    <path d="M-100 212V260" stroke="#1FBEE6" stroke-width="3" stroke-opacity="0.6"/>
+    <path d="M500 212V260" stroke="#1FBEE6" stroke-width="3" stroke-opacity="0.6"/>
+    <path d="M-80 260L-30 320" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-40 260L10 320" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M460 260L410 320" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M420 260L370 320" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(880 120)">
+    <rect x="-80" y="200" width="420" height="12" rx="6" fill="#0B3248" stroke="#1FBEE6" stroke-opacity="0.45"/>
+    <path d="M-40 200V140C-40 134.477 -35.5228 130 -30 130H250C255.523 130 260 134.477 260 140V200" fill="#041E2F" stroke="#25CFF5" stroke-opacity="0.7" stroke-width="2"/>
+    <rect x="-20" y="152" width="80" height="26" rx="5" fill="url(#structure)"/>
+    <rect x="80" y="152" width="80" height="26" rx="5" fill="url(#structure)"/>
+    <rect x="180" y="152" width="80" height="26" rx="5" fill="url(#structure)"/>
+    <path d="M60 110H170L210 60" stroke="url(#accent)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="60" cy="110" r="10" fill="url(#accent)"/>
+    <rect x="-80" y="210" width="420" height="12" rx="6" fill="#0B3248" stroke="#1FBEE6" stroke-opacity="0.45"/>
+    <path d="M-50 222V270" stroke="#1FBEE6" stroke-width="3" stroke-opacity="0.6"/>
+    <path d="M320 222V270" stroke="#1FBEE6" stroke-width="3" stroke-opacity="0.6"/>
+    <path d="M-30 270L20 330" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M0 270L50 330" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M260 270L210 330" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <path d="M230 270L180 330" stroke="#27F7C4" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="260" cy="44" r="44" fill="#032132" stroke="#24E5FF" stroke-opacity="0.6" stroke-width="4"/>
+    <text x="260" y="50" text-anchor="middle" font-size="28" font-family="'Segoe UI', sans-serif" fill="#24E5FF">H</text>
+    <text x="260" y="70" text-anchor="middle" font-size="12" font-family="'Segoe UI', sans-serif" letter-spacing="3" fill="#24E5FF" opacity="0.6">PAD</text>
+  </g>
+  <g>
+    <path d="M180 360H1220" stroke="url(#glow)" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <path d="M340 340H540" stroke="#1BE7FF" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+    <path d="M880 340H1100" stroke="#1BE7FF" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <g opacity="0.85">
+    <circle cx="1080" cy="86" r="4" fill="#39F6FF"/>
+    <circle cx="1120" cy="72" r="3" fill="#39F6FF"/>
+    <circle cx="1160" cy="60" r="2" fill="#39F6FF"/>
+  </g>
+</svg>
