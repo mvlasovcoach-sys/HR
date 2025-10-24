@@ -58,11 +58,11 @@
     </div>
     <div id="global-caption"></div>
     <section class="analytics-tracker">
-      <div class="panel chart-card" id="analytics-tracker-panel">
+      <div class="panel chart-card" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
         <div class="panel__head">
           <h2 class="trk-title">
             <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
-            <span id="trk-delta" class="delta-badge" aria-live="polite"></span>
+            <span id="trk-delta" class="delta-badge"></span>
           </h2>
           <div class="trk-controls">
             <label class="switch">
@@ -70,6 +70,8 @@
               <span data-i18n="label.movingAverage">MA(3)</span>
             </label>
             <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
+            <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
+              data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source &amp; methodology">i</button>
           </div>
         </div>
         <div class="panel__body analytics-tracker__body">
@@ -77,6 +79,7 @@
           <div id="wlb-chart" class="analytics-chart hero-chart chart" role="img" aria-live="polite" data-mount="renderAnalyticsPage"></div>
         </div>
         <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
+        <div class="panel__meta note note--meta" id="trk-meta"></div>
       </div>
     </section>
     <section class="panel analytics-breakdown">
