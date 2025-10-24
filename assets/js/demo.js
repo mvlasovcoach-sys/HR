@@ -4,6 +4,28 @@
 
   const state = { data: null, version: null };
   const DEMO_CHARTS = {};
+  const utils = window.DEMO_UTILS || {};
+  const warnOnMismatch = typeof utils.warnMismatch === 'function' ? utils.warnMismatch : () => {};
+  const computeBands = typeof utils.computeAgeBands === 'function'
+    ? utils.computeAgeBands
+    : (source, bands) => {
+        if (!bands) return [];
+        const entries = Array.isArray(bands) ? bands : [];
+        return entries.map((band, index) => {
+          const key = typeof band === 'string' ? band : (band?.key || String(index));
+          const label = typeof band === 'string' ? band : (band?.label || key);
+          const labelKey = typeof band === 'object' ? band?.labelKey : null;
+          const value = source && typeof source === 'object' ? Number(source[key]) || 0 : 0;
+          return { key, label, labelKey, count: value };
+        });
+      };
+  const AGE_BANDS = [
+    { key: '20-29', labelKey: 'demo.age.band1', label: '20–29', min: 20, max: 29 },
+    { key: '30-39', labelKey: 'demo.age.band2', label: '30–39', min: 30, max: 39 },
+    { key: '40-49', labelKey: 'demo.age.band3', label: '40–49', min: 40, max: 49 },
+    { key: '50-59', labelKey: 'demo.age.band4', label: '50–59', min: 50, max: 59 },
+    { key: '60+', labelKey: 'demo.age.band5', label: '60+', min: 60 }
+  ];
   const els = {
     badge: document.getElementById('site-badge'),
     cards: {
@@ -165,13 +187,16 @@
     if (!data) return;
     const departments = Array.isArray(data.departments) ? data.departments : [];
     const headcount = departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+    if (typeof window !== 'undefined') {
+      window.DEMO_TOTAL = headcount;
+    }
     renderBadge(data.site, headcount);
     renderHero(data.site);
     renderOverviewCards(data, headcount, departments);
     renderOrgTable(departments);
     renderGenderOverall(data.gender_overall, headcount);
-    renderAgeOverall(data.age_overall);
-    renderByDepartment(departments, data.gender_by_dept);
+    renderAgeOverall(data.age_overall, headcount);
+    renderByDepartment(departments, data.byDeptBattery);
     renderShiftGrid(departments);
   }
 
@@ -328,79 +353,98 @@
     container.removeAttribute('aria-busy');
     const entries = Object.entries(genderData || {}).filter(([, value]) => Number(value) > 0);
     const descId = 'gender-overall-desc';
+    const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
+    const nEl = document.getElementById('gender-n');
+    if (nEl) {
+      nEl.textContent = formatInteger(total);
+    }
     if (!entries.length) {
       const noData = window.I18N?.t?.('status.noData') || 'No data available';
       container.innerHTML = `<p id="${descId}" class="sr-only">${noData}</p>`;
       container.setAttribute('role', 'group');
       container.setAttribute('tabindex', '0');
       container.setAttribute('aria-describedby', descId);
-      container.setAttribute('aria-label', `${getText('demo.genderOverall', 'Gender — Overall')}: ${noData}`);
+      container.setAttribute('aria-label', `${getText('demo.gender_title', 'Gender — Headcount')}: ${noData}`);
       return;
     }
-    const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
-    const circumference = 2 * Math.PI * 16;
-    let progress = 0;
-    const segments = entries.map(([key, value]) => {
-      const val = Number(value) || 0;
-      const percent = total ? (val / total) * 100 : 0;
-      const dash = (percent / 100) * circumference;
-      const offset = circumference * 0.25 - progress;
-      progress += dash;
-      return `<circle class="donut-segment donut-segment--${key}" cx="21" cy="21" r="16" stroke-width="6" stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${offset}" fill="transparent"></circle>`;
-    }).join('');
-    const svg = `
-      <svg viewBox="0 0 42 42" aria-hidden="true" focusable="false">
-        <circle class="donut-track" cx="21" cy="21" r="16" stroke-width="6" fill="transparent"></circle>
-        ${segments}
-      </svg>
-    `;
-    const legendItems = entries.map(([key, value]) => {
+    const dataset = entries.map(([key, value]) => {
       const count = Number(value) || 0;
-      const percent = total ? Math.round(count / total * 100) : 0;
-      const label = getGenderLabel(key);
-      return `<span class="chart-legend__item"><span class="chart-legend__swatch stack--${key}"></span>${label} · ${formatInteger(count)} (${formatPercent(percent)})</span>`;
-    }).join('');
-    container.innerHTML = `
-      <div class="chart-donut__inner">${svg}
-        <div class="chart-donut__value">
-          <span class="chart-donut__number">${formatInteger(totalHeadcount)}</span>
-          <span class="chart-donut__caption">${getText('demo.headcount', 'Headcount')}</span>
+      const percent = total ? Math.round((count / total) * 100) : 0;
+      return {
+        key,
+        label: getGenderLabel(key),
+        count,
+        percent
+      };
+    });
+    const items = dataset.map(item => {
+      const tooltip = `${item.label}: ${formatInteger(item.count)} (${item.percent}%)`;
+      return `
+        <div class="chart-mini__item" role="listitem" title="${escapeHtml(tooltip)}">
+          <span class="chart-mini__label">${escapeHtml(item.label)}</span>
+          <div class="chart-mini__bar" aria-hidden="true">
+            <span class="chart-mini__fill chart-mini__fill--${item.key}" style="width:${Math.max(item.percent, 1)}%;"></span>
+          </div>
+          <span class="chart-mini__value">${formatInteger(item.count)} (${item.percent}%)</span>
         </div>
-      </div>
-      <div class="chart-legend">${legendItems}</div>
-      <p id="${descId}" class="sr-only">${entries.map(([key, value]) => {
-        const count = Number(value) || 0;
-        const percent = total ? Math.round(count / total * 100) : 0;
-        return `${getGenderLabel(key)} ${formatInteger(count)} (${formatPercent(percent)})`;
-      }).join('; ')}. ${getText('demo.headcount', 'Headcount')}: ${formatInteger(totalHeadcount)}.</p>
-    `;
-    container.setAttribute('role', 'group');
+      `;
+    }).join('');
+    container.innerHTML = items;
+    container.setAttribute('role', 'list');
     container.setAttribute('tabindex', '0');
-    container.setAttribute('aria-describedby', descId);
-    container.setAttribute('aria-label', getText('demo.genderOverall', 'Gender — Overall'));
+    container.setAttribute('aria-label', getText('demo.gender_title', 'Gender — Headcount'));
+    setDescription(container, descId, dataset.map(item => `${item.label}: ${formatInteger(item.count)} (${item.percent}%)`).join('; '));
   }
 
-  function renderAgeOverall(ageData){
+  function renderAgeOverall(ageData, totalHeadcount){
     const container = els.ageOverall;
     if (!container) return;
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
-    mountChart('#chart-age-overall', drawAgeOverall, ageData);
+    const bands = computeBands(ageData, AGE_BANDS).map(band => {
+      const labelKey = band.labelKey || null;
+      const fallbackLabel = band.label || band.key;
+      const label = labelKey ? getText(labelKey, fallbackLabel) : fallbackLabel;
+      return {
+        key: band.key,
+        labelKey,
+        label,
+        count: Number(band.count) || 0
+      };
+    });
+    const total = bands.reduce((sum, item) => sum + item.count, 0);
+    const nEl = document.getElementById('age-n');
+    if (nEl) {
+      nEl.textContent = formatInteger(total);
+    }
+    const globalTotal = typeof window !== 'undefined' ? Number(window.DEMO_TOTAL) : Number(totalHeadcount);
+    if (Number.isFinite(globalTotal) && globalTotal > 0) {
+      warnOnMismatch('Age bands sum', total, globalTotal);
+    }
+    mountChart('#chart-age-overall', drawAgeOverall, { data: bands, total });
   }
 
-  function renderByDepartment(departments, genderByDept){
+  function renderByDepartment(departments, wellnessByDept){
     const container = els.byDept;
     if (!container) return;
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
-    mountChart('#chart-by-dept', drawByDept, { departments, genderByDept });
+    const noteHost = document.querySelector('[data-note-host="dept"]');
+    const note = noteHost?.querySelector('#dept-note');
+    if (note) {
+      note.textContent = getText('demo.note.byDept', 'Threshold: Wellness Score ≥ 60 (demo). Period: {period}.', {
+        period: getPeriodLabel()
+      });
+    }
+    mountChart('#chart-by-dept', drawByDept, { departments, wellnessByDept });
   }
 
-  function drawAgeOverall(root, ageData){
-    const entries = Object.entries(ageData || {});
+  function drawAgeOverall(root, payload){
+    const dataset = Array.isArray(payload?.data) ? payload.data : [];
+    const total = Number(payload?.total) || dataset.reduce((sum, item) => sum + (Number(item?.count) || 0), 0);
     const descId = 'age-overall-desc';
     const host = root?.closest?.('[data-chart="age-overall"]') || root?.parentElement || root;
-    if (!entries.length) {
+    if (!dataset.length) {
       const noData = window.I18N?.t?.('status.noData') || 'No data available';
       const empty = document.createElement('p');
       empty.id = descId;
@@ -410,7 +454,7 @@
       root.setAttribute('role', 'group');
       root.setAttribute('tabindex', '0');
       root.setAttribute('aria-describedby', descId);
-      root.setAttribute('aria-label', `${getText('demo.ageOverall', 'Age — Overall')}: ${noData}`);
+      root.setAttribute('aria-label', `${getText('demo.age_title', 'Age — Headcount by band')}: ${noData}`);
       return {
         destroy(){
           root.replaceChildren();
@@ -421,14 +465,14 @@
         }
       };
     }
-    const totals = entries.map(([, value]) => Number(value) || 0);
+    const totals = dataset.map(item => Number(item?.count) || 0);
     const desc = document.createElement('p');
     desc.id = descId;
     desc.className = 'sr-only';
     root.setAttribute('role', 'group');
     root.setAttribute('tabindex', '0');
     root.setAttribute('aria-describedby', descId);
-    root.setAttribute('aria-label', getText('demo.ageOverall', 'Age — Overall'));
+    root.setAttribute('aria-label', getText('demo.age_title', 'Age — Headcount by band'));
 
     const getBounds = () => {
       const rect = host?.getBoundingClientRect?.() || {width: 0, height: 0};
@@ -442,7 +486,7 @@
       const margin = { top: 28, right: 20, bottom: 48, left: 20 };
       const chartHeight = Math.max(60, height - margin.top - margin.bottom);
       const available = Math.max(1, width - margin.left - margin.right);
-      const bucketCount = entries.length;
+      const bucketCount = dataset.length;
       const gapRatio = bucketCount > 1 ? 0.28 : 0;
       let barWidth = available / (bucketCount + gapRatio * Math.max(bucketCount - 1, 0));
       barWidth = Math.max(18, Math.min(88, barWidth));
@@ -463,16 +507,23 @@
       const axisY = height - margin.bottom;
       const radius = Math.min(12, barWidth / 2);
       const labelBaseline = Math.min(height - 12, axisY + 28);
-      const bars = entries.map(([bucket, value], index) => {
-        const val = Number(value) || 0;
+      const bars = dataset.map((entry, index) => {
+        const labelKey = entry.labelKey || null;
+        const fallbackLabel = entry.label || entry.key;
+        const label = labelKey ? getText(labelKey, fallbackLabel) : fallbackLabel;
+        const val = Number(entry.count) || 0;
+        const percent = total ? Math.round((val / total) * 100) : 0;
         const barHeight = max ? (val / max) * chartHeight : 0;
         const x = margin.left + index * (barWidth + gap);
         const y = axisY - barHeight;
         const valueY = Math.max(margin.top + 16, y - 12);
+        const tooltip = `${formatInteger(val)} (${percent}%)`;
         return `
-          <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${radius}" class="age-bar"></rect>
-          <text x="${x + barWidth / 2}" y="${valueY}" class="age-bar__value">${formatInteger(val)}</text>
-          <text x="${x + barWidth / 2}" y="${labelBaseline}" class="age-bar__label">${escapeHtml(bucket)}</text>
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${radius}" class="age-bar">
+            <title>${escapeHtml(tooltip)}</title>
+          </rect>
+          <text x="${x + barWidth / 2}" y="${valueY}" class="age-bar__value">${escapeHtml(tooltip)}</text>
+          <text x="${x + barWidth / 2}" y="${labelBaseline}" class="age-bar__label">${escapeHtml(label)}</text>
         `;
       }).join('');
       root.innerHTML = `
@@ -481,7 +532,14 @@
           ${bars}
         </svg>
       `;
-      desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${formatInteger(value)}`).join('; ');
+      desc.textContent = dataset.map(entry => {
+        const labelKey = entry.labelKey || null;
+        const fallbackLabel = entry.label || entry.key;
+        const label = labelKey ? getText(labelKey, fallbackLabel) : fallbackLabel;
+        const val = Number(entry.count) || 0;
+        const percent = total ? Math.round((val / total) * 100) : 0;
+        return `${label}: ${formatInteger(val)} (${percent}%)`;
+      }).join('; ');
       root.appendChild(desc);
     };
 
@@ -522,8 +580,8 @@
 
   function drawByDept(root, payload){
     const departments = Array.isArray(payload?.departments) ? payload.departments : [];
-    const genderByDept = payload?.genderByDept || {};
-    const descId = 'gender-by-dept-desc';
+    const wellnessByDept = Array.isArray(payload?.wellnessByDept) ? payload.wellnessByDept : [];
+    const descId = 'dept-status-desc';
     if (!departments.length) {
       const noData = window.I18N?.t?.('status.noData') || 'No data available';
       const empty = document.createElement('p');
@@ -545,29 +603,46 @@
         }
       };
     }
+    const statsMap = new Map(wellnessByDept.map(item => [item.id, item]));
+    const okLabel = getText('legend.ok', 'OK (≥ threshold)');
+    const nokLabel = getText('legend.nok', 'Not OK (< threshold)');
+    const totalLabel = getText('demo.total', 'Total');
     const rows = departments.map(dept => {
-      const stats = genderByDept?.[dept.id] || {};
-      const entries = Object.entries(stats).filter(([, value]) => Number(value) > 0);
-      const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0) || 1;
-      const segments = entries.map(([key, value]) => {
-        const val = Number(value) || 0;
-        const percent = Math.round((val / total) * 100);
-        const ariaLabel = `${getGenderLabel(key)} ${formatInteger(val)} (${formatPercent(percent)})`;
-        return `<span class="stack--${key}" style="flex:${Math.max(val, 1)}" aria-label="${escapeHtml(ariaLabel)}"><span>${formatPercent(percent)}</span></span>`;
+      const metric = statsMap.get(dept.id) || {};
+      const headcount = Number(dept.headcount) || 0;
+      const okPercentRaw = Number(metric.avg);
+      const okPercent = Number.isFinite(okPercentRaw) ? Math.max(0, Math.min(100, Math.round(okPercentRaw))) : 0;
+      const nokPercent = Math.max(0, Math.min(100, 100 - okPercent));
+      const okCount = Math.round((okPercent / 100) * headcount);
+      const nokCount = Math.max(0, headcount - okCount);
+      const segments = [
+        { key: 'ok', label: okLabel, percent: okPercent, count: okCount },
+        { key: 'nok', label: nokLabel, percent: nokPercent, count: nokCount }
+      ];
+      const stack = segments.map(segment => {
+        const width = Math.max(segment.percent, 1);
+        const ariaLabel = `${segment.label} ${formatPercent(segment.percent)} (n=${formatInteger(segment.count)})`;
+        return `<span class="stack--${segment.key}" style="flex:${width}" aria-label="${escapeHtml(ariaLabel)}">${formatPercent(segment.percent)}</span>`;
       }).join('');
+      const tooltip = `${dept.name} — ${okLabel}: ${formatPercent(okPercent)} (n=${formatInteger(okCount)}); ${nokLabel}: ${formatPercent(nokPercent)} (n=${formatInteger(nokCount)}); ${totalLabel}: ${formatInteger(headcount)}`;
       return `
-        <div class="chart-bars__row">
+        <div class="chart-bars__row" role="listitem" title="${escapeHtml(tooltip)}" aria-label="${escapeHtml(tooltip)}">
           <div class="chart-bars__label">${escapeHtml(dept.name)}</div>
-          <div class="chart-bars__stack" role="presentation">${segments}</div>
+          <div class="chart-bars__stack" role="presentation">${stack}</div>
         </div>
       `;
     }).join('');
     const description = departments.map(dept => {
-      const stats = genderByDept?.[dept.id] || {};
-      const parts = Object.entries(stats).map(([key, value]) => `${getGenderLabel(key)} ${formatInteger(value)}`);
-      return `${dept.name}: ${parts.join(', ')}`;
+      const metric = statsMap.get(dept.id) || {};
+      const headcount = Number(dept.headcount) || 0;
+      const okPercentRaw = Number(metric.avg);
+      const okPercent = Number.isFinite(okPercentRaw) ? Math.max(0, Math.min(100, Math.round(okPercentRaw))) : 0;
+      const nokPercent = Math.max(0, Math.min(100, 100 - okPercent));
+      const okCount = Math.round((okPercent / 100) * headcount);
+      const nokCount = Math.max(0, headcount - okCount);
+      return `${dept.name}: ${okLabel} ${formatPercent(okPercent)} (n=${formatInteger(okCount)}), ${nokLabel} ${formatPercent(nokPercent)} (n=${formatInteger(nokCount)})`;
     }).join('; ');
-    root.innerHTML = `<div class="chart-bars__grid">${rows}</div>`;
+    root.innerHTML = `<div class="chart-bars__grid" role="list">${rows}</div>`;
     const desc = document.createElement('p');
     desc.id = descId;
     desc.className = 'sr-only';
@@ -659,6 +734,37 @@
       pattern: row.pattern.map(value => mapShiftLabel(value, dayLabel, nightLabel, offLabel)).join(', ')
     })).join('; ');
     setDescription(els.shiftGrid, 'shift-desc', `${getText('demo.shiftPattern', 'Shift Pattern')}. ${summary}`);
+  }
+
+  function getPeriodLabel(){
+    const readRange = window.DateControls?.readRange;
+    if (typeof readRange !== 'function') {
+      return getText('demo.period.default', 'Selected period');
+    }
+    const range = readRange();
+    if (!range) {
+      return getText('demo.period.default', 'Selected period');
+    }
+    if (range.preset) {
+      const key = `range.${range.preset}`;
+      const translated = window.I18N?.t?.(key);
+      if (translated && translated !== key) return translated;
+      return String(range.preset).toUpperCase();
+    }
+    if (range.start && range.end) {
+      const startDate = new Date(range.start);
+      const endDate = new Date(range.end);
+      if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+        try {
+          const formatter = new Intl.DateTimeFormat(getLang(), {year: 'numeric', month: 'short', day: 'numeric'});
+          return `${formatter.format(startDate)} – ${formatter.format(endDate)}`;
+        } catch (err) {
+          /* fall through to raw values */
+        }
+      }
+      return `${range.start} – ${range.end}`;
+    }
+    return getText('demo.period.default', 'Selected period');
   }
 
   function getGenderLabel(key){

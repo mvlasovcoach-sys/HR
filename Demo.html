@@ -25,6 +25,7 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/demo.utils.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
@@ -69,16 +70,36 @@
     <section id="demo-demographics" class="section">
 
       <div class="panel panel--chart">
-        <h2 data-i18n="demo.ageOverall">Age — Overall</h2>
+        <h2 class="panel__title">
+          <span data-i18n="demo.age_title">Age — Headcount by band</span>
+          <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="age-n">0</span>)</span>
+        </h2>
         <div class="chart-host chart-host--bar" data-chart="age-overall">
           <div id="chart-age-overall" class="chart-root"></div>
+        </div>
+        <div class="chart-mini">
+          <h3 class="chart-mini__title">
+            <span data-i18n="demo.gender_title">Gender — Headcount</span>
+            <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="gender-n">0</span>)</span>
+          </h3>
+          <div id="chart-gender-overall" class="chart-mini__root"></div>
+        </div>
+        <div class="chart-notes" data-note-host="age">
+          <p class="note note--meta" data-i18n="demo.note.unit_headcount">Unit: headcount. Values show count and % per age band.</p>
         </div>
       </div>
 
       <article class="card">
         <h3 data-i18n="demo.byDepartment">By Department</h3>
+        <div class="legend legend--inline">
+          <span class="legend__item"><i class="dot dot--green"></i><span data-i18n="legend.ok">OK (≥ threshold)</span></span>
+          <span class="legend__item"><i class="dot dot--blue"></i><span data-i18n="legend.nok">Not OK (&lt; threshold)</span></span>
+        </div>
         <div class="chart-block">
           <div id="chart-by-dept" class="chart-root"></div>
+        </div>
+        <div class="chart-notes" data-note-host="dept">
+          <p class="note note--meta" id="dept-note"></p>
         </div>
       </article>
 
