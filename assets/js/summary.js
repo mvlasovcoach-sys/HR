@@ -163,19 +163,16 @@
   }
 
   function bindScenarioControls(){
-    const loadBtn = document.getElementById('btn-night-scenario');
-    const resetBtn = document.getElementById('btn-night-reset');
+    const buttons = Array.from(document.querySelectorAll('.scenario-controls [data-scenario]'));
     const returnLink = document.getElementById('btn-return-live');
-    if (loadBtn) {
-      loadBtn.addEventListener('click', () => {
-        setScenario('night');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-scenario');
+        if (mode === 'night' || mode === 'live') {
+          setScenario(mode);
+        }
       });
-    }
-    if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        setScenario('live');
-      });
-    }
+    });
     if (returnLink) {
       returnLink.addEventListener('click', evt => {
         evt.preventDefault();
@@ -211,17 +208,13 @@
 
   function updateScenarioButtons(){
     const scenario = readScenario();
-    const loadBtn = document.getElementById('btn-night-scenario');
-    const resetBtn = document.getElementById('btn-night-reset');
-    loadBtn?.setAttribute('aria-pressed', String(scenario === 'night'));
-    resetBtn?.setAttribute('aria-pressed', String(scenario !== 'night'));
-    if (scenario === 'night') {
-      loadBtn?.classList.add('is-active');
-      resetBtn?.classList.remove('is-active');
-    } else {
-      resetBtn?.classList.add('is-active');
-      loadBtn?.classList.remove('is-active');
-    }
+    const buttons = Array.from(document.querySelectorAll('.scenario-controls [data-scenario]'));
+    buttons.forEach(btn => {
+      const mode = btn.getAttribute('data-scenario');
+      const isActive = (mode === 'night' && scenario === 'night') || (mode === 'live' && scenario !== 'night');
+      btn.setAttribute('aria-pressed', String(isActive));
+      btn.classList.toggle('is-active', isActive);
+    });
     updateScenarioParam(scenario === 'night');
     setDemoState(scenario === 'night');
   }

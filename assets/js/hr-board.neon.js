@@ -263,8 +263,8 @@ function initHrBoard(host){
       toggleInsufficient(insufficient);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (CAPTION && window.Caption?.renderCaption) {
-          window.Caption.renderCaption(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
+        if (CAPTION && window.Caption?.render) {
+          window.Caption?.render(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
         } else if (CAPTION) {
           CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
         }
@@ -295,8 +295,8 @@ function initHrBoard(host){
       }).join('');
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
-      if (CAPTION && window.Caption?.renderCaption) {
-        window.Caption.renderCaption(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
+      if (CAPTION && window.Caption?.render) {
+        window.Caption?.render(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
       } else if (CAPTION) {
         CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
       }

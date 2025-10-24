@@ -198,8 +198,8 @@
         renderHistogram(histogramEl, data, t);
         updateCoverageBadge(coverageEl, siteState, allRows, t);
         const insight = rows.length ? buildCaption(range, team, t) : '';
-        if (captionEl && window.Caption?.renderCaption) {
-          window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+        if (captionEl && window.Caption?.render) {
+          window.Caption?.render(captionEl, {asOf: new Date(), insight});
         } else if (captionEl) {
           captionEl.textContent = insight;
         }
@@ -211,8 +211,8 @@
       renderHistogram(histogramEl, data, t);
       updateCoverageBadge(coverageEl, siteState, allRows, t);
       const insight = buildCaption(range, team, t);
-      if (captionEl && window.Caption?.renderCaption) {
-        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+      if (captionEl && window.Caption?.render) {
+        window.Caption?.render(captionEl, {asOf: new Date(), insight});
       } else if (captionEl) {
         captionEl.textContent = insight;
       }
@@ -223,8 +223,8 @@
       cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
       tableEl.innerHTML = '';
       histogramEl.innerHTML = '';
-      if (captionEl && window.Caption?.renderCaption) {
-        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: ''});
+      if (captionEl && window.Caption?.render) {
+        window.Caption?.render(captionEl, {asOf: new Date(), insight: ''});
       } else if (captionEl) {
         captionEl.textContent = '';
       }

@@ -9,7 +9,9 @@
 <link rel="stylesheet" href="./assets/css/app.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/print.css?v=2025.10.19-05" media="print">
 <link rel="stylesheet" href="./assets/css/wellness.css?v=2025.10.19-05">
+<script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/version.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
@@ -17,7 +19,6 @@
 <script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/mock-stream.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/wellbeing.compute.js?v=2025.10.19-05"></script>
@@ -39,7 +40,7 @@
             <h1 class="header__title" data-i18n="header.wellness">Wellness</h1>
           </div>
           <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter team-filter"></div>
+            <div id="team-filter" class="toolbar__filter"></div>
             <div id="date-controls" class="toolbar__filter"></div>
           </div>
         </div>
@@ -47,11 +48,10 @@
       <div class="topbar-right">
         <div id="lang-switch" class="lang-switch"></div>
         <button class="header__icon" type="button" data-about-open
-                data-i18n="ui.about" data-i18n-attr="aria-label"
-                aria-label="About">i</button>
+          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
       </div>
     </div>
-    <div id="global-caption" class="header__caption" aria-live="polite"></div>
+    <div id="global-caption"></div>
     <section id="wellness-root" class="wellness-grid" aria-live="polite">
       <article class="tile wellness-tile wellness-tile--wellbeing">
         <header class="tile__head">
@@ -167,5 +167,5 @@
     </section>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('wellness');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.renderCaption('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('wellness');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

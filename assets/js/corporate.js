@@ -29,8 +29,7 @@ function initCorporatePage(){
     activityTable: document.getElementById('activity-table'),
     activityCards: document.getElementById('activity-cards'),
     exportBtn: document.getElementById('export-activity'),
-    scenarioNight: document.getElementById('btn-load-night'),
-    scenarioLive: document.getElementById('btn-return-live')
+    scenarioButtons: Array.from(document.querySelectorAll('.scenario-controls [data-scenario]'))
   };
 
   if (!els.kpiGrid || !els.heatmapGrid || !els.eventsList || !els.activityTable) {
@@ -133,8 +132,14 @@ function initCorporatePage(){
     window.addEventListener('storage', handleStorageEvent);
     document.addEventListener('i18n:change', handleI18nChange);
 
-    els.scenarioNight?.addEventListener('click', () => setScenario('night'));
-    els.scenarioLive?.addEventListener('click', () => setScenario('live'));
+    els.scenarioButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-scenario');
+        if (mode === 'night' || mode === 'live') {
+          setScenario(mode);
+        }
+      });
+    });
   }
 
   async function loadTeams(){
@@ -922,8 +927,8 @@ function initCorporatePage(){
     const prefix = t('caption.orgAvg', t('caption.orgAverage', 'Org avg'));
     const sep = t('caption.separator', ' · ');
     const insight = `${scenarioPrefix()}${prefix}${sep}${rangeLabel}${sep}${teamLabel}`;
-    if (window.Caption?.renderCaption) {
-      window.Caption.renderCaption(els.caption, {asOf: new Date(), insight});
+    if (window.Caption?.render) {
+      window.Caption?.render(els.caption, {asOf: new Date(), insight});
     } else {
       els.caption.textContent = insight;
     }
@@ -1164,12 +1169,9 @@ function initCorporatePage(){
   function updateScenarioButtons(){
     const scenario = readScenario();
     const isNight = scenario === 'night';
-    const buttons = [
-      {btn: els.scenarioNight, active: isNight},
-      {btn: els.scenarioLive, active: !isNight}
-    ];
-    buttons.forEach(({btn, active}) => {
-      if (!btn) return;
+    els.scenarioButtons.forEach(btn => {
+      const mode = btn.getAttribute('data-scenario');
+      const active = (mode === 'night' && isNight) || (mode === 'live' && !isNight);
       btn.classList.toggle('is-active', active);
       btn.setAttribute('aria-pressed', String(active));
     });
