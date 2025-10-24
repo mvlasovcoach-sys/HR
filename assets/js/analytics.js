@@ -90,6 +90,23 @@ function initPage(){
       return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
     }
 
+    const getLang = () => window.I18N?.getLang?.() || 'en';
+    const defaultDateOptions = lang => (lang === 'ru'
+      ? {day: '2-digit', month: '2-digit', year: 'numeric'}
+      : {day: 'numeric', month: 'short', year: 'numeric'});
+
+    function formatLocaleDate(value){
+      const date = value instanceof Date ? value : new Date(value);
+      if (!(date instanceof Date) || Number.isNaN(date)) return value;
+      const lang = getLang();
+      const options = defaultDateOptions(lang);
+      try {
+        return new Intl.DateTimeFormat(lang, options).format(date);
+      } catch (err) {
+        return date.toLocaleDateString();
+      }
+    }
+
     function readRange(){
       try {
         const raw = localStorage.getItem('hr:range');
@@ -612,7 +629,10 @@ function initPage(){
         return map[range.preset] || t('range.7d');
       }
       if (range.start && range.end) {
-        return `${range.start} → ${range.end}`;
+        const start = formatLocaleDate(range.start);
+        const end = formatLocaleDate(range.end);
+        if (start && start === end) return start;
+        return `${start} – ${end}`;
       }
       return t('range.7d');
     }

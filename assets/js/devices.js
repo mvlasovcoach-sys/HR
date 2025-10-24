@@ -99,7 +99,13 @@
 
     cardsEl.classList.add('devices-kpis');
 
-    exportBtn?.addEventListener('click', () => exportCsv(tableEl));
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        if (exportBtn.disabled || exportBtn.getAttribute('aria-disabled') === 'true') return;
+        window.exporter?.notifyStart?.(exportBtn);
+        exportCsv(tableEl);
+      });
+    }
     tableEl?.addEventListener('click', evt => handleTableSort(evt, tableEl));
 
     window.addEventListener('storage', evt => {
@@ -143,10 +149,11 @@
       const insufficient = Number(data?.n) > 0 && Number(data.n) < 5;
       toggleInsufficient(insufficient, summaryPanel, tablePanel, t('guard.insufficient'));
       if (exportBtn) {
-        const exportLabel = t('ui.exportCSV') || t('label.export.csv');
-        exportBtn.setAttribute('aria-label', `${exportLabel} (${preset})`);
+        const baseLabel = exportBtn.getAttribute('data-export-label') || t('ui.exportCSV') || t('label.export.csv');
+        exportBtn.setAttribute('aria-label', `${baseLabel} (${preset})`);
+        exportBtn.setAttribute('title', `${baseLabel} (${preset})`);
         exportBtn.disabled = insufficient || !rows.length;
-        if (!rows.length) {
+        if (!rows.length || insufficient) {
           exportBtn.setAttribute('aria-disabled', 'true');
         } else {
           exportBtn.removeAttribute('aria-disabled');
@@ -180,7 +187,10 @@
         coverageEl.textContent = '';
         coverageEl.hidden = true;
       }
-      if (exportBtn) exportBtn.disabled = true;
+      if (exportBtn) {
+        exportBtn.disabled = true;
+        exportBtn.setAttribute('aria-disabled', 'true');
+      }
     }
   }
 

@@ -26,6 +26,7 @@
 
   const focusSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
   let lastFocus = null;
+  let lastTrigger = null;
 
   document.body.addEventListener('click', evt => {
     const trigger = evt.target.closest('[data-about-trigger]');
@@ -41,6 +42,11 @@
 
   function openModal(trigger){
     lastFocus = trigger;
+    lastTrigger = trigger;
+    if (trigger) {
+      trigger.setAttribute('aria-haspopup', 'dialog');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
     modal.setAttribute('aria-hidden', 'false');
     modal.classList.add('is-open');
     const firstFocusable = modal.querySelector(focusSelectors);
@@ -54,10 +60,14 @@
     modal.classList.remove('is-open');
     document.body.classList.remove('modal-open');
     document.removeEventListener('keydown', handleKeyDown, true);
+    if (lastTrigger) {
+      lastTrigger.setAttribute('aria-expanded', 'false');
+    }
     if (lastFocus) {
       try { lastFocus.focus(); } catch (e) { /* ignore */ }
-      lastFocus = null;
     }
+    lastFocus = null;
+    lastTrigger = null;
   }
 
   function handleKeyDown(evt){

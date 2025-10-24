@@ -18,6 +18,23 @@
       kpiSummary: []
     };
 
+    const getLang = () => window.I18N?.getLang?.() || 'en';
+    const defaultDateOptions = lang => (lang === 'ru'
+      ? {day: '2-digit', month: '2-digit', year: 'numeric'}
+      : {day: 'numeric', month: 'short', year: 'numeric'});
+
+    function formatLocaleDate(value){
+      const date = value instanceof Date ? value : new Date(value);
+      if (!(date instanceof Date) || Number.isNaN(date)) return value;
+      const lang = getLang();
+      const options = defaultDateOptions(lang);
+      try {
+        return new Intl.DateTimeFormat(lang, options).format(date);
+      } catch (err) {
+        return date.toLocaleDateString();
+      }
+    }
+
     exportBtn?.addEventListener('click', handleExport);
     window.addEventListener('storage', evt => {
       if (!evt) return;
@@ -91,7 +108,16 @@
       state.metrics = metrics;
       if (exportBtn) {
         const nValue = Number(metrics?.n ?? engagement?.n);
-        exportBtn.disabled = Number.isFinite(nValue) && nValue < 5;
+        const disableBtn = Number.isFinite(nValue) && nValue < 5;
+        exportBtn.disabled = disableBtn;
+        if (disableBtn) {
+          exportBtn.setAttribute('aria-disabled', 'true');
+        } else {
+          exportBtn.removeAttribute('aria-disabled');
+        }
+        const baseLabel = exportBtn.getAttribute('data-export-label') || (window.t('label.export.pdf') || 'Export Pilot Summary (PDF)');
+        exportBtn.setAttribute('aria-label', baseLabel);
+        exportBtn.setAttribute('title', baseLabel);
       }
       renderKpis(engagement, preset, team, range);
       renderHeatmap(metrics);
@@ -348,8 +374,7 @@
     }
 
     function formatDate(value){
-      const dt = new Date(value);
-      return isNaN(dt) ? value : dt.toLocaleDateString();
+      return formatLocaleDate(value);
     }
 
     function capitalize(str){
@@ -396,7 +421,12 @@
         };
         return map[range.preset] || window.t('range.7d');
       }
-      if (range.start && range.end) return `${range.start} → ${range.end}`;
+      if (range.start && range.end) {
+        const start = formatLocaleDate(range.start);
+        const end = formatLocaleDate(range.end);
+        if (start && start === end) return start;
+        return `${start} – ${end}`;
+      }
       return window.t('range.7d');
     }
 
@@ -413,6 +443,8 @@
     }
 
     async function handleExport(){
+      if (exportBtn?.disabled || exportBtn?.getAttribute('aria-disabled') === 'true') return;
+      window.exporter?.notifyStart?.(exportBtn, exportBtn?.dataset?.exportKey);
       const range = readRange();
       const team = readTeam();
       const preset = presetForRange(range);

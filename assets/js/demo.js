@@ -77,6 +77,10 @@
   function bindEvents(){
     if (els.exportBtn) {
       els.exportBtn.disabled = true;
+      els.exportBtn.setAttribute('aria-disabled', 'true');
+      const baseLabel = els.exportBtn.getAttribute('data-export-label') || getText('demo.exportBrief', 'Export Site Brief (PDF)');
+      els.exportBtn.setAttribute('aria-label', baseLabel);
+      els.exportBtn.setAttribute('title', baseLabel);
       els.exportBtn.addEventListener('click', handleExport);
     }
   }
@@ -86,11 +90,13 @@
       showToast(getText('demo.loading', 'Loading demo data…'));
       return;
     }
+    if (els.exportBtn?.disabled) return;
     const exporter = window.EXPORTER || window.exporter;
     if (!exporter || typeof exporter.exportSiteBriefPDF !== 'function') {
       showToast(getText('demo.exportUnavailable', 'Export not available.'));
       return;
     }
+    window.exporter?.notifyStart?.(els.exportBtn, els.exportBtn?.dataset?.exportKey);
     exporter.exportSiteBriefPDF({
       badgeText: els.badge?.textContent?.trim?.() || '',
       version: state.version || ''
@@ -108,7 +114,13 @@
     const data = await response.json();
     state.data = data;
     render(data);
-    if (els.exportBtn) els.exportBtn.disabled = false;
+    if (els.exportBtn) {
+      els.exportBtn.disabled = false;
+      els.exportBtn.removeAttribute('aria-disabled');
+      const baseLabel = els.exportBtn.getAttribute('data-export-label') || getText('demo.exportBrief', 'Export Site Brief (PDF)');
+      els.exportBtn.setAttribute('aria-label', baseLabel);
+      els.exportBtn.setAttribute('title', baseLabel);
+    }
   }
 
   function applySkeletons(){

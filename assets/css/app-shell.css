@@ -76,3 +76,17 @@ a:focus-visible,button:focus-visible,input[type="date"]:focus-visible,.tile:focu
 @media(max-width:480px){
   .main{padding:18px}
 }
+
+@media(prefers-reduced-transparency:reduce){
+  .sidebar{background:rgba(7,23,32,.92);box-shadow:none}
+  .header__icon,
+  .dc button,
+  .team-filter__select,
+  .about__close,
+  .drawer__close,
+  .about__sheet,
+  .drawer,
+  .drawer__links button,
+  .drawer__actions button{background:rgba(11,31,41,.85)}
+  .about__overlay,.drawer__overlay{background:rgba(4,12,18,.85)}
+}
