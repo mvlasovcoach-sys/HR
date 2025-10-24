@@ -10,6 +10,8 @@
 .dc button.is-active{box-shadow:0 0 12px rgba(39,224,255,.2) inset;background:rgba(11,31,41,.7)}
 .dc input[type="date"]{background:rgba(11,31,41,.5);border:1px solid var(--stroke);color:var(--txt);padding:8px 10px;border-radius:10px;min-width:160px}
 .dc__sep{width:8px;height:1px}
+.dc__compare{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.9rem}
+.dc__compare-input{width:16px;height:16px}
 .about{position:fixed;inset:0;display:none;z-index:999}
 .about.is-open{display:block}
 .about__overlay{position:absolute;inset:0;background:rgba(4,12,18,.7)}

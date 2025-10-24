@@ -10,7 +10,7 @@ function initCorporatePage(){
   const DATA_ROOT = './data/org';
 
   const els = {
-    caption: document.getElementById('corp-caption'),
+    caption: document.getElementById('global-caption'),
     kpiPanel: document.getElementById('corp-kpis'),
     kpiGrid: document.getElementById('corp-kpi-grid'),
     heatmapPanel: document.getElementById('corp-heatmap'),
@@ -27,6 +27,7 @@ function initCorporatePage(){
     eventInfo: document.getElementById('ev-info'),
     activityPanel: document.getElementById('corp-activity'),
     activityTable: document.getElementById('activity-table'),
+    activityCards: document.getElementById('activity-cards'),
     exportBtn: document.getElementById('export-activity'),
     scenarioNight: document.getElementById('btn-load-night'),
     scenarioLive: document.getElementById('btn-return-live')
@@ -77,6 +78,26 @@ function initCorporatePage(){
   };
 
   boot().catch(err => console.error('Corporate init failed', err));
+
+  function canonicalPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return '7d';
+    if (key === 'mtd' || key === 'month') return 'month';
+    if (key === 'qtd' || key === 'quarter') return 'month';
+    if (key === 'ytd' || key === 'year') return 'year';
+    if (key === '7d') return '7d';
+    return '7d';
+  }
+
+  function displayPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return 'today';
+    if (key === 'mtd' || key === 'month') return 'mtd';
+    if (key === 'qtd' || key === 'quarter') return 'qtd';
+    if (key === 'ytd' || key === 'year') return 'ytd';
+    if (key === '7d') return '7d';
+    return '7d';
+  }
 
   async function boot(){
     await loadTeams();
@@ -588,6 +609,7 @@ function initCorporatePage(){
 
   function renderActivity(activity){
     const table = els.activityTable;
+    const cardsHost = els.activityCards;
     if (!table) return;
     const rows = Array.isArray(activity) ? activity : [];
     const filtered = rows.filter(row => {
@@ -597,9 +619,15 @@ function initCorporatePage(){
     });
 
     table.innerHTML = '';
+    if (cardsHost) {
+      cardsHost.innerHTML = '';
+    }
     if (state.insufficient) {
       if (window.guardSmallN) {
         window.guardSmallN(0, table, t('guard.insufficient', 'Insufficient group size'));
+      }
+      if (cardsHost) {
+        cardsHost.innerHTML = '';
       }
       state.activityCsvRows = [];
       updateExportState(true);
@@ -617,6 +645,9 @@ function initCorporatePage(){
 
     if (!filtered.length) {
       tbody = `<tbody><tr data-empty-row="true"><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr></tbody>`;
+      if (cardsHost) {
+        cardsHost.innerHTML = `<p class="caption">${t('activity.empty', 'No activity data')}</p>`;
+      }
     } else {
       const sorted = sortActivityRows(filtered, columns, lang);
       const bodyRows = sorted.map(row => {
@@ -630,6 +661,17 @@ function initCorporatePage(){
         return `<tr>${cells.join('')}</tr>`;
       });
       tbody = `<tbody>${bodyRows.join('')}</tbody>`;
+
+      if (cardsHost) {
+        const cardMarkup = sorted.map(row => {
+          const title = columns[0].render(row, lang);
+          const items = columns.slice(1).map(col => {
+            return `<li class="table-card__item"><span class="table-card__label">${col.label}</span><span class="table-card__value">${col.render(row, lang)}</span></li>`;
+          }).join('');
+          return `<article class="table-card"><h3 class="table-card__title">${title}</h3><ul class="table-card__list">${items}</ul></article>`;
+        }).join('');
+        cardsHost.innerHTML = cardMarkup;
+      }
     }
 
     table.innerHTML = `${thead}${tbody}`;
@@ -879,7 +921,12 @@ function initCorporatePage(){
     const rangeLabel = state.rangeLabel || t('label.range', 'Range');
     const prefix = t('caption.orgAvg', t('caption.orgAverage', 'Org avg'));
     const sep = t('caption.separator', ' · ');
-    els.caption.textContent = `${scenarioPrefix()}${prefix}${sep}${rangeLabel}${sep}${teamLabel}`;
+    const insight = `${scenarioPrefix()}${prefix}${sep}${rangeLabel}${sep}${teamLabel}`;
+    if (window.Caption?.renderCaption) {
+      window.Caption.renderCaption(els.caption, {asOf: new Date(), insight});
+    } else {
+      els.caption.textContent = insight;
+    }
   }
 
   function handleStorageEvent(evt){
@@ -950,18 +997,28 @@ function initCorporatePage(){
   function resolveRangeConfig(selection){
     const lang = getLang();
     const presets = {
-      day: window.I18N?.t('range.day') || '1 Day',
+      today: window.I18N?.t('range.today') || 'Today',
       '7d': window.I18N?.t('range.7d') || '7 Days',
-      month: window.I18N?.t('range.month') || '1 Month',
-      year: window.I18N?.t('range.year') || '1 Year'
+      mtd: window.I18N?.t('range.mtd') || 'Month to date',
+      qtd: window.I18N?.t('range.qtd') || 'Quarter to date',
+      ytd: window.I18N?.t('range.ytd') || 'Year to date'
     };
     if (selection?.preset) {
-      const preset = selection.preset;
-      if (preset === 'day') {
-        return {dataKey: '7d', label: presets.day, rangeKey: 'day'};
+      const preset = displayPreset(selection.preset);
+      if (preset === 'today') {
+        return {dataKey: '7d', label: presets.today, rangeKey: 'today'};
       }
-      if (preset === '7d' || preset === 'month' || preset === 'year') {
-        return {dataKey: preset, label: presets[preset], rangeKey: preset};
+      if (preset === '7d') {
+        return {dataKey: '7d', label: presets['7d'], rangeKey: '7d'};
+      }
+      if (preset === 'mtd') {
+        return {dataKey: 'month', label: presets.mtd, rangeKey: 'mtd'};
+      }
+      if (preset === 'qtd') {
+        return {dataKey: 'month', label: presets.qtd, rangeKey: 'qtd'};
+      }
+      if (preset === 'ytd') {
+        return {dataKey: 'year', label: presets.ytd, rangeKey: 'ytd'};
       }
     }
     if (selection?.start && selection?.end) {

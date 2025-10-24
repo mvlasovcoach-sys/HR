@@ -26,6 +26,26 @@
 
   const getLang = () => window.I18N?.getLang?.() || 'en';
 
+  function canonicalPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return '7d';
+    if (key === 'mtd' || key === 'month') return 'month';
+    if (key === 'qtd' || key === 'quarter') return 'month';
+    if (key === 'ytd' || key === 'year') return 'year';
+    if (key === '7d') return '7d';
+    return '7d';
+  }
+
+  function displayPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return 'today';
+    if (key === 'mtd' || key === 'month') return 'mtd';
+    if (key === 'qtd' || key === 'quarter') return 'qtd';
+    if (key === 'ytd' || key === 'year') return 'ytd';
+    if (key === '7d') return '7d';
+    return '7d';
+  }
+
   function formatInteger(value){
     const num = Number(value);
     if (!Number.isFinite(num)) return '0';
@@ -37,6 +57,17 @@
     if (!Number.isFinite(num)) return '–';
     const ratio = num / 100;
     return new Intl.NumberFormat(getLang(), {style: 'percent', maximumFractionDigits: fractionDigits}).format(ratio);
+  }
+
+  function formatLocaleDate(value){
+    const date = value instanceof Date ? value : new Date(value);
+    if (!(date instanceof Date) || Number.isNaN(date)) return value;
+    const lang = getLang();
+    try {
+      return new Intl.DateTimeFormat(lang, {day: 'numeric', month: 'short', year: 'numeric'}).format(date);
+    } catch (err) {
+      return date.toLocaleDateString();
+    }
   }
 
   function boot(){
@@ -90,7 +121,7 @@
     if (!cardsEl) return;
     const tableEl = document.getElementById('fleet-table');
     const histogramEl = document.getElementById('devices-histogram');
-    const captionEl = document.getElementById('devices-caption');
+    const captionEl = document.getElementById('global-caption');
     const exportBtn = document.getElementById('export-fleet');
     const summaryPanel = document.getElementById('fleet-summary-panel');
     const tablePanel = document.getElementById('fleet-table-panel');
@@ -166,7 +197,12 @@
         renderTable(tableEl, rows, siteState, t, false);
         renderHistogram(histogramEl, data, t);
         updateCoverageBadge(coverageEl, siteState, allRows, t);
-        if (captionEl) captionEl.textContent = rows.length ? buildCaption(range, team, t) : '';
+        const insight = rows.length ? buildCaption(range, team, t) : '';
+        if (captionEl && window.Caption?.renderCaption) {
+          window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+        } else if (captionEl) {
+          captionEl.textContent = insight;
+        }
         return;
       }
 
@@ -174,7 +210,12 @@
       renderTable(tableEl, rows, siteState, t, true);
       renderHistogram(histogramEl, data, t);
       updateCoverageBadge(coverageEl, siteState, allRows, t);
-      if (captionEl) captionEl.textContent = buildCaption(range, team, t);
+      const insight = buildCaption(range, team, t);
+      if (captionEl && window.Caption?.renderCaption) {
+        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+      } else if (captionEl) {
+        captionEl.textContent = insight;
+      }
     }
 
     function renderEmpty(){
@@ -182,7 +223,11 @@
       cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
       tableEl.innerHTML = '';
       histogramEl.innerHTML = '';
-      if (captionEl) captionEl.textContent = '';
+      if (captionEl && window.Caption?.renderCaption) {
+        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: ''});
+      } else if (captionEl) {
+        captionEl.textContent = '';
+      }
       if (coverageEl) {
         coverageEl.textContent = '';
         coverageEl.hidden = true;
@@ -220,8 +265,7 @@
   function presetForRange(range){
     if (!range) return '7d';
     if (range.preset) {
-      if (range.preset === 'month' || range.preset === 'year') return range.preset;
-      return '7d';
+      return canonicalPreset(range.preset);
     }
     if (range.start && range.end) {
       const start = new Date(range.start);
@@ -548,29 +592,34 @@
   function buildCaption(range, team, translate){
     const rangeText = rangeLabel(range, translate);
     const teamText = teamLabel(team, translate);
-    const prefix = translate('caption.orgAvg');
+    const prefix = translate('caption.orgAvg') || translate('caption.orgAverage') || 'Org average';
     return `${scenarioPrefix(translate)}${prefix} · ${rangeText} · ${teamText}`;
   }
 
   function rangeLabel(range, translate){
     if (!range) return translate('range.7d');
     if (range.preset) {
+      const presetKey = displayPreset(range.preset);
       const map = {
-        day: translate('range.day'),
-        '7d': translate('range.7d'),
-        month: translate('range.month'),
-        year: translate('range.year')
+        today: translate('range.today') || 'Today',
+        '7d': translate('range.7d') || '7 Days',
+        mtd: translate('range.mtd') || 'Month to date',
+        qtd: translate('range.qtd') || 'Quarter to date',
+        ytd: translate('range.ytd') || 'Year to date'
       };
-      return map[range.preset] || translate('range.7d');
+      return map[presetKey] || translate('range.7d');
     }
     if (range.start && range.end) {
-      return `${range.start} → ${range.end}`;
+      const start = formatLocaleDate(range.start);
+      const end = formatLocaleDate(range.end);
+      if (start && start === end) return start;
+      return `${start} – ${end}`;
     }
     return translate('range.7d');
   }
 
   function teamLabel(team, translate){
-    if (!team || team === 'all') return translate('caption.teamAll');
+    if (!team || team === 'all') return translate('caption.teamAll') || 'All teams';
     const site = window.SITE || siteState;
     const label = site?.map?.[team]?.label;
     if (label) return label;
@@ -578,7 +627,7 @@
   }
 
   function scenarioPrefix(translate){
-    return readScenario() === 'night' ? translate('caption.scenarioPrefix') : '';
+    return readScenario() === 'night' ? (translate('caption.scenarioPrefix') || 'Night scenario · ') : '';
   }
 
   function readScenario(){

@@ -8,12 +8,12 @@
     <div class="about__overlay" data-about-close></div>
     <div class="about__sheet" role="document">
       <header class="about__header">
-        <h2 class="about__title" data-i18n="about.title">About this platform</h2>
+        <h2 class="about__title" id="about-title" data-i18n="about.title">About this platform</h2>
         <button type="button" class="about__close" data-about-close data-i18n="about.close" data-i18n-attr="aria-label" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
       </header>
-      <ul class="about__list">
+      <ul class="about__list" id="about-desc">
         <li data-i18n="about.bullet1">Aggregates only</li>
         <li data-i18n="about.bullet2">No ML</li>
         <li data-i18n="about.bullet3">EU cloud</li>
@@ -23,6 +23,8 @@
       </ul>
     </div>`;
   document.body.appendChild(modal);
+  modal.setAttribute('aria-labelledby', 'about-title');
+  modal.setAttribute('aria-describedby', 'about-desc');
 
   const focusSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
   let lastFocus = null;

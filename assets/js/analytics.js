@@ -31,7 +31,7 @@ function initPage(){
     if (!chartEl) return;
     const legendEl = document.getElementById('wellbeing-legend');
     const breakdownEl = document.getElementById('analytics-breakdown');
-    const captionEl = document.getElementById('analytics-caption');
+    const captionEl = document.getElementById('global-caption');
     const maToggle = document.getElementById('maToggle');
     const deltaBadgeEl = document.getElementById('wellbeing-delta');
     const miniGrid = document.getElementById('analytics-mini-kpis');
@@ -91,6 +91,36 @@ function initPage(){
     }
 
     const getLang = () => window.I18N?.getLang?.() || 'en';
+
+    function escapeHtml(input){
+      return String(input ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char] || char);
+    }
+
+    function canonicalPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return '7d';
+      if (key === 'mtd' || key === 'month') return 'month';
+      if (key === 'qtd' || key === 'quarter') return 'month';
+      if (key === 'ytd' || key === 'year') return 'year';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
+
+    function displayPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return 'today';
+      if (key === 'mtd' || key === 'month') return 'mtd';
+      if (key === 'qtd' || key === 'quarter') return 'qtd';
+      if (key === 'ytd' || key === 'year') return 'ytd';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
     const defaultDateOptions = lang => (lang === 'ru'
       ? {day: '2-digit', month: '2-digit', year: 'numeric'}
       : {day: 'numeric', month: 'short', year: 'numeric'});
@@ -128,8 +158,7 @@ function initPage(){
 
     function presetForRange(range){
       if (range.preset) {
-        if (range.preset === 'month' || range.preset === 'year') return range.preset;
-        return '7d';
+        return canonicalPreset(range.preset);
       }
       if (range.start && range.end) {
         const start = new Date(range.start);
@@ -175,14 +204,22 @@ function initPage(){
           deltaBadgeEl.textContent = '';
           deltaBadgeEl.className = 'delta-badge';
         }
-        if (captionEl) captionEl.textContent = buildCaption(range, team);
+        if (captionEl && window.Caption?.renderCaption) {
+          window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+        } else if (captionEl) {
+          captionEl.textContent = buildCaption(range, team);
+        }
         return;
       }
 
       renderTracker(metrics, team);
       renderBreakdown(metrics, team);
       renderMiniKpis(metrics, team);
-      if (captionEl) captionEl.textContent = buildCaption(range, team);
+      if (captionEl && window.Caption?.renderCaption) {
+        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight: buildCaption(range, team)});
+      } else if (captionEl) {
+        captionEl.textContent = buildCaption(range, team);
+      }
     }
 
     async function loadMetrics(preset, range, team){
@@ -318,13 +355,14 @@ function initPage(){
         const series = info.series || [];
         const delta = info.delta != null ? info.delta : value - previous;
         const badge = deltaBadge(delta, !cfg.inverse);
+        const sparkMeta = buildSparkMeta(delta);
         return `<article class="tile breakdown-card">
           <header class="tile__head">
             <span class="tile__title">${t(cfg.label)}</span>
             <span class="delta-badge ${badge.className}">${badge.label}</span>
           </header>
           <div class="tile__kpi">${Math.round(value)}<span>${cfg.unit}</span></div>
-          <div class="spark">${sparkline(series)}</div>
+          <div class="spark">${sparkline(series, sparkMeta)}</div>
           <footer class="breakdown-meta">
             <span>${t('status.value')} ${Math.round(value)}${cfg.unit}</span>
             <span>${t('status.target')}: ${Math.round(previous)}${cfg.unit}</span>
@@ -406,7 +444,7 @@ function initPage(){
 
     function metricDeltaInfo(metrics, key, team){
       if (!metrics) return {current: null, previous: null, delta: null, series: []};
-      const preset = metrics?.range || presetForRange(readRange());
+      const preset = metrics?.range ? canonicalPreset(metrics.range) : presetForRange(readRange());
       const series = seriesForMetric(metrics, key, team);
       const windowStats = computeWindowStats(series, preset);
 
@@ -503,8 +541,10 @@ function initPage(){
       return avg(series.slice(half)) - avg(series.slice(0,half));
     }
 
-    function sparkline(values){
-      if (!Array.isArray(values) || values.length === 0) return '';
+    function sparkline(values, meta){
+      if (!Array.isArray(values) || values.length === 0) {
+        return '<div class="chart chart--spark" aria-hidden="true"></div>';
+      }
       const max = Math.max(...values);
       const min = Math.min(...values);
       const span = max - min || 1;
@@ -514,7 +554,55 @@ function initPage(){
         const y = (100 - ((v - min) / span) * 100).toFixed(2);
         return `${x},${y}`;
       }).join(' ');
-      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke" points="${points}" /></svg>`;
+      const lastX = values.length > 1 ? (step * (values.length - 1)).toFixed(2) : '100';
+      const lastY = values.length ? (100 - ((values[values.length - 1] - min) / span) * 100).toFixed(2) : '50';
+      const aria = meta?.aria ? ` aria-label="${escapeHtml(meta.aria)}"` : ' aria-hidden="true"';
+      const tabindex = meta?.aria ? ' tabindex="0"' : '';
+      const title = meta?.tooltip ? ` title="${escapeHtml(meta.tooltip)}"` : '';
+      const trendAttr = meta?.trend ? ` data-trend="${escapeHtml(meta.trend)}"` : '';
+      const tooltip = meta?.tooltip ? `<span class="chart__tooltip">${escapeHtml(meta.tooltip)}</span>` : '';
+      return `<div class="chart chart--spark"${aria}${tabindex}${title}${trendAttr}><svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false"><polyline points="${points}" /></svg><span class="chart__marker" style="left:${lastX}%;top:${lastY}%"></span>${tooltip}</div>`;
+    }
+
+    function sparkTrend(delta){
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
+      return delta > 0 ? 'rising' : 'falling';
+    }
+
+    function sparkTrendLabel(key){
+      return window.I18N?.t(`trend.${key}`) || ({
+        rising: 'Rising',
+        falling: 'Falling',
+        stable: 'Stable'
+      }[key] || 'Stable');
+    }
+
+    function formatSparkDelta(delta){
+      if (!Number.isFinite(delta)) return '';
+      const lang = getLang();
+      const abs = Math.abs(delta);
+      const decimals = abs >= 10 ? 0 : 1;
+      const options = {maximumFractionDigits: decimals, minimumFractionDigits: decimals};
+      try {
+        if (Math.abs(delta) < 0.05) {
+          return new Intl.NumberFormat(lang, options).format(0);
+        }
+        return new Intl.NumberFormat(lang, {...options, signDisplay: 'always'}).format(delta);
+      } catch (err) {
+        if (Math.abs(delta) < 0.05) return abs.toFixed(decimals);
+        const sign = delta >= 0 ? '+' : '−';
+        return `${sign}${abs.toFixed(decimals)}`;
+      }
+    }
+
+    function buildSparkMeta(delta){
+      if (!Number.isFinite(delta)) return null;
+      const trend = sparkTrend(delta);
+      const trendLabel = sparkTrendLabel(trend);
+      const deltaText = formatSparkDelta(delta);
+      const deltaLabel = window.I18N?.t('trend.delta', {delta: deltaText}) || `${deltaText} vs last`;
+      const tooltip = `${trendLabel}; ${deltaLabel}`;
+      return {trend, tooltip, aria: tooltip};
     }
 
     function seriesForMetric(metrics, key, team){
@@ -620,13 +708,15 @@ function initPage(){
     function rangeLabel(range){
       if (!range) return t('range.7d');
       if (range.preset) {
+        const presetKey = displayPreset(range.preset);
         const map = {
-          day: t('range.day'),
+          today: t('range.today'),
           '7d': t('range.7d'),
-          month: t('range.month'),
-          year: t('range.year')
+          mtd: t('range.mtd'),
+          qtd: t('range.qtd'),
+          ytd: t('range.ytd')
         };
-        return map[range.preset] || t('range.7d');
+        return map[presetKey] || t('range.7d');
       }
       if (range.start && range.end) {
         const start = formatLocaleDate(range.start);
@@ -659,6 +749,18 @@ function initPage(){
     }
   }
 
+window.renderAnalyticsPage = function(){
+  const boot = () => initPage();
+  if (window.I18N?.onReady) {
+    window.I18N.onReady(boot);
+  } else {
+    boot();
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  window.I18N.onReady(initPage);
+  const lazyHost = document.querySelector('[data-mount="renderAnalyticsPage"]');
+  if (!lazyHost) {
+    window.renderAnalyticsPage();
+  }
 });

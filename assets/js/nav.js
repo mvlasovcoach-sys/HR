@@ -74,11 +74,18 @@
     // Translate just-in-time (if i18n is present)
     try { window.I18N?.refresh?.(host); } catch(e){/* noop */}
 
-    host.querySelectorAll('a').forEach(link => {
+    const links = Array.from(host.querySelectorAll('a'));
+    links.forEach(link => {
       const labelText = link.querySelector('.nav-label')?.textContent?.trim?.();
       if (labelText) {
         link.dataset.short = labelText.charAt(0).toUpperCase();
       }
+      link.addEventListener('keydown', evt => handleKeydown(evt, links));
+      link.addEventListener('focus', () => {
+        if (typeof link.scrollIntoView === 'function') {
+          link.scrollIntoView({block: 'nearest'});
+        }
+      });
     });
 
     // Self-check in console to debug
@@ -100,4 +107,31 @@
       renderSideNav(guess);
     }
   });
+
+  function handleKeydown(evt, links){
+    if (!evt || !links || !links.length) return;
+    const key = evt.key;
+    const current = evt.currentTarget;
+    const index = links.indexOf(current);
+    if (index === -1) return;
+
+    if (key === 'ArrowDown') {
+      evt.preventDefault();
+      const next = links[index + 1] || links[0];
+      next?.focus();
+    } else if (key === 'ArrowUp') {
+      evt.preventDefault();
+      const prev = links[index - 1] || links[links.length - 1];
+      prev?.focus();
+    } else if (key === 'Home') {
+      evt.preventDefault();
+      links[0]?.focus();
+    } else if (key === 'End') {
+      evt.preventDefault();
+      links[links.length - 1]?.focus();
+    } else if (key === 'Enter' || key === ' ') {
+      evt.preventDefault();
+      current?.click();
+    }
+  }
 })();

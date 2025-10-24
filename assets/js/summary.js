@@ -7,7 +7,7 @@
 
   const SUMMARY = window.SUMMARY = window.SUMMARY || {};
   const RANGE = window.RANGE = window.RANGE || {};
-  const selectionState = SUMMARY.state = SUMMARY.state || {range: '7d', start: null, end: null};
+  const selectionState = SUMMARY.state = SUMMARY.state || {range: '7d', displayRange: '7d', start: null, end: null};
 
   const runtime = {
     loading: false,
@@ -41,6 +41,26 @@
     }
   };
   const fmt = (date, opts) => formatLocaleDate(date, opts);
+
+  function canonicalPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return '7d';
+    if (key === 'mtd' || key === 'month') return 'month';
+    if (key === 'qtd' || key === 'quarter') return 'month';
+    if (key === 'ytd' || key === 'year') return 'year';
+    if (key === '7d') return '7d';
+    return null;
+  }
+
+  function displayPreset(value){
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return 'today';
+    if (key === 'mtd' || key === 'month') return 'mtd';
+    if (key === 'qtd' || key === 'quarter') return 'qtd';
+    if (key === 'ytd' || key === 'year') return 'ytd';
+    if (key === '7d') return '7d';
+    return null;
+  }
 
   SUMMARY.computePeriodLabel = computePeriodLabel;
   SUMMARY.setPeriodAndAsOf = setPeriodAndAsOf;
@@ -261,6 +281,8 @@
 
   function applyRangeSelection(range){
     const preset = typeof range?.preset === 'string' ? range.preset : null;
+    const canonical = preset ? canonicalPreset(preset) : null;
+    const display = preset ? displayPreset(preset) : null;
     const parseDate = value => {
       if (!value) return null;
       if (value instanceof Date) {
@@ -269,7 +291,8 @@
       const parsed = new Date(value);
       return isNaN(parsed) ? null : parsed;
     };
-    selectionState.range = preset || (range?.start && range?.end ? 'custom' : '7d');
+    selectionState.range = canonical || (range?.start && range?.end ? 'custom' : '7d');
+    selectionState.displayRange = display || (range?.start && range?.end ? 'custom' : '7d');
     selectionState.start = parseDate(range?.start);
     selectionState.end = parseDate(range?.end);
     setPeriodAndAsOf(selectionState);
@@ -277,8 +300,8 @@
 
   function getRangeKey(range){
     if (range?.preset) {
-      if (range.preset === 'day') return '7d';
-      if (range.preset === '7d' || range.preset === 'month' || range.preset === 'year') return range.preset;
+      const preset = canonicalPreset(range.preset);
+      if (preset) return preset;
     }
     if (range?.start && range?.end) {
       const start = new Date(range.start);
@@ -548,23 +571,47 @@
   function computePeriodLabel(stateLike){
     const target = stateLike || selectionState;
     const today = getToday();
-    const range = target?.range || '7d';
+    const datasetRange = target?.range || '7d';
+    const displayRange = target?.displayRange
+      || (datasetRange === 'custom' ? 'custom'
+        : datasetRange === 'month' ? 'mtd'
+        : datasetRange === 'year' ? 'ytd'
+        : datasetRange);
     const selectedStart = ensureDate(target?.start);
     const selectedEnd = ensureDate(target?.end);
     const dataStart = ensureDate(runtime.rangeStart);
     const dataEnd = ensureDate(runtime.rangeEnd);
 
     const defaultStart = (() => {
-      if (range === '7d') return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
-      if (range === 'month') return new Date(today.getFullYear(), today.getMonth(), 1);
-      if (range === 'year') return new Date(today.getFullYear(), 0, 1);
-      return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      switch (displayRange) {
+        case 'today':
+          return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        case '7d':
+          return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+        case 'mtd':
+          return new Date(today.getFullYear(), today.getMonth(), 1);
+        case 'qtd': {
+          const quarterStart = Math.floor(today.getMonth() / 3) * 3;
+          return new Date(today.getFullYear(), quarterStart, 1);
+        }
+        case 'ytd':
+          return new Date(today.getFullYear(), 0, 1);
+        default:
+          return new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+      }
     })();
 
     const defaultEnd = (() => {
-      if (range === 'day' || range === '7d') return new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      if (range === 'month') return new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      return new Date(today.getFullYear(), 11, 31);
+      switch (displayRange) {
+        case 'today':
+        case '7d':
+        case 'mtd':
+        case 'qtd':
+        case 'ytd':
+          return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        default:
+          return new Date(today.getFullYear(), 11, 31);
+      }
     })();
 
     const start = dataStart || selectedStart || defaultStart;

@@ -39,6 +39,16 @@
     cardio: {short: [], long: []}
   };
 
+  function displayPreset(value) {
+    const key = String(value || '').toLowerCase();
+    if (key === 'today' || key === 'day') return 'today';
+    if (key === 'mtd' || key === 'month') return 'mtd';
+    if (key === 'qtd' || key === 'quarter') return 'qtd';
+    if (key === 'ytd' || key === 'year') return 'ytd';
+    if (key === '7d') return '7d';
+    return '7d';
+  }
+
   function seedTrends(key) {
     try {
       const raw = localStorage.getItem(`hr:${key}`);
@@ -99,7 +109,8 @@
 
   function horizonForRange(range) {
     if (range && range.preset) {
-      if (range.preset === 'month' || range.preset === 'year') return 'long';
+      const preset = displayPreset(range.preset);
+      if (preset === 'mtd' || preset === 'qtd' || preset === 'ytd') return 'long';
       return 'short';
     }
     if (range && range.start && range.end) {

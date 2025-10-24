@@ -1,5 +1,5 @@
-function initPage(){
-    const mount = document.getElementById('hr-board');
+function initHrBoard(host){
+    const mount = typeof host === 'string' ? document.querySelector(host) : host;
     if (!mount) return;
 
     const CAPTION = document.getElementById('global-caption');
@@ -50,6 +50,26 @@ function initPage(){
       })[char] || char);
     }
 
+    function canonicalPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return '7d';
+      if (key === 'mtd' || key === 'month') return 'month';
+      if (key === 'qtd' || key === 'quarter') return 'month';
+      if (key === 'ytd' || key === 'year') return 'year';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
+
+    function displayPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return 'today';
+      if (key === 'mtd' || key === 'month') return 'mtd';
+      if (key === 'qtd' || key === 'quarter') return 'qtd';
+      if (key === 'ytd' || key === 'year') return 'ytd';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
+
     function readRange(){
       try {
         const raw = localStorage.getItem('hr:range');
@@ -75,8 +95,7 @@ function initPage(){
 
     function presetForRange(range){
       if (range && range.preset) {
-        if (range.preset === 'month' || range.preset === 'year') return range.preset;
-        return '7d';
+        return canonicalPreset(range.preset);
       }
       if (range && range.start && range.end) {
         const start = new Date(range.start);
@@ -101,8 +120,10 @@ function initPage(){
       }
     }
 
-    function sparkline(values){
-      if (!Array.isArray(values) || !values.length) return '';
+    function sparkline(values, meta){
+      if (!Array.isArray(values) || !values.length) {
+        return '<div class="chart chart--spark" aria-hidden="true"></div>';
+      }
       const max = Math.max(...values);
       const min = Math.min(...values);
       const span = max - min || 1;
@@ -114,23 +135,27 @@ function initPage(){
           return `${x},${y}`;
         })
         .join(' ');
-      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="var(--cyan)" stroke-width="4" stroke-linecap="round" points="${points}" /></svg>`;
+      const lastX = values.length > 1 ? (step * (values.length - 1)).toFixed(2) : '100';
+      const lastY = values.length ? (100 - ((values[values.length - 1] - min) / span) * 100).toFixed(2) : '50';
+      const aria = meta?.aria ? ` aria-label="${escapeHtml(meta.aria)}"` : ' aria-hidden="true"';
+      const tabindex = meta?.aria ? ' tabindex="0"' : '';
+      const title = meta?.tooltip ? ` title="${escapeHtml(meta.tooltip)}"` : '';
+      const trendAttr = meta?.trend ? ` data-trend="${escapeHtml(meta.trend)}"` : '';
+      const tooltip = meta?.tooltip ? `<span class="chart__tooltip">${escapeHtml(meta.tooltip)}</span>` : '';
+      return `<div class="chart chart--spark"${aria}${tabindex}${title}${trendAttr}><svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false"><polyline points="${points}" /></svg><span class="chart__marker" style="left:${lastX}%;top:${lastY}%"></span>${tooltip}</div>`;
     }
 
     function sparkTrend(delta){
       if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
-      return delta > 0 ? 'up' : 'down';
+      return delta > 0 ? 'rising' : 'falling';
     }
 
     function sparkTrendLabel(key){
-      switch (key) {
-        case 'up':
-          return window.I18N?.t('spark.rising') || 'Rising';
-        case 'down':
-          return window.I18N?.t('spark.falling') || 'Falling';
-        default:
-          return window.I18N?.t('spark.stable') || 'Stable';
-      }
+      return window.I18N?.t(`trend.${key}`) || ({
+        rising: 'Rising',
+        falling: 'Falling',
+        stable: 'Stable'
+      }[key] || 'Stable');
     }
 
     function formatSparkDelta(delta){
@@ -156,9 +181,10 @@ function initPage(){
       const trendKey = sparkTrend(delta);
       const trendLabel = sparkTrendLabel(trendKey);
       const deltaText = formatSparkDelta(delta);
-      const tooltip = window.I18N?.t('spark.delta', {delta: deltaText}) || `${deltaText} vs last period`;
-      const aria = `${trendLabel}. ${tooltip}`.trim();
-      return {trendLabel, deltaText, tooltip, aria};
+      const deltaLabel = window.I18N?.t('trend.delta', {delta: deltaText}) || `${deltaText} vs last`;
+      const tooltip = `${trendLabel}; ${deltaLabel}`;
+      const aria = tooltip.trim();
+      return {trendLabel, deltaText, tooltip, aria, trend: trendKey};
     }
 
     function formatValue(value, decimals){
@@ -168,13 +194,15 @@ function initPage(){
     function rangeLabel(range){
       if (!range) return t('caption.range', {range: '—'});
       if (range.preset) {
+        const presetKey = displayPreset(range.preset);
         const mapping = {
-          day: t('range.day'),
+          today: t('range.today'),
           '7d': t('range.7d'),
-          month: t('range.month'),
-          year: t('range.year')
+          mtd: t('range.mtd'),
+          qtd: t('range.qtd'),
+          ytd: t('range.ytd')
         };
-        return mapping[range.preset] || t('caption.range', {range: '—'});
+        return mapping[presetKey] || t('caption.range', {range: '—'});
       }
       if (range.start && range.end) {
         const start = formatLocaleDate(range.start);
@@ -235,7 +263,11 @@ function initPage(){
       toggleInsufficient(insufficient);
       if (!data) {
         mount.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+        if (CAPTION && window.Caption?.renderCaption) {
+          window.Caption.renderCaption(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
+        } else if (CAPTION) {
+          CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+        }
         toggleInsufficient(false);
         return;
       }
@@ -247,10 +279,7 @@ function initPage(){
         const series = resolveSeries(data, cfg.key, team);
         const badge = buildDelta(delta, cfg.positive);
         const sparkInfo = buildSparkMeta(delta);
-        const sparkGraphic = sparkline(series);
-        const sparkMarkup = sparkInfo
-          ? `<div class="spark tile__spark" role="img" tabindex="0" aria-label="${escapeHtml(sparkInfo.aria)}" title="${escapeHtml(sparkInfo.tooltip)}" data-tooltip="${escapeHtml(sparkInfo.tooltip)}">${sparkGraphic}${sparkInfo.tooltip ? `<div class=\"spark-tooltip\">${escapeHtml(sparkInfo.tooltip)}</div>` : ''}</div>`
-          : `<div class="spark tile__spark" aria-hidden="true">${sparkGraphic}</div>`;
+        const sparkMarkup = `<div class="spark tile__spark">${sparkline(series, sparkInfo)}</div>`;
         return `<article class="tile">
           <header class="tile__head">
             <span class="tile__title">${labelFor(cfg.labelKey, cfg.key)}</span>
@@ -266,7 +295,11 @@ function initPage(){
       }).join('');
 
       mount.innerHTML = `<div class="panel__grid">${cards}</div>`;
-      if (CAPTION) CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+      if (CAPTION && window.Caption?.renderCaption) {
+        window.Caption.renderCaption(CAPTION, {asOf: new Date(), insight: `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`});
+      } else if (CAPTION) {
+        CAPTION.textContent = `${scenarioPrefix()}${t('caption.orgAvg') || t('caption.orgAverage')} · ${rangeLabel(range)} · ${teamLabel(team)}`;
+      }
     }
 
     function toggleInsufficient(active){
@@ -332,6 +365,18 @@ function initPage(){
     }
 }
 
+window.renderHrBoard = function(target){
+  const boot = () => initHrBoard(target || document.getElementById('hr-board'));
+  if (window.I18N?.onReady) {
+    window.I18N.onReady(boot);
+  } else {
+    boot();
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  window.I18N.onReady(initPage);
+  const lazyHost = document.querySelector('[data-mount="renderHrBoard"]');
+  if (!lazyHost) {
+    window.renderHrBoard('#hr-board');
+  }
 });
