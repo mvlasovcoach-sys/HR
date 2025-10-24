@@ -399,6 +399,7 @@
   function drawAgeOverall(root, ageData){
     const entries = Object.entries(ageData || {});
     const descId = 'age-overall-desc';
+    const host = root?.closest?.('[data-chart="age-overall"]') || root?.parentElement || root;
     if (!entries.length) {
       const noData = window.I18N?.t?.('status.noData') || 'No data available';
       const empty = document.createElement('p');
@@ -421,41 +422,95 @@
       };
     }
     const totals = entries.map(([, value]) => Number(value) || 0);
-    const max = Math.max(1, ...totals);
-    const width = 360;
-    const height = 220;
-    const chartHeight = 150;
-    const margin = 32;
-    const gap = 16;
-    const barWidth = (width - margin * 2 - gap * (entries.length - 1)) / entries.length;
-    const bars = entries.map(([bucket, value], index) => {
-      const val = Number(value) || 0;
-      const barHeight = (val / max) * chartHeight;
-      const x = margin + index * (barWidth + gap);
-      const y = height - margin - barHeight;
-      return `
-        <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6" class="age-bar"></rect>
-        <text x="${x + barWidth / 2}" y="${y - 8}" class="age-bar__value">${formatInteger(val)}</text>
-        <text x="${x + barWidth / 2}" y="${height - margin + 18}" class="age-bar__label">${escapeHtml(bucket)}</text>
-      `;
-    }).join('');
-    root.innerHTML = `
-      <svg viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">
-        <line x1="${margin - 8}" y1="${height - margin}" x2="${width - margin + 8}" y2="${height - margin}" class="age-axis"></line>
-        ${bars}
-      </svg>
-    `;
     const desc = document.createElement('p');
     desc.id = descId;
     desc.className = 'sr-only';
-    desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${formatInteger(value)}`).join('; ');
-    root.appendChild(desc);
     root.setAttribute('role', 'group');
     root.setAttribute('tabindex', '0');
     root.setAttribute('aria-describedby', descId);
     root.setAttribute('aria-label', getText('demo.ageOverall', 'Age — Overall'));
+
+    const getBounds = () => {
+      const rect = host?.getBoundingClientRect?.() || {width: 0, height: 0};
+      const width = Math.max(rect.width || host?.clientWidth || host?.offsetWidth || root.clientWidth || 360, 280);
+      const height = Math.max(rect.height || host?.clientHeight || host?.offsetHeight || root.clientHeight || 220, 200);
+      return { width, height };
+    };
+
+    const render = () => {
+      const { width, height } = getBounds();
+      const margin = { top: 28, right: 20, bottom: 48, left: 20 };
+      const chartHeight = Math.max(60, height - margin.top - margin.bottom);
+      const available = Math.max(1, width - margin.left - margin.right);
+      const bucketCount = entries.length;
+      const gapRatio = bucketCount > 1 ? 0.28 : 0;
+      let barWidth = available / (bucketCount + gapRatio * Math.max(bucketCount - 1, 0));
+      barWidth = Math.max(18, Math.min(88, barWidth));
+      if (barWidth * bucketCount > available) {
+        barWidth = Math.max(18, available / bucketCount);
+      }
+      let remaining = Math.max(0, available - barWidth * bucketCount);
+      let gap = bucketCount > 1 ? remaining / (bucketCount - 1) : 0;
+      if (bucketCount > 1 && gap < 6) {
+        const deficit = (6 - gap) * (bucketCount - 1);
+        const adjustment = deficit / bucketCount;
+        barWidth = Math.max(18, barWidth - adjustment);
+        remaining = Math.max(0, available - barWidth * bucketCount);
+        gap = bucketCount > 1 ? remaining / (bucketCount - 1) : 0;
+      }
+      gap = bucketCount > 1 ? Math.min(32, gap) : 0;
+      const max = Math.max(1, ...totals);
+      const axisY = height - margin.bottom;
+      const radius = Math.min(12, barWidth / 2);
+      const labelBaseline = Math.min(height - 12, axisY + 28);
+      const bars = entries.map(([bucket, value], index) => {
+        const val = Number(value) || 0;
+        const barHeight = max ? (val / max) * chartHeight : 0;
+        const x = margin.left + index * (barWidth + gap);
+        const y = axisY - barHeight;
+        const valueY = Math.max(margin.top + 16, y - 12);
+        return `
+          <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${radius}" class="age-bar"></rect>
+          <text x="${x + barWidth / 2}" y="${valueY}" class="age-bar__value">${formatInteger(val)}</text>
+          <text x="${x + barWidth / 2}" y="${labelBaseline}" class="age-bar__label">${escapeHtml(bucket)}</text>
+        `;
+      }).join('');
+      root.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">
+          <line x1="${margin.left - 6}" y1="${axisY}" x2="${width - margin.right + 6}" y2="${axisY}" class="age-axis"></line>
+          ${bars}
+        </svg>
+      `;
+      desc.textContent = entries.map(([bucket, value]) => `${bucket}: ${formatInteger(value)}`).join('; ');
+      root.appendChild(desc);
+    };
+
+    let raf = null;
+    const requestRender = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(render);
+    };
+
+    const observer = (host && typeof ResizeObserver !== 'undefined') ? new ResizeObserver(() => requestRender()) : null;
+    if (observer && host) {
+      observer.observe(host);
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        requestRender();
+      }
+    };
+    window.addEventListener('visibilitychange', handleVisibility);
+
+    render();
+    requestRender();
+
     return {
       destroy(){
+        if (observer) observer.disconnect();
+        window.removeEventListener('visibilitychange', handleVisibility);
+        if (raf) cancelAnimationFrame(raf);
         root.replaceChildren();
         root.removeAttribute('role');
         root.removeAttribute('tabindex');
