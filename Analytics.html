@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="./assets/css/nav.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/app.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/charts.css?v=2025.10.19-05">
+<link rel="stylesheet" href="./assets/css/stress.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/print.css?v=2025.10.19-05" media="print">
 <!-- optional page CSS -->
 <link rel="stylesheet" href="./assets/css/corporate.css?v=2025.10.19-05">
@@ -30,6 +31,9 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/sources.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/source-badge.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/stress.overview.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
@@ -75,7 +79,60 @@
       <div class="panel__meta" data-i18n="section.breakdowns">Risk Breakdown</div>
       <div class="breakdown-grid" id="analytics-breakdown" aria-live="polite"></div>
     </section>
+    <section class="panel panel--stress" data-stats="true" data-source-id="demo-synth-2025">
+      <div class="so-skeleton" aria-hidden="true">
+        <div class="skeleton__line skeleton__line--wide"></div>
+        <div class="skeleton__line skeleton__line--mid"></div>
+        <div class="skeleton__block"></div>
+      </div>
+      <header class="so-head">
+        <h2 data-i18n="stress.title">Emotional wellbeing</h2>
+        <div class="so-tabs" role="tablist" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
+          <button role="tab" data-range="day"   class="tab is-active"  data-i18n="range.day">Day</button>
+          <button role="tab" data-range="week"  class="tab"            data-i18n="range.week">Week</button>
+          <button role="tab" data-range="month" class="tab"            data-i18n="range.month">Month</button>
+          <button role="tab" data-range="year"  class="tab"            data-i18n="range.year">Year</button>
+        </div>
+        <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
+                data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source & methodology">i</button>
+      </header>
+
+      <div class="so-meta">
+        <div class="so-range">
+          <div class="so-range__value"><span id="so-range">—</span></div>
+          <div class="so-range__label" data-i18n="stress.range">Range</div>
+        </div>
+        <div class="so-last">
+          <div class="so-last__value"><span id="so-last">—</span> <span id="so-state" class="pill pill--state">—</span></div>
+          <div class="so-last__label" data-i18n="stress.updated">Last updated</div>
+          <div class="so-last__time" id="so-updated">—:—</div>
+        </div>
+      </div>
+
+      <div class="chart-host chart-host--bars" id="so-chart" tabindex="0" data-i18n="stress.chartAria" data-i18n-attr="aria-label" aria-label="Emotional wellbeing distribution chart"></div>
+
+      <div class="so-legend legend legend--inline">
+        <span><i class="dot dot--low"></i><span data-i18n="stress.low">Low</span></span>
+        <span><i class="dot dot--normal"></i><span data-i18n="stress.normal">Normal</span></span>
+        <span><i class="dot dot--moderate"></i><span data-i18n="stress.moderate">Moderate</span></span>
+        <span><i class="dot dot--high"></i><span data-i18n="stress.high">High</span></span>
+      </div>
+
+      <div class="so-switch">
+        <div class="seg" role="group" data-i18n="stress.metricGroup" data-i18n-attr="aria-label" aria-label="Metric">
+          <button class="seg__btn is-active" data-metric="emotion"  data-i18n="stress.emotion">Emotion</button>
+          <button class="seg__btn"           data-metric="stress"   data-i18n="stress.stress">Stress</button>
+        </div>
+        <div class="so-actions">
+          <button class="btn btn--ghost" data-i18n="stress.test">Stress test</button>
+          <button class="btn btn--ghost" data-i18n="stress.calibrate">Calibrate</button>
+        </div>
+      </div>
+
+      <div class="panel__meta note note--meta" id="so-meta-line"></div>
+      <div class="so-low" id="so-low" role="status" aria-live="polite" hidden>Low sample size</div>
+    </section>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('analytics');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('analytics');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});window.StressOverview?.mount('so-chart','day');});</script>
 </body></html>
