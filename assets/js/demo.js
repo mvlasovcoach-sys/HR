@@ -36,7 +36,7 @@
     DEMO_CHARTS[selector] = drawFn(root, data, opts) || null;
   }
 
-  const HERO_SRC = './assets/img/aurora-platform-hero.svg';
+  const HERO_SRC = './assets/img/demo-hero-offshore.svg';
 
   const getLang = () => window.I18N?.getLang?.() || 'en';
 
@@ -184,6 +184,7 @@
 
   function renderHero(name){
     heroEl.classList.remove('is-fallback');
+    heroEl.classList.remove('has-art');
     heroEl.removeAttribute('data-fallback-label');
     heroEl.innerHTML = '';
     const img = new Image();
@@ -193,6 +194,7 @@
     img.addEventListener('load', () => {
       heroEl.classList.remove('is-loading');
       heroEl.removeAttribute('aria-busy');
+      heroEl.classList.add('has-art');
     });
     img.addEventListener('error', () => {
       heroEl.classList.remove('is-loading');
@@ -203,6 +205,7 @@
       heroEl.classList.add('is-fallback');
       heroEl.setAttribute('data-fallback-label', name);
       heroEl.setAttribute('aria-label', name);
+      heroEl.classList.remove('has-art');
     });
     img.src = `${HERO_SRC}?v=${encodeURIComponent(state.version || '')}`;
     heroEl.appendChild(img);
