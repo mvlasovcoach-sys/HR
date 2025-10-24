@@ -60,13 +60,17 @@
     <section class="analytics-tracker">
       <div class="panel chart-card" id="analytics-tracker-panel">
         <div class="panel__head">
-          <span data-i18n="section.wellbeingTracker">Wellbeing Score Tracker</span>
-          <span id="wellbeing-delta" class="delta-badge" aria-live="polite"></span>
-          <label class="switch">
-            <input id="maToggle" type="checkbox">
-            <span data-i18n="label.movingAverage">MA(3)</span>
-          </label>
-          <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
+          <h2 class="trk-title">
+            <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
+            <span id="trk-delta" class="delta-badge" aria-live="polite"></span>
+          </h2>
+          <div class="trk-controls">
+            <label class="switch">
+              <input id="maToggle" type="checkbox">
+              <span data-i18n="label.movingAverage">MA(3)</span>
+            </label>
+            <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
+          </div>
         </div>
         <div class="panel__body analytics-tracker__body">
           <div class="tracker-legend" id="wellbeing-legend"></div>
@@ -134,5 +138,86 @@
     </section>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('analytics');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});window.StressOverview?.mount('so-chart','day');});</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const t = (key, fallback) => window.I18N?.t?.(key) || fallback;
+      const periodLabel = () => {
+        const raw = (() => {
+          try {
+            return localStorage.getItem('hr:range');
+          } catch (err) {
+            return null;
+          }
+        })();
+        if (!raw) return t('range.7d', '7 Days');
+        try {
+          const parsed = JSON.parse(raw);
+          const preset = String(parsed?.preset || '').toLowerCase();
+          const key = preset === 'today' || preset === 'day'
+            ? 'today'
+            : preset === 'mtd' || preset === 'month'
+              ? 'mtd'
+              : preset === 'qtd' || preset === 'quarter'
+                ? 'qtd'
+                : preset === 'ytd' || preset === 'year'
+                  ? 'ytd'
+                  : '7d';
+          return t(`range.${key}`, '7 Days');
+        } catch (err) {
+          return t('range.7d', '7 Days');
+        }
+      };
+      const teamLabel = () => {
+        let team = 'all';
+        try {
+          team = localStorage.getItem('hr:team') || 'all';
+        } catch (err) {
+          team = 'all';
+        }
+        if (!team || team === 'all') return t('caption.teamAll', 'All Teams');
+        try {
+          const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
+          if (map && map[team]) return map[team];
+        } catch (err) {
+          /* noop */
+        }
+        return team;
+      };
+      const captionInsight = () => {
+        const prefix = (() => {
+          try {
+            return localStorage.getItem('hr:scenario') === 'night'
+              ? t('caption.scenarioPrefix', 'Night-Shift Scenario · ')
+              : '';
+          } catch (err) {
+            return '';
+          }
+        })();
+        const base = `${t('caption.orgAvg', 'Org avg')} • ${periodLabel()} • ${teamLabel()}`;
+        return `${prefix}${base}`;
+      };
+
+      const renderCaption = () => {
+        window.Caption?.render?.('#global-caption', {
+          asOf: new Date(),
+          insight: captionInsight()
+        });
+      };
+
+      renderSideNav('analytics');
+      window.DateControls?.mount('#date-controls', {
+        presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
+        compare: true
+      });
+      renderCaption();
+      document.addEventListener('i18n:change', renderCaption);
+      window.addEventListener('storage', event => {
+        if (!event) return;
+        if (event.key === 'hr:range' || event.key === 'hr:team' || event.key === 'hr:scenario') {
+          renderCaption();
+        }
+      });
+      window.StressOverview?.mount('so-chart', 'day');
+    });
+  </script>
 </body></html>
