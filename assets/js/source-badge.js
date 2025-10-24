@@ -11,10 +11,57 @@
 
   function translate(key, fallback){
     const translated = g.I18N?.t?.(key);
-    if (typeof translated === 'string' && translated.trim()) {
+    if (typeof translated === 'string' && translated.trim() && translated !== key) {
       return translated;
     }
     return fallback;
+  }
+
+  function escapeHtml(value){
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderSourceNote(host, options={}){
+    if (!host) return;
+    const sourceId = options.sourceId;
+    const lang = getLang();
+    const t = (key, fallback) => (g.I18N?.t?.(key, fallback)) || translate(key, fallback);
+    const getSource = g.Sources?.get;
+    const source = sourceId && typeof getSource === 'function' ? getSource.call(g.Sources, sourceId) : null;
+
+    if (!source) {
+      host.innerHTML = `<span class="note__label">${escapeHtml(t('source.short', 'Source'))}:</span> —`;
+      if (sourceId) {
+        console.warn('[SOURCE] Missing source for panel', sourceId);
+      }
+      return;
+    }
+
+    const rawTitle = source.title;
+    const title = typeof rawTitle === 'object'
+      ? (rawTitle?.[lang] || rawTitle?.en || rawTitle?.default || '')
+      : (typeof rawTitle === 'string' ? rawTitle : '');
+
+    const threshold = options.threshold;
+    const period = options.period;
+
+    const labelSource = title
+      ? `<span class="note__label">${escapeHtml(t('source.short', 'Source'))}:</span> ${escapeHtml(title)}`
+      : '';
+    const labelThreshold = threshold
+      ? `<span class="note__label">${escapeHtml(t('source.threshold', 'Threshold'))}:</span> ${escapeHtml(threshold)}`
+      : '';
+    const labelPeriod = period
+      ? `<span class="note__label">${escapeHtml(t('source.period', 'Period'))}:</span> ${escapeHtml(period)}`
+      : '';
+
+    const chunks = [labelSource, labelThreshold, labelPeriod].filter(Boolean);
+    host.innerHTML = chunks.join('<span class="note__sep">·</span>');
   }
 
   function formatStats(stats){
@@ -294,4 +341,6 @@
   api.refreshPanel = refreshPanel;
   api.refresh = refreshAll;
   api.applyOverrides = applyOverrides;
+  api.renderSourceNote = renderSourceNote;
+  g.renderSourceNote = renderSourceNote;
 })(window, document);

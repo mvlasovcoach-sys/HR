@@ -80,6 +80,7 @@
           <span data-i18n="demo.age_title">Age — Headcount by band</span>
           <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="age-n">0</span>)</span>
         </h2>
+        <div class="panel__meta note note--meta" id="age-meta"></div>
         <div class="chart-host chart-host--bar" data-chart="age-overall">
           <div id="chart-age-overall" class="chart-root"></div>
         </div>
@@ -90,18 +91,7 @@
           </h3>
           <div id="chart-gender-overall" class="chart-mini__root"></div>
         </div>
-        <div class="chart-notes" data-note-host="age">
-          <p class="note note--meta" data-i18n="demo.note.unit_headcount">Unit: headcount. Values show count and % per age band.</p>
-        </div>
-        <div class="panel__foot note">
-          <span data-i18n="source.short">Source</span>:
-          <span class="note__src"></span>.
-          <span data-i18n="source.threshold">Threshold</span>:
-          <span class="note__threshold"></span>.
-          <span data-i18n="source.period">Period</span>:
-          <span class="note__period"></span>.
-          <span class="note__disclaimer muted" hidden></span>
-        </div>
+        <div class="chart-notes" data-note-host="age"></div>
       </div>
 
       <article class="card panel" data-stats="true" data-source-id="demo-synth-2025">
@@ -112,21 +102,11 @@
           <span class="legend__item"><i class="dot dot--green"></i><span data-i18n="legend.ok">OK (≥ threshold)</span></span>
           <span class="legend__item"><i class="dot dot--blue"></i><span data-i18n="legend.nok">Not OK (&lt; threshold)</span></span>
         </div>
+        <div class="panel__meta note note--meta" id="dept-meta"></div>
         <div class="chart-block">
           <div id="chart-by-dept" class="chart-root"></div>
         </div>
-        <div class="chart-notes" data-note-host="dept">
-          <p class="note note--meta" id="dept-note"></p>
-        </div>
-        <div class="panel__foot note">
-          <span data-i18n="source.short">Source</span>:
-          <span class="note__src"></span>.
-          <span data-i18n="source.threshold">Threshold</span>:
-          <span class="note__threshold"></span>.
-          <span data-i18n="source.period">Period</span>:
-          <span class="note__period"></span>.
-          <span class="note__disclaimer muted" hidden></span>
-        </div>
+        <div class="chart-notes" data-note-host="dept"></div>
       </article>
 
     </section>
@@ -135,16 +115,8 @@
       <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
         data-i18n="source.link" data-i18n-attr="aria-label">i</button>
       <div class="panel__head" data-i18n="demo.shiftPattern">Shift Pattern</div>
+      <div class="panel__meta note note--meta" id="shift-meta"></div>
       <div id="shift-grid"></div>
-      <div class="panel__foot note">
-        <span data-i18n="source.short">Source</span>:
-        <span class="note__src"></span>.
-        <span data-i18n="source.threshold">Threshold</span>:
-        <span class="note__threshold"></span>.
-        <span data-i18n="source.period">Period</span>:
-        <span class="note__period"></span>.
-        <span class="note__disclaimer muted" hidden></span>
-      </div>
     </section>
 
     <div class="actions">
