@@ -129,9 +129,86 @@ body.density--compact .demo-hero{padding:12px;margin-bottom:var(--section-gap)}
   gap: var(--space-4);
 }
 
-.panel--chart > h2 {
+.panel--chart > h2,
+.panel__title {
   margin: 0;
   font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.panel__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: 1.3rem;
+}
+
+.chart-mini {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.chart-mini__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.chart-mini__root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.chart-mini__item {
+  display: grid;
+  gap: var(--space-3);
+  align-items: center;
+  grid-template-columns: minmax(80px, auto) minmax(0, 1fr) auto;
+}
+
+.chart-mini__label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.chart-mini__bar {
+  position: relative;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(7, 23, 32, 0.6);
+  overflow: hidden;
+}
+
+.chart-mini__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.chart-mini__fill--male {
+  background: rgba(130, 182, 255, 0.55);
+  box-shadow: 0 0 8px rgba(130, 182, 255, 0.32);
+}
+
+.chart-mini__fill--female {
+  background: rgba(15, 247, 177, 0.55);
+  box-shadow: 0 0 8px rgba(15, 247, 177, 0.28);
+}
+
+.chart-mini__fill--other {
+  background: rgba(255, 217, 102, 0.55);
+  box-shadow: 0 0 8px rgba(255, 217, 102, 0.28);
+}
+
+.chart-mini__value {
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
@@ -289,6 +366,7 @@ body.density--compact .chart-legend{margin-top:6px;gap:12px;flex-wrap:wrap}
   gap: var(--space-3);
   align-items: center;
   grid-template-columns: minmax(120px, 1fr) minmax(0, 3fr);
+  cursor: default;
 }
 
 .chart-bars__label {
@@ -310,6 +388,16 @@ body.density--compact .chart-legend{margin-top:6px;gap:12px;flex-wrap:wrap}
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.stack--ok {
+  background: rgba(15, 247, 177, 0.45);
+  color: #01261c;
+}
+
+.stack--nok {
+  background: rgba(130, 182, 255, 0.4);
+  color: #041924;
 }
 
 .stack--male {
