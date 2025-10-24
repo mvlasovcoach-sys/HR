@@ -31,6 +31,64 @@
   letter-spacing: 0.32px;
 }
 
+.panel.is-loading {
+  position: relative;
+  color: transparent;
+}
+.panel.is-loading > * {
+  visibility: hidden;
+}
+.panel.is-loading > .panel__head,
+.panel.is-loading > header.panel__head {
+  visibility: visible;
+  opacity: 0.55;
+}
+.panel.is-loading::before,
+.panel.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.panel.is-loading::before {
+  background: rgba(7, 23, 32, 0.55);
+  z-index: 1;
+}
+.panel.is-loading::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  animation: shimmer 1.2s infinite;
+  z-index: 2;
+}
+
+.panel[data-low-sample="true"] {
+  position: relative;
+  opacity: 0.78;
+}
+.panel[data-low-sample="true"]::after {
+  content: attr(data-low-sample-label);
+  position: absolute;
+  bottom: calc(100% - 8px);
+  right: 16px;
+  background: rgba(7, 23, 32, 0.92);
+  color: var(--txt);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 12px 32px rgba(7, 23, 32, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 6;
+}
+.panel[data-low-sample="true"]:hover::after,
+.panel[data-low-sample="true"]:focus-within::after {
+  opacity: 1;
+  transform: translateY(-8px);
+}
+
 [data-guard="true"] {
   position: relative;
   pointer-events: none;

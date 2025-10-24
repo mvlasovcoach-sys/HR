@@ -36,28 +36,34 @@ function initPage(){
     const deltaBadgeEl = document.getElementById('trk-delta');
     const miniGrid = document.getElementById('analytics-mini-kpis');
     const trackerPanel = document.getElementById('analytics-tracker-panel');
+    const trackerMeta = document.getElementById('trk-meta');
     const breakdownPanel = document.querySelector('.analytics-breakdown');
 
     const BREAKDOWN_KEYS = [
-      {key: 'high_stress_pct', label: 'kpi.highStress', inverse: true, unit: '%'},
-      {key: 'fatigue_elevated_pct', label: 'kpi.elevatedFatigue', inverse: true, unit: '%'},
-      {key: 'engagement_active_pct', label: 'kpi.activeEngagement', inverse: false, unit: '%'}
+      {key: 'high_stress_pct', label: 'kpi.highStress', fallback: 'High stress', inverse: true, unit: '%'},
+      {key: 'fatigue_elevated_pct', label: 'kpi.elevatedFatigue', fallback: 'Elevated fatigue', inverse: true, unit: '%'},
+      {key: 'engagement_active_pct', label: 'kpi.activeEngagement', fallback: 'Active engagement', inverse: false, unit: '%'}
     ];
+
+    const LOW_SAMPLE_THRESHOLD = 20;
+    const miniKpiRegistry = new Map();
+    let hoverHandlerAttached = false;
 
     const MA_KEY = 'hr:analytics:ma';
     let useMA = readStoredMA();
-    let currentSeries = null;
+    let currentChartState = null;
+    let compareEnabled = readCompare();
     if (typeof ResizeObserver === 'function') {
       const resizeObserver = new ResizeObserver(() => {
-        if (currentSeries) {
-          renderWellbeingChart(currentSeries);
+        if (currentChartState) {
+          renderWellbeingChart(currentChartState);
         }
       });
       resizeObserver.observe(chartEl);
     } else {
       window.addEventListener('resize', () => {
-        if (currentSeries) {
-          renderWellbeingChart(currentSeries);
+        if (currentChartState) {
+          renderWellbeingChart(currentChartState);
         }
       });
     }
@@ -81,13 +87,30 @@ function initPage(){
         maToggle.checked = useMA;
         render();
       }
+      if (evt.key === 'hr:compare') {
+        compareEnabled = readCompare();
+        render();
+      }
     });
     document.addEventListener('i18n:change', render);
     const expandBtn = document.querySelector('.chart-card .x-expand');
     setExpandLabel(expandBtn, expandBtn?.closest('.chart-card')?.classList.contains('expanded'));
 
-    function t(key, vars){
-      return window.I18N?.t(key, vars) || key.replace(/^label\.|^range\./, '');
+    function t(key, vars, fallback){
+      let tplVars = vars;
+      let alt = fallback;
+      if (typeof vars === 'string' && typeof fallback === 'undefined') {
+        alt = vars;
+        tplVars = undefined;
+      }
+      try {
+        const value = window.I18N?.t?.(key, tplVars);
+        if (value != null) return value;
+      } catch (err) {
+        /* ignore */
+      }
+      if (typeof alt === 'string') return alt;
+      return key.replace(/^label\.|^range\./, '');
     }
 
     const getLang = () => window.I18N?.getLang?.() || 'en';
@@ -156,6 +179,24 @@ function initPage(){
       }
     }
 
+    function readCompare(){
+      if (typeof window.DateControls?.readCompare === 'function') {
+        try {
+          return Boolean(window.DateControls.readCompare());
+        } catch (err) {
+          /* ignore */
+        }
+      }
+      try {
+        const raw = localStorage.getItem('hr:compare');
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return Boolean(parsed?.enabled);
+      } catch (err) {
+        return false;
+      }
+    }
+
     function presetForRange(range){
       if (range.preset) {
         return canonicalPreset(range.preset);
@@ -187,41 +228,102 @@ function initPage(){
       } catch (e) {}
     }
 
-    async function render(){
-      const range = readRange();
-      const team = readTeam();
-      const preset = presetForRange(range);
-      const metrics = await loadMetrics(preset, range, team);
-      const insufficient = Number(metrics?.n) > 0 && Number(metrics.n) < 5;
-      toggleInsufficient(insufficient);
-      if (!metrics) {
-        currentSeries = [];
-        renderWellbeingChart(currentSeries);
-        if (legendEl) legendEl.innerHTML = `<span>${t('status.noData')}</span>`;
-        if (breakdownEl) breakdownEl.innerHTML = '';
-        if (miniGrid) miniGrid.innerHTML = '';
-        if (deltaBadgeEl) {
-          deltaBadgeEl.textContent = '';
-          deltaBadgeEl.className = 'delta-badge';
-          deltaBadgeEl.removeAttribute('aria-label');
+    function setLoading(active){
+      [trackerPanel, breakdownPanel].forEach(panel => {
+        if (!panel) return;
+        panel.classList.toggle('is-loading', !!active);
+        if (active) {
+          panel.setAttribute('aria-busy', 'true');
+        } else {
+          panel.removeAttribute('aria-busy');
         }
-        const insight = buildCaption(range, team);
-        if (window.Caption?.render) {
-          window.Caption.render('#global-caption', {asOf: new Date(), insight});
-        } else if (captionEl) {
-          captionEl.textContent = buildCaption(range, team);
-        }
-        return;
-      }
+      });
+    }
 
-      renderTracker(metrics, team);
-      renderBreakdown(metrics, team);
-      renderMiniKpis(metrics, team);
-      const insight = buildCaption(range, team);
+    function applyLowSampleState(metrics, team){
+      const size = sampleSize(metrics, team);
+      const message = lowSampleMessage(size);
+      [trackerPanel, breakdownPanel].forEach(panel => {
+        if (!panel) return;
+        if (message) {
+          panel.setAttribute('data-low-sample', 'true');
+          panel.setAttribute('data-low-sample-label', message);
+          panel.setAttribute('title', message);
+        } else {
+          panel.removeAttribute('data-low-sample');
+          panel.removeAttribute('data-low-sample-label');
+          panel.removeAttribute('title');
+        }
+      });
+    }
+
+    function lowSampleMessage(n){
+      if (!Number.isFinite(n) || n >= LOW_SAMPLE_THRESHOLD) return '';
+      const label = t('stats.lowSample', 'Low sample size');
+      return `${label} (n=${Math.round(n)})`;
+    }
+
+    function updateCaption(insight){
       if (window.Caption?.render) {
         window.Caption.render('#global-caption', {asOf: new Date(), insight});
       } else if (captionEl) {
         captionEl.textContent = insight;
+      }
+    }
+
+    async function render(){
+      const range = readRange();
+      const team = readTeam();
+      const preset = presetForRange(range);
+      compareEnabled = readCompare();
+      setLoading(true);
+      let metrics = null;
+      try {
+        metrics = await loadMetrics(preset, range, team);
+        const insufficient = Number(metrics?.n) > 0 && Number(metrics.n) < 5;
+        toggleInsufficient(insufficient);
+        applyLowSampleState(metrics, team);
+        const insight = buildCaption(range, team);
+        if (!metrics) {
+          currentChartState = null;
+          renderWellbeingChart(null);
+          if (legendEl) legendEl.innerHTML = `<span>${t('status.noData', 'No data')}</span>`;
+          if (breakdownEl) breakdownEl.innerHTML = '';
+          if (miniGrid) miniGrid.innerHTML = '';
+          miniKpiRegistry.clear();
+          if (deltaBadgeEl) {
+            deltaBadgeEl.textContent = '';
+            deltaBadgeEl.className = 'delta-badge';
+            deltaBadgeEl.removeAttribute('aria-label');
+          }
+          if (trackerMeta) trackerMeta.innerHTML = '';
+          if (trackerPanel) {
+            delete trackerPanel.dataset.sourcePeriod;
+            delete trackerPanel.dataset.sourceThreshold;
+          }
+          updateCaption(insight);
+          window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail: {index: null}}));
+          return;
+        }
+
+        renderTracker(metrics, team, {compare: compareEnabled, preset});
+        renderBreakdown(metrics, team);
+        renderMiniKpis(metrics, team);
+        updateCaption(insight);
+
+        if (trackerPanel) {
+          trackerPanel.dataset.sourcePeriod = periodLabel(range);
+          trackerPanel.dataset.sourceThreshold = 'Wellbeing ≥ 60';
+        }
+        if (typeof window.renderSourceNote === 'function' && trackerMeta) {
+          window.renderSourceNote(trackerMeta, {
+            sourceId: 'demo-synth-2025',
+            threshold: 'Wellbeing ≥ 60',
+            period: periodLabel(range)
+          });
+        }
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -235,91 +337,391 @@ function initPage(){
       }
     }
 
-    function renderTracker(metrics, team){
+    function renderTracker(metrics, team, options={}){
       const info = metricDeltaInfo(metrics, 'wellbeing_avg', team);
-      const values = Array.isArray(info.series) && info.series.length ? info.series : (metrics.series?.wellbeing_avg || []);
-      const maValues = useMA ? movingAverage(values, 3) : values;
-      const current = info.current;
-      const fallbackPrevious = current != null && info.delta != null ? current - info.delta : null;
-      const previous = info.previous != null ? info.previous : fallbackPrevious;
-      const delta = info.delta != null ? info.delta : (current != null && previous != null ? current - previous : 0);
+      const seriesSource = Array.isArray(info.series) && info.series.length
+        ? info.series
+        : (metrics.series?.wellbeing_avg || []);
+      const normalizedSeries = normalizeSeries(seriesSource);
+      const displaySeries = useMA ? movingAverage(normalizedSeries, 3) : normalizedSeries.slice();
+      const current = Number.isFinite(info.current)
+        ? info.current
+        : (normalizedSeries.length ? normalizedSeries[normalizedSeries.length - 1] : null);
+      const fallbackPrevious = current != null && Number.isFinite(info.delta) ? current - info.delta : null;
+      const previous = Number.isFinite(info.previous) ? info.previous : fallbackPrevious;
+      const delta = Number.isFinite(info.delta)
+        ? info.delta
+        : (current != null && previous != null ? current - previous : 0);
       const badge = deltaBadge(delta, true);
-      const modeLabel = useMA ? t('label.movingAverage') : t('label.actual');
+      const modeLabel = useMA ? t('label.movingAverage', 'Moving average') : t('label.actual', 'Actual');
+      const sampleN = sampleSize(metrics, team);
+      const rangeKey = options?.preset || presetForRange(readRange());
+      const windowSize = windowSizeForRange(rangeKey, displaySeries.length);
+      const compareActive = Boolean(options?.compare);
+      const compareSeries = compareActive && windowSize ? shiftSeries(normalizedSeries, windowSize) : null;
+      const seSeries = computeStandardErrors(displaySeries, sampleN);
+      const bandTop = buildBandSeries(displaySeries, seSeries, 1);
+      const bandBottom = buildBandSeries(displaySeries, seSeries, -1);
+      const labels = buildTrackerLabels(metrics, displaySeries.length);
 
       if (legendEl) {
-        legendEl.innerHTML = [
-          `<span>${t('kpi.wellbeing')} (${modeLabel})</span>`,
-          `<span>${t('status.value')}: ${current != null ? Math.round(current) : '–'}/100</span>`,
-          `<span class="delta-badge ${badge.className}">${badge.label}</span>`
-        ].join('');
+        const legendItems = [
+          `<span class="legend-line">${t('kpi.wellbeing', 'Wellbeing score')} (${modeLabel})</span>`,
+          `<span>${t('status.value', 'Value')}: ${current != null ? Math.round(current) : '–'}/100</span>`
+        ];
+        if (Number.isFinite(sampleN)) {
+          legendItems.push(`<span>${t('stats.sample', 'Sample')}: n=${Math.round(sampleN)}</span>`);
+        }
+        legendItems.push(`<span class="legend-band">${t('analytics.ciBand', 'CI band (±SE)')}</span>`);
+        if (compareActive && compareSeries && compareSeries.some(Number.isFinite)) {
+          legendItems.push(`<span class="legend-prev">${t('analytics.prevWindow', 'Prev window (dashed)')}</span>`);
+        }
+        legendItems.push(`<span class="${badge.className}">${badge.label}</span>`);
+        legendEl.innerHTML = legendItems.filter(Boolean).join('');
       }
 
-      updateTrackerDelta(deltaBadgeEl, info, metrics, team);
+      updateTrackerDelta(deltaBadgeEl, current, previous);
 
-      chartEl.setAttribute('aria-label', `${t('kpi.wellbeing')} (${modeLabel})`);
+      chartEl.setAttribute('aria-label', `${t('kpi.wellbeing', 'Wellbeing score')} (${modeLabel}) trend`);
 
-      currentSeries = maValues.length ? maValues.reduce((acc, value, index) => {
-        const num = Number(value);
-        if (Number.isFinite(num)) {
-          acc.push(num);
-        } else {
-          const fallback = index > 0 ? acc[index - 1] : 0;
-          acc.push(fallback ?? 0);
-        }
-        return acc;
-      }, []) : [];
+      currentChartState = {
+        series: displaySeries,
+        labels,
+        previous: compareSeries,
+        bandTop,
+        bandBottom,
+        se: seSeries,
+        sample: sampleN,
+        compare: compareActive
+      };
 
-      renderWellbeingChart(currentSeries);
+      renderWellbeingChart(currentChartState);
     }
 
-    function renderWellbeingChart(series){
+    function renderWellbeingChart(state){
       const host = document.getElementById('wlb-chart');
       if (!host) return;
 
-      if (!Array.isArray(series) || series.length === 0) {
-        host.setAttribute('aria-label', t('status.noData'));
-        host.innerHTML = `<p role="status">${t('status.noData')}</p>`;
+      if (host._trackerHandlers) {
+        const prev = host._trackerHandlers;
+        host.removeEventListener('pointermove', prev.move);
+        host.removeEventListener('pointerleave', prev.leave);
+        host.removeEventListener('pointerup', prev.leave);
+        host.removeEventListener('touchstart', prev.touchMove);
+        host.removeEventListener('touchmove', prev.touchMove);
+        host.removeEventListener('touchend', prev.leave);
+        host.removeEventListener('touchcancel', prev.leave);
+        host._trackerHandlers = null;
+      }
+
+      host.classList.add('tracker-chart');
+
+      if (!state || !Array.isArray(state.series) || state.series.length === 0) {
+        host.classList.remove('is-hovering');
+        host.setAttribute('aria-label', t('status.noData', 'No data'));
+        host.innerHTML = `<p role="status">${t('status.noData', 'No data')}</p>`;
+        window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail: {index: null}}));
         return;
       }
 
-      const { width } = host.getBoundingClientRect();
-      const height = host.clientHeight;
-      const pad = 28;
-      const W = Math.max(320, Math.floor(width));
-      const H = Math.max(200, Math.floor(height));
+      const series = state.series;
+      const labels = Array.isArray(state.labels) ? state.labels : [];
+      const previousSeries = Array.isArray(state.previous) ? state.previous : null;
+      const bandTop = Array.isArray(state.bandTop) ? state.bandTop : [];
+      const bandBottom = Array.isArray(state.bandBottom) ? state.bandBottom : [];
+      const seSeries = Array.isArray(state.se) ? state.se : [];
+      const sample = Number.isFinite(state.sample) ? state.sample : null;
+      const compareActive = Boolean(state.compare);
+
+      const rect = host.getBoundingClientRect();
+      const widthPx = rect.width || host.clientWidth || 360;
+      const heightPx = rect.height || host.clientHeight || 240;
+      const W = Math.max(360, Math.round(widthPx || 360));
+      const H = Math.max(220, Math.round(heightPx || 220));
+      const padLeft = 40;
+      const padRight = 24;
+      const padTop = 28;
+      const padBottom = 36;
 
       host.innerHTML = '';
+      host.classList.remove('is-hovering');
+
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.setAttribute('preserveAspectRatio', 'none');
+      svg.classList.add('tracker-chart__svg');
       svg.setAttribute('role', 'presentation');
       svg.setAttribute('aria-hidden', 'true');
       host.appendChild(svg);
 
-      const xs = (i) => pad + i * ((W - 2 * pad) / Math.max(1, series.length - 1));
-      const min = Math.min(...series);
-      const max = Math.max(...series);
-      const ys = (v) => {
-        if (max === min) return H / 2;
-        return pad + (H - 2 * pad) * (1 - (v - min) / (max - min));
+      const xScale = index => padLeft + index * ((W - padLeft - padRight) / Math.max(1, series.length - 1));
+      const extent = [];
+      const pushExtent = value => { if (Number.isFinite(value)) extent.push(value); };
+      series.forEach(pushExtent);
+      bandTop.forEach(pushExtent);
+      bandBottom.forEach(pushExtent);
+      if (compareActive && previousSeries) previousSeries.forEach(pushExtent);
+      if (!extent.length) {
+        extent.push(0);
+        extent.push(100);
+      }
+      const minVal = Math.min(...extent);
+      const maxVal = Math.max(...extent);
+      const span = maxVal - minVal || 1;
+      const yScale = value => {
+        if (!Number.isFinite(value)) return padTop + (H - padTop - padBottom) / 2;
+        return padTop + (H - padTop - padBottom) * (1 - (value - minVal) / span);
       };
 
-      let d = `M ${xs(0)} ${ys(series[0])}`;
-      if (series.length === 1) {
-        d += ` L ${xs(0)} ${ys(series[0])}`;
-      } else {
-        for (let i = 1; i < series.length; i += 1) {
-          d += ` L ${xs(i)} ${ys(series[i])}`;
+      const bandPath = buildBandPath(bandTop, bandBottom, xScale, yScale);
+      if (bandPath) {
+        const area = document.createElementNS(svg.namespaceURI, 'path');
+        area.setAttribute('d', bandPath);
+        area.setAttribute('fill', 'rgba(39, 224, 255, 0.18)');
+        area.setAttribute('stroke', 'none');
+        svg.appendChild(area);
+      }
+
+      const linePath = buildLinePath(series, xScale, yScale);
+      if (linePath) {
+        const path = document.createElementNS(svg.namespaceURI, 'path');
+        path.setAttribute('d', linePath);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'var(--cyan, #27E0FF)');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('vector-effect', 'non-scaling-stroke');
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(path);
+      }
+
+      if (compareActive && previousSeries) {
+        const comparePath = buildLinePath(previousSeries, xScale, yScale);
+        if (comparePath) {
+          const prev = document.createElementNS(svg.namespaceURI, 'path');
+          prev.setAttribute('d', comparePath);
+          prev.setAttribute('fill', 'none');
+          prev.setAttribute('stroke', 'rgba(159, 213, 235, 0.65)');
+          prev.setAttribute('stroke-width', '2');
+          prev.setAttribute('stroke-dasharray', '6 6');
+          prev.setAttribute('vector-effect', 'non-scaling-stroke');
+          prev.setAttribute('stroke-linecap', 'round');
+          svg.appendChild(prev);
         }
       }
-      const path = document.createElementNS(svg.namespaceURI, 'path');
-      path.setAttribute('d', d);
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', 'var(--cyan, #27E0FF)');
-      path.setAttribute('stroke-width', '2');
-      path.setAttribute('vector-effect', 'non-scaling-stroke');
-      path.setAttribute('stroke-linecap', 'round');
-      svg.appendChild(path);
+
+      const scaleX = (widthPx || W) / W;
+      const scaleY = (heightPx || H) / H;
+
+      const cursor = document.createElement('div');
+      cursor.className = 'tracker-chart__cursor';
+      host.appendChild(cursor);
+
+      const focus = document.createElement('div');
+      focus.className = 'tracker-chart__focus';
+      host.appendChild(focus);
+
+      const tooltip = document.createElement('div');
+      tooltip.className = 'tracker-tooltip';
+      host.appendChild(tooltip);
+
+      const points = series.map((value, index) => {
+        const numeric = Number(value);
+        const labelEntry = labels[index];
+        const label = formatLabel(labelEntry, index);
+        const seValue = Number(seSeries[index]);
+        const previous = previousSeries && Number.isFinite(previousSeries[index]) ? Number(previousSeries[index]) : null;
+        return {
+          index,
+          value: Number.isFinite(numeric) ? numeric : null,
+          x: xScale(index),
+          y: Number.isFinite(numeric) ? yScale(numeric) : null,
+          label,
+          se: Number.isFinite(seValue) ? seValue : null,
+          previous
+        };
+      });
+
+      let lastIndex = null;
+
+      const handlePointerMove = event => {
+        const clientX = getClientX(event);
+        if (clientX == null) return;
+        const index = indexForClientX(clientX);
+        updateHover(index);
+      };
+
+      const handleLeave = () => {
+        if (!host.classList.contains('is-hovering')) return;
+        host.classList.remove('is-hovering');
+        lastIndex = null;
+        window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail: {index: null}}));
+      };
+
+      const handlers = {
+        move: handlePointerMove,
+        leave: handleLeave,
+        touchMove: event => handlePointerMove(event)
+      };
+      host._trackerHandlers = handlers;
+
+      host.addEventListener('pointermove', handlePointerMove);
+      host.addEventListener('pointerleave', handleLeave);
+      host.addEventListener('pointerup', handleLeave);
+      host.addEventListener('touchstart', handlers.touchMove, {passive: true});
+      host.addEventListener('touchmove', handlers.touchMove, {passive: true});
+      host.addEventListener('touchend', handleLeave);
+      host.addEventListener('touchcancel', handleLeave);
+
+      function updateHover(targetIndex){
+        let point = points[targetIndex];
+        if (!point || point.value == null || point.y == null) {
+          point = findNearestValid(targetIndex);
+          if (!point) {
+            handleLeave();
+            return;
+          }
+        }
+        lastIndex = point.index;
+        const left = point.x * scaleX;
+        const top = point.y * scaleY;
+        cursor.style.left = `${left}px`;
+        focus.style.left = `${left}px`;
+        focus.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        tooltip.innerHTML = buildTooltip(point);
+        host.classList.add('is-hovering');
+        const detail = {
+          index: point.index,
+          label: point.label,
+          value: point.value,
+          se: point.se,
+          sample
+        };
+        if (compareActive && Number.isFinite(point.previous)) {
+          detail.previous = point.previous;
+        }
+        window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail}));
+      }
+
+      function buildTooltip(point){
+        const labelText = escapeHtml(point.label ?? `#${point.index + 1}`);
+        const valueText = formatValue(point.value);
+        const seText = Number.isFinite(point.se) ? formatSe(point.se) : null;
+        let summary = valueText;
+        if (seText) summary += ` ±${seText}`;
+        if (Number.isFinite(sample)) summary += ` (n=${Math.round(sample)})`;
+        const lines = [`<strong>${labelText}</strong>`, `<div>${escapeHtml(summary)}</div>`];
+        if (compareActive && Number.isFinite(point.previous)) {
+          const prevLabel = escapeHtml(t('analytics.prevValue', 'Prev'));
+          lines.push(`<div>${prevLabel}: ${escapeHtml(formatValue(point.previous))}</div>`);
+        }
+        return lines.join('');
+      }
+
+      function indexForClientX(clientX){
+        const bounds = host.getBoundingClientRect();
+        const width = bounds.width || 1;
+        const ratio = Math.max(0, Math.min(1, (clientX - bounds.left) / width));
+        return Math.max(0, Math.min(series.length - 1, Math.round(ratio * (series.length - 1))));
+      }
+
+      function findNearestValid(index){
+        let left = index;
+        let right = index;
+        while (left >= 0 || right < points.length) {
+          if (left >= 0) {
+            const candidate = points[left];
+            if (candidate && candidate.value != null && candidate.y != null) return candidate;
+            left -= 1;
+          }
+          if (right < points.length) {
+            const candidate = points[right];
+            if (candidate && candidate.value != null && candidate.y != null) return candidate;
+            right += 1;
+          }
+        }
+        return null;
+      }
+
+      function formatLabel(entry, index){
+        if (entry && typeof entry === 'object') {
+          return entry.display || entry.raw || `#${index + 1}`;
+        }
+        if (entry != null) return String(entry);
+        return `#${index + 1}`;
+      }
+
+      function formatValue(value){
+        try {
+          return new Intl.NumberFormat(getLang(), {maximumFractionDigits: 0}).format(value);
+        } catch (err) {
+          return Math.round(value).toString();
+        }
+      }
+
+      function formatSe(value){
+        const digits = Math.abs(value) >= 1 ? 1 : 2;
+        try {
+          return new Intl.NumberFormat(getLang(), {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits
+          }).format(value);
+        } catch (err) {
+          return value.toFixed(digits);
+        }
+      }
+
+      function getClientX(evt){
+        if (evt.touches && evt.touches.length) return evt.touches[0].clientX;
+        if (evt.changedTouches && evt.changedTouches.length) return evt.changedTouches[0].clientX;
+        if (typeof evt.clientX === 'number') return evt.clientX;
+        return null;
+      }
+
+      function buildBandPath(topSeriesValues, bottomSeriesValues, xFn, yFn){
+        const topPoints = [];
+        const bottomPoints = [];
+        for (let i = 0; i < series.length; i += 1) {
+          const topVal = Number(topSeriesValues[i]);
+          const bottomVal = Number(bottomSeriesValues[i]);
+          if (!Number.isFinite(topVal) || !Number.isFinite(bottomVal)) continue;
+          topPoints.push({x: xFn(i), y: yFn(topVal)});
+          bottomPoints.push({x: xFn(i), y: yFn(bottomVal)});
+        }
+        if (topPoints.length < 2) return '';
+        let path = `M ${topPoints[0].x} ${topPoints[0].y}`;
+        for (let i = 1; i < topPoints.length; i += 1) {
+          path += ` L ${topPoints[i].x} ${topPoints[i].y}`;
+        }
+        for (let i = bottomPoints.length - 1; i >= 0; i -= 1) {
+          path += ` L ${bottomPoints[i].x} ${bottomPoints[i].y}`;
+        }
+        path += ' Z';
+        return path;
+      }
+
+      function buildLinePath(values, xFn, yFn){
+        let path = '';
+        let started = false;
+        for (let i = 0; i < values.length; i += 1) {
+          const val = Number(values[i]);
+          if (!Number.isFinite(val)) {
+            started = false;
+            continue;
+          }
+          const x = xFn(i);
+          const y = yFn(val);
+          if (!started) {
+            path += `M ${x} ${y}`;
+            started = true;
+          } else {
+            path += ` L ${x} ${y}`;
+          }
+        }
+        return started ? path : '';
+      }
     }
 
     function renderBreakdown(metrics, team){
@@ -340,14 +742,14 @@ function initPage(){
         const sparkMeta = buildSparkMeta(delta);
         return `<article class="tile breakdown-card">
           <header class="tile__head">
-            <span class="tile__title">${t(cfg.label)}</span>
-            <span class="delta-badge ${badge.className}">${badge.label}</span>
+            <span class="tile__title">${t(cfg.label, cfg.fallback)}</span>
+            <span class="${badge.className}">${badge.label}</span>
           </header>
           <div class="tile__kpi">${Math.round(value)}<span>${cfg.unit}</span></div>
           <div class="spark">${sparkline(series, sparkMeta)}</div>
           <footer class="breakdown-meta">
-            <span>${t('status.value')} ${Math.round(value)}${cfg.unit}</span>
-            <span>${t('status.target')}: ${Math.round(previous)}${cfg.unit}</span>
+            <span>${t('status.value', 'Value')} ${Math.round(value)}${cfg.unit}</span>
+            <span>${t('status.target', 'Target')}: ${Math.round(previous)}${cfg.unit}</span>
           </footer>
         </article>`;
       }).join('');
@@ -357,6 +759,7 @@ function initPage(){
     function renderMiniKpis(metrics, team){
       if (!miniGrid) return;
       miniGrid.innerHTML = '';
+      miniKpiRegistry.clear();
       const nValue = Number(metrics?.n);
       if (Number.isFinite(nValue) && window.guardSmallN) {
         if (window.guardSmallN(nValue, miniGrid)) {
@@ -365,7 +768,10 @@ function initPage(){
       } else {
         miniGrid.removeAttribute('data-guard');
       }
-      const items = BREAKDOWN_KEYS.map(cfg => {
+
+      const fragment = document.createDocumentFragment();
+
+      BREAKDOWN_KEYS.forEach(cfg => {
         const info = metricDeltaInfo(metrics, cfg.key, team);
         const rawValue = teamValue(metrics?.kpi, cfg.key, team);
         const value = Number.isFinite(Number(rawValue)) ? Number(rawValue) : (info.current ?? 0);
@@ -380,13 +786,68 @@ function initPage(){
         const badge = deltaBadge(delta, !cfg.inverse);
         const magnitude = Number.isFinite(delta) ? `${delta >= 0 ? '+' : '−'}${Math.abs(Math.round(delta))}` : '0';
         const summary = Number.isFinite(delta) ? `${badge.label} ${magnitude}` : badge.label;
-        return `<div class="mini-kpis__item">
-          <span class="mini-kpis__label">${t(cfg.label)}</span>
-          <strong class="mini-kpis__value">${Math.round(value)}${cfg.unit}</strong>
-          <span class="mini-kpis__delta ${badge.className}" aria-label="${summary}">${summary}</span>
-        </div>`;
-      }).join('');
-      miniGrid.innerHTML = items;
+
+        const item = document.createElement('div');
+        item.className = 'mini-kpis__item';
+
+        const labelEl = document.createElement('span');
+        labelEl.className = 'mini-kpis__label';
+        labelEl.textContent = t(cfg.label, cfg.fallback);
+        item.appendChild(labelEl);
+
+        const valueEl = document.createElement('strong');
+        valueEl.className = 'mini-kpis__value';
+        const valueNode = document.createTextNode(Math.round(value));
+        valueEl.appendChild(valueNode);
+        const unitEl = document.createElement('span');
+        unitEl.textContent = cfg.unit;
+        valueEl.appendChild(unitEl);
+        item.appendChild(valueEl);
+
+        const deltaEl = document.createElement('span');
+        deltaEl.className = `mini-kpis__delta ${badge.className}`;
+        deltaEl.setAttribute('aria-label', summary);
+        deltaEl.textContent = summary;
+        item.appendChild(deltaEl);
+
+        fragment.appendChild(item);
+
+        miniKpiRegistry.set(cfg.key, {
+          element: item,
+          valueNode,
+          unitNode: unitEl,
+          defaultValue: Math.round(value),
+          unit: cfg.unit,
+          series: normalizeSeries(info.series || [])
+        });
+      });
+
+      miniGrid.appendChild(fragment);
+      attachHoverSync();
+      updateMiniHover(null);
+    }
+
+    function attachHoverSync(){
+      if (hoverHandlerAttached) return;
+      hoverHandlerAttached = true;
+      window.addEventListener('analytics:hoverIndex', event => {
+        const detail = event?.detail;
+        const index = Number.isInteger(detail?.index) ? detail.index : null;
+        updateMiniHover(index);
+      });
+    }
+
+    function updateMiniHover(index){
+      miniKpiRegistry.forEach(entry => {
+        const {element, valueNode, defaultValue, series} = entry;
+        if (index == null || !Array.isArray(series) || !Number.isFinite(series[index])) {
+          valueNode.nodeValue = String(defaultValue);
+          element.classList.remove('is-hovered');
+          return;
+        }
+        valueNode.nodeValue = String(Math.round(series[index]));
+        element.classList.add('is-hovered');
+      });
     }
 
     function aggregateEntry(list){
@@ -405,7 +866,7 @@ function initPage(){
         let sum = 0;
         let count = 0;
         seriesList.forEach(arr => {
-          if (Array.isArray(arr) && typeof arr[i] === 'number') {
+          if (Array.isArray(arr) && Number.isFinite(arr[i])) {
             sum += arr[i];
             count += 1;
           }
@@ -491,7 +952,7 @@ function initPage(){
         if (!panel) return;
         if (active) {
           panel.setAttribute('data-insufficient', 'true');
-          panel.setAttribute('data-guard-message', t('guard.insufficient'));
+          panel.setAttribute('data-guard-message', t('guard.insufficient', 'Access restricted'));
         } else {
           panel.removeAttribute('data-insufficient');
           panel.removeAttribute('data-guard-message');
@@ -506,7 +967,7 @@ function initPage(){
         let sum = 0;
         let count = 0;
         for (let j = i - window + 1; j <= i; j += 1) {
-          if (j >= 0 && typeof values[j] === 'number') {
+          if (j >= 0 && Number.isFinite(values[j])) {
             sum += values[j];
             count += 1;
           }
@@ -514,6 +975,73 @@ function initPage(){
         result.push(count ? sum / count : values[i]);
       }
       return result;
+    }
+
+    function normalizeSeries(values){
+      if (!Array.isArray(values)) return [];
+      const result = [];
+      for (let i = 0; i < values.length; i += 1) {
+        const num = Number(values[i]);
+        if (Number.isFinite(num)) {
+          result.push(num);
+        } else {
+          const fallback = i > 0 ? result[i - 1] : null;
+          result.push(Number.isFinite(fallback) ? fallback : NaN);
+        }
+      }
+      return result;
+    }
+
+    function shiftSeries(series, windowSize){
+      if (!Array.isArray(series) || !windowSize) return null;
+      const result = new Array(series.length).fill(null);
+      for (let i = 0; i < series.length; i += 1) {
+        const sourceIndex = i - windowSize;
+        if (sourceIndex >= 0 && Number.isFinite(series[sourceIndex])) {
+          result[i] = series[sourceIndex];
+        }
+      }
+      return result;
+    }
+
+    function computeStandardErrors(series, sampleN){
+      if (!Array.isArray(series)) return [];
+      if (!Number.isFinite(sampleN) || sampleN <= 0) {
+        return series.map(() => null);
+      }
+      return series.map(value => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return null;
+        const proportion = Math.max(0, Math.min(1, numeric / 100));
+        const se = Math.sqrt((proportion * (1 - proportion)) / sampleN) * 100;
+        return Number.isFinite(se) ? se : null;
+      });
+    }
+
+    function buildBandSeries(series, seSeries, direction){
+      if (!Array.isArray(series) || !Array.isArray(seSeries)) return [];
+      return series.map((value, index) => {
+        const base = Number(value);
+        const se = Number(seSeries[index]);
+        if (!Number.isFinite(base) || !Number.isFinite(se)) return null;
+        const adjusted = direction >= 0 ? base + se : base - se;
+        return Math.max(0, Math.min(100, adjusted));
+      });
+    }
+
+    function buildTrackerLabels(metrics, length){
+      if (!length) return [];
+      const heatmapDates = metrics?.heatmap?.dates;
+      if (Array.isArray(heatmapDates) && heatmapDates.length) {
+        const slice = heatmapDates.slice(-length);
+        return slice.map(date => ({raw: date, display: formatLocaleDate(date)}));
+      }
+      const seriesLabels = metrics?.series?.labels || metrics?.series?.dates;
+      if (Array.isArray(seriesLabels) && seriesLabels.length) {
+        const slice = seriesLabels.slice(-length);
+        return slice.map(label => ({raw: label, display: formatLocaleDate(label)}));
+      }
+      return Array.from({length}, (_, idx) => ({raw: idx, display: `#${idx + 1}`}));
     }
 
     function deltaVsPrior(series){
@@ -671,35 +1199,41 @@ function initPage(){
     }
 
     function deltaBadge(delta, positive){
-      if (delta == null || isNaN(delta) || Math.abs(delta) < 0.1) {
-        return {label: t('delta.equal'), className: 'delta-badge--neutral'};
+      let tone = 'is-flat';
+      if (Number.isFinite(delta) && Math.abs(delta) >= 0.1) {
+        const improved = positive ? delta >= 0 : delta <= 0;
+        tone = improved ? 'is-up' : 'is-down';
       }
-      const improved = positive ? delta >= 0 : delta <= 0;
-      return improved
-        ? {label: t('delta.up'), className: 'delta-badge--up'}
-        : {label: t('delta.down'), className: 'delta-badge--down'};
+      const key = tone === 'is-up'
+        ? 'delta.up'
+        : tone === 'is-down'
+          ? 'delta.down'
+          : 'delta.equal';
+      const fallbackLabel = tone === 'is-up'
+        ? 'Up'
+        : tone === 'is-down'
+          ? 'Down'
+          : 'No change';
+      const label = window.I18N?.t?.(key) || fallbackLabel;
+      return {label, className: `delta-badge ${tone}`, tone};
     }
 
     function buildCaption(range, team){
-      const rangeText = rangeLabel(range);
-      const teamText = teamLabel(team);
-      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
-      const base = `${prefix} • ${rangeText} • ${teamText}`;
-      return `${scenarioPrefix()}${base}`;
+      return `${periodLabel(range)} • ${teamLabel(team)}`;
     }
 
     function rangeLabel(range){
-      if (!range) return t('range.7d');
+      if (!range) return t('range.7d', '7 Days');
       if (range.preset) {
         const presetKey = displayPreset(range.preset);
         const map = {
-          today: t('range.today'),
-          '7d': t('range.7d'),
-          mtd: t('range.mtd'),
-          qtd: t('range.qtd'),
-          ytd: t('range.ytd')
+          today: t('range.today', 'Today'),
+          '7d': t('range.7d', '7 Days'),
+          mtd: t('range.mtd', 'MTD'),
+          qtd: t('range.qtd', 'QTD'),
+          ytd: t('range.ytd', 'YTD')
         };
-        return map[presetKey] || t('range.7d');
+        return map[presetKey] || t('range.7d', '7 Days');
       }
       if (range.start && range.end) {
         const start = formatLocaleDate(range.start);
@@ -707,46 +1241,31 @@ function initPage(){
         if (start && start === end) return start;
         return `${start} – ${end}`;
       }
-      return t('range.7d');
+      return t('range.7d', '7 Days');
     }
 
-    function updateTrackerDelta(el, info, metrics, team){
+    function periodLabel(range){
+      const prefix = scenarioPrefix();
+      const base = `${t('caption.orgAvg', 'Org avg')} • ${rangeLabel(range)}`;
+      return `${prefix}${base}`;
+    }
+
+    function updateTrackerDelta(el, currentAvg, previousAvg){
       if (!el) return;
-      const currentAvg = Number.isFinite(info?.current) ? info.current : null;
-      const previousAvg = Number.isFinite(info?.previous) ? info.previous : null;
-      const explicitDelta = Number.isFinite(info?.delta) ? info.delta : null;
-      const deltaValue = Number.isFinite(explicitDelta)
-        ? explicitDelta
-        : (currentAvg != null && previousAvg != null ? currentAvg - previousAvg : null);
-      if (!Number.isFinite(deltaValue)) {
+      if (!Number.isFinite(currentAvg) || !Number.isFinite(previousAvg)) {
         el.textContent = '';
         el.className = 'delta-badge';
         el.removeAttribute('aria-label');
         return;
       }
-      const currentSample = trackerSample(currentAvg, metrics, team);
-      const previousSample = trackerSample(previousAvg, metrics, team);
-      const significant = currentSample && previousSample
-        ? wilsonDiffSig(currentSample, previousSample)
-        : false;
+      const deltaValue = Math.round(currentAvg - previousAvg);
       const vsPrev = t('analytics.delta.vsPrev', 'vs prev');
-      const sigLabel = t('analytics.delta.significant', 'significant');
-      const rounded = Math.round(deltaValue);
       const prefix = deltaValue > 0 ? '+' : '';
-      const text = `${prefix}${Number.isFinite(rounded) ? rounded : 0} ${vsPrev}${significant ? ` • ${sigLabel}` : ''}`;
       const direction = deltaValue > 0 ? 'is-up' : deltaValue < 0 ? 'is-down' : 'is-flat';
+      const text = `${prefix}${deltaValue} ${vsPrev}`;
       el.textContent = text;
       el.className = `delta-badge ${direction}`.trim();
       el.setAttribute('aria-label', `${t('analytics.delta.aria', 'Delta vs previous period')}: ${text}`);
-    }
-
-    function trackerSample(avg, metrics, team){
-      if (!Number.isFinite(avg)) return null;
-      const total = sampleSize(metrics, team);
-      if (!Number.isFinite(total) || total <= 0) return null;
-      const proportion = avg / 100;
-      const ok = Math.round(Math.max(0, Math.min(1, proportion)) * total);
-      return {avg, n: total, ok};
     }
 
     function sampleSize(metrics, team){
@@ -763,46 +1282,8 @@ function initPage(){
       return NaN;
     }
 
-    function wilsonDiffSig(curr, prev){
-      if (!curr || !prev) return false;
-      const result = twoPropZ(curr.ok, curr.n, prev.ok, prev.n);
-      return result.p < 0.05;
-    }
-
-    function twoPropZ(ok1, n1, ok0, n0){
-      const o1 = Number(ok1);
-      const total1 = Number(n1);
-      const o0 = Number(ok0);
-      const total0 = Number(n0);
-      if (!Number.isFinite(o1) || !Number.isFinite(o0) || !Number.isFinite(total1) || !Number.isFinite(total0)) {
-        return {z: 0, p: 1};
-      }
-      if (total1 <= 0 || total0 <= 0) return {z: 0, p: 1};
-      const pPool = (o1 + o0) / (total1 + total0);
-      const se = Math.sqrt(pPool * (1 - pPool) * (1 / total1 + 1 / total0));
-      if (!Number.isFinite(se) || se === 0) return {z: 0, p: 1};
-      const z = ((o1 / total1) - (o0 / total0)) / se;
-      const p = 2 * (1 - 0.5 * (1 + erf(Math.abs(z) / Math.SQRT2)));
-      return {z, p};
-    }
-
-    function erf(x){
-      // Abramowitz and Stegun approximation
-      const sign = x >= 0 ? 1 : -1;
-      const absX = Math.abs(x);
-      const a1 = 0.254829592;
-      const a2 = -0.284496736;
-      const a3 = 1.421413741;
-      const a4 = -1.453152027;
-      const a5 = 1.061405429;
-      const p = 0.3275911;
-      const t = 1 / (1 + p * absX);
-      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX);
-      return sign * y;
-    }
-
     function teamLabel(team){
-      if (!team || team === 'all') return t('caption.teamAll');
+      if (!team || team === 'all') return t('caption.teamAll', 'All teams');
       try {
         const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
         if (map && map[team]) return map[team];
@@ -819,7 +1300,7 @@ function initPage(){
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
+      return readScenario() === 'night' ? t('caption.scenarioPrefix', 'Night • ') : '';
     }
   }
 
