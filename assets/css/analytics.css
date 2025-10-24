@@ -3,6 +3,17 @@
   flex-direction:column;
   gap:var(--space-6);
 }
+.kpi-grid{
+  display:grid;
+  gap:var(--section-gap);
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+}
+@media (min-width:1024px){
+  .kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media (min-width:1440px){
+  .kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+}
 .tracker-legend{
   display:flex;
   gap:var(--space-3);

@@ -16,18 +16,6 @@
 #page-progress,.summary-progress{display:none}
 .is-loading #page-progress,.is-loading .summary-progress{display:block}
 
-.main .header{position:relative}
-.summary-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:12px}
-.summary-toolbar__left{display:flex;flex-direction:column;gap:8px}
-.summary-toolbar__title-row{display:flex;align-items:center;gap:10px}
-.summary-toolbar__title-row h1{margin:0}
-.summary-toolbar__right{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
-.summary-toolbar__right .header__actions{margin-left:0}
-.summary-toolbar__right .lang-switch{align-self:flex-end}
-
-.icon-btn{margin-left:8px;border-radius:50%;width:32px;height:32px;border:1px solid var(--border);background:transparent;color:var(--txt);display:flex;align-items:center;justify-content:center;font-weight:600;cursor:pointer}
-.icon-btn:hover{background:rgba(255,255,255,0.08)}
-
 #legend-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding-top:72px}
 .legend-modal{width:min(560px,calc(100% - 40px));border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 18px 54px rgba(0,0,0,.6);color:#e8f6f9;padding:16px 18px}
 .summary-legend{background:rgba(8,22,28,.96);backdrop-filter:blur(6px)}
@@ -46,6 +34,7 @@
 .dot-amber{background:#e3c14d}
 .dot-red{background:#e26666}
 .legend__footer{margin-top:4px;font-size:.85rem;opacity:.86}
+.legend-disclaimer{margin:.5rem 0 0;font-size:.85rem;opacity:.8}
 
 .page-subhead{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:.9rem;color:var(--txt-muted)}
 .page-subhead .muted{opacity:.8}
@@ -56,12 +45,6 @@
 .banner{margin-top:8px;padding:10px 14px;border-radius:var(--radius);display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:rgba(7,23,32,.65)}
 .banner--demo{background:rgba(31,226,194,.10);border-color:rgba(31,226,194,.28)}
 .link-quiet{color:var(--cyan);text-decoration:none;font-weight:600}
-
-@media (max-width:1279px){
-  .summary-toolbar{grid-template-columns:1fr}
-  .summary-toolbar__right{align-items:flex-start}
-  .summary-toolbar__right .lang-switch{align-self:flex-start}
-}
 
 @media (max-width:768px){
   #org-badge{width:100%}

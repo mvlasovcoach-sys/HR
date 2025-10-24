@@ -30,21 +30,28 @@
   <main class="main main--devices">
     <div id="app-topbar">
       <div class="topbar-left">
-        <div class="header header--devices">
-          <h1 class="header__title" data-i18n="header.devices">Devices</h1>
-          <div class="header__actions">
-            <button class="btn btn--ghost btn--export" type="button" id="export-fleet" data-export-key="ui.exportCSV" data-export-icon="⇩">
-              <span class="btn__icon" aria-hidden="true">⇩</span>
-              <span class="btn__label" data-i18n="ui.exportCSV">Export CSV</span>
-            </button>
-            <div id="team-filter" class="team-filter"></div>
-            <div id="date-controls"></div>
-            <button class="header__icon" type="button" data-about-trigger data-i18n="aria.about" data-i18n-attr="aria-label" aria-label="About"></button>
+        <div class="toolbar">
+          <div class="toolbar__title">
+            <h1 class="header__title" data-i18n="header.devices">Devices</h1>
+          </div>
+          <div class="toolbar__filters">
+            <div id="team-filter" class="toolbar__filter team-filter"></div>
+            <div id="date-controls" class="toolbar__filter"></div>
+            <div class="toolbar__filter">
+              <button class="btn btn--ghost btn--export" type="button" id="export-fleet"
+                      data-export-key="ui.exportCSV" data-export-icon="⇩">
+                <span class="btn__icon" aria-hidden="true">⇩</span>
+                <span class="btn__label" data-i18n="ui.exportCSV">Export CSV</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
       <div class="topbar-right">
         <div id="lang-switch" class="lang-switch"></div>
+        <button class="header__icon" type="button" data-about-open
+                data-i18n="ui.about" data-i18n-attr="aria-label"
+                aria-label="About">i</button>
       </div>
     </div>
     <div id="devices-coverage" class="devices-coverage" aria-live="polite"></div>
