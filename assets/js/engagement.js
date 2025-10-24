@@ -1,7 +1,7 @@
 function initPage(){
     const grid = document.getElementById('eng-kpi-grid');
     if (!grid) return;
-    const caption = document.getElementById('engagement-caption');
+    const caption = document.getElementById('global-caption');
     const updatedEl = document.getElementById('engagement-updated');
     const panel = document.getElementById('engagement-panel');
 
@@ -37,6 +37,26 @@ function initPage(){
     const defaultDateOptions = lang => (lang === 'ru'
       ? {day: '2-digit', month: '2-digit', year: 'numeric'}
       : {day: 'numeric', month: 'short', year: 'numeric'});
+
+    function canonicalPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return '7d';
+      if (key === 'mtd' || key === 'month') return 'month';
+      if (key === 'qtd' || key === 'quarter') return 'month';
+      if (key === 'ytd' || key === 'year') return 'year';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
+
+    function displayPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return 'today';
+      if (key === 'mtd' || key === 'month') return 'mtd';
+      if (key === 'qtd' || key === 'quarter') return 'qtd';
+      if (key === 'ytd' || key === 'year') return 'ytd';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
 
     function formatLocaleDate(value){
       const date = value instanceof Date ? value : new Date(value);
@@ -92,8 +112,7 @@ function initPage(){
 
     function presetForRange(range){
       if (range.preset) {
-        if (range.preset === 'month' || range.preset === 'year') return range.preset;
-        return '7d';
+        return canonicalPreset(range.preset);
       }
       if (range.start && range.end) {
         const start = new Date(range.start);
@@ -116,7 +135,7 @@ function initPage(){
       toggleInsufficient(insufficient);
       if (!data) {
         grid.innerHTML = `<p role="status">${t('status.noData')}</p>`;
-        if (caption) caption.textContent = buildCaption(range, team);
+        applyCaption(range, team);
         if (updatedEl) updatedEl.textContent = '';
         return;
       }
@@ -124,7 +143,7 @@ function initPage(){
       grid.innerHTML = '';
       const nValue = Number(data?.n);
       if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, grid)) {
-        if (caption) caption.textContent = buildCaption(range, team);
+        applyCaption(range, team);
         if (updatedEl) updatedEl.textContent = '';
         return;
       } else if (!Number.isFinite(nValue)) {
@@ -133,7 +152,7 @@ function initPage(){
 
       const cards = KPI_KEYS.map(cfg => buildCard(cfg, data, preset, team, range)).join('');
       grid.innerHTML = cards;
-      if (caption) caption.textContent = buildCaption(range, team);
+      applyCaption(range, team);
       if (updatedEl) {
         updatedEl.textContent = data.updated ? `${t('ui.updated')} ${formatDate(data.updated)}` : '';
       }
@@ -158,13 +177,14 @@ function initPage(){
       const targetMarkup = targetLabel ? `<div class="kpi-card__target">${targetLabel}</div>` : '<div class="kpi-card__target" aria-hidden="true"></div>';
       const badgeMarkup = cfg.key === 'alert_count' ? '' : `<span class="kpi-card__delta ${deltaClass}">${deltaBadge(metrics.delta)}</span>`;
       const status = metrics.status ? `<span class="status-chip ${metrics.status.className}">${metrics.status.label}</span>` : '';
+      const sparkMeta = buildSparkMeta(metrics.delta);
       return `<article class="tile">
         <header class="tile__head">
           <span class="tile__title">${t(cfg.label)}</span>
           <span class="tile__status">${status}${badgeMarkup}</span>
         </header>
         <div class="tile__kpi">${formatted}<span>${unit}</span></div>
-        <div class="spark kpi-card__spark">${sparkline(metrics.spark)}</div>
+        <div class="spark kpi-card__spark">${sparkline(metrics.spark, sparkMeta)}</div>
         <footer class="tile__foot kpi-card__meta">
           ${targetMarkup}
           <strong>${t('status.value')}: ${formatted}${unit}</strong>
@@ -290,17 +310,18 @@ function initPage(){
         const end = new Date(range.end);
         return {start: Number.isNaN(start) ? null : start, end: Number.isNaN(end) ? null : end};
       }
-      if (range.preset === 'day') {
+      const presetKey = displayPreset(range.preset);
+      if (presetKey === 'today') {
         const end = new Date();
         const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
         return {start, end};
       }
-      if (range.preset === 'month') {
+      if (presetKey === 'mtd' || presetKey === 'qtd') {
         const end = new Date();
         const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
         return {start, end};
       }
-      if (range.preset === 'year') {
+      if (presetKey === 'ytd') {
         const end = new Date();
         const start = new Date(end.getTime() - 365 * 24 * 60 * 60 * 1000);
         return {start, end};
@@ -328,23 +349,38 @@ function initPage(){
         : {label: t('status.belowTarget'), className: 'status-chip--amber', met: false};
     }
 
+    function applyCaption(range, team){
+      if (!caption) return;
+      const insight = buildCaption(range, team);
+      if (window.Caption?.renderCaption) {
+        window.Caption.renderCaption(caption, {asOf: new Date(), insight});
+      } else {
+        caption.textContent = insight;
+      }
+    }
+
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = teamLabel(team);
-      const prefix = t('caption.orgAvg') || t('caption.orgAverage');
-      return `${scenarioPrefix()}${prefix} · ${rangeText} · ${teamText}`;
+      const prefix = t('caption.orgAvg') || t('caption.orgAverage') || 'Org average';
+      const separator = t('caption.separator') || ' · ';
+      return `${scenarioPrefix()}${prefix}${separator}${rangeText}${separator}${teamText}`;
     }
 
     function rangeLabel(range){
       if (!range) return t('caption.range', {range: '—'});
       if (range.preset) {
-        const map = {
-          day: t('range.day'),
-          '7d': t('range.7d'),
-          month: t('range.month'),
-          year: t('range.year')
-        };
-        return map[range.preset] || t('range.7d');
+        const presetKey = displayPreset(range.preset);
+        if (presetKey) {
+          return t(`range.${presetKey}`) || {
+            today: 'Today',
+            '7d': '7 Days',
+            mtd: 'Month to date',
+            qtd: 'Quarter to date',
+            ytd: 'Year to date'
+          }[presetKey];
+        }
+        return t('range.7d');
       }
       if (range.start && range.end) {
         const start = formatLocaleDate(range.start);
@@ -356,7 +392,7 @@ function initPage(){
     }
 
     function teamLabel(team){
-      if (!team || team === 'all') return t('caption.teamAll');
+      if (!team || team === 'all') return t('caption.teamAll') || 'All teams';
       try {
         const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
         if (map && map[team]) return map[team];
@@ -373,7 +409,7 @@ function initPage(){
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? t('caption.scenarioPrefix') : '';
+      return readScenario() === 'night' ? (t('caption.scenarioPrefix') || 'Night scenario · ') : '';
     }
 
     function toggleInsufficient(active){
@@ -387,8 +423,10 @@ function initPage(){
       }
     }
 
-    function sparkline(values){
-      if (!Array.isArray(values) || values.length === 0) return '';
+    function sparkline(values, meta){
+      if (!Array.isArray(values) || values.length === 0) {
+        return '<div class="chart chart--spark" aria-hidden="true"></div>';
+      }
       const sliced = values.slice(-7);
       const series = [];
       sliced.forEach((val, index) => {
@@ -399,7 +437,9 @@ function initPage(){
           series.push(index > 0 ? series[index - 1] : 0);
         }
       });
-      if (!series.length) return '';
+      if (!series.length) {
+        return '<div class="chart chart--spark" aria-hidden="true"></div>';
+      }
       const max = Math.max(...series);
       const min = Math.min(...series);
       const span = max - min || 1;
@@ -409,7 +449,65 @@ function initPage(){
         const y = (100 - ((v - min) / span) * 100).toFixed(2);
         return `${x},${y}`;
       }).join(' ');
-      return `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline fill="none" stroke="rgba(39,224,255,0.9)" stroke-width="3" stroke-linecap="round" points="${points}" /></svg>`;
+      const lastX = series.length > 1 ? (step * (series.length - 1)).toFixed(2) : '100';
+      const lastY = series.length ? (100 - ((series[series.length - 1] - min) / span) * 100).toFixed(2) : '50';
+      const aria = meta?.aria ? ` aria-label="${escapeHtml(meta.aria)}"` : ' aria-hidden="true"';
+      const tabindex = meta?.aria ? ' tabindex="0"' : '';
+      const title = meta?.tooltip ? ` title="${escapeHtml(meta.tooltip)}"` : '';
+      const trendAttr = meta?.trend ? ` data-trend="${escapeHtml(meta.trend)}"` : '';
+      const tooltip = meta?.tooltip ? `<span class="chart__tooltip">${escapeHtml(meta.tooltip)}</span>` : '';
+      return `<div class="chart chart--spark"${aria}${tabindex}${title}${trendAttr}><svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false"><polyline points="${points}" /></svg><span class="chart__marker" style="left:${lastX}%;top:${lastY}%"></span>${tooltip}</div>`;
+    }
+
+    function escapeHtml(input){
+      return String(input ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char] || char);
+    }
+
+    function sparkTrend(delta){
+      if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
+      return delta > 0 ? 'rising' : 'falling';
+    }
+
+    function sparkTrendLabel(key){
+      return window.I18N?.t(`trend.${key}`) || ({
+        rising: 'Rising',
+        falling: 'Falling',
+        stable: 'Stable'
+      }[key] || 'Stable');
+    }
+
+    function formatSparkDelta(delta){
+      if (!Number.isFinite(delta)) return '';
+      const lang = getLang();
+      const abs = Math.abs(delta);
+      const decimals = abs >= 10 ? 0 : 1;
+      const options = {maximumFractionDigits: decimals, minimumFractionDigits: decimals};
+      try {
+        if (Math.abs(delta) < 0.05) {
+          return new Intl.NumberFormat(lang, options).format(0);
+        }
+        return new Intl.NumberFormat(lang, {...options, signDisplay: 'always'}).format(delta);
+      } catch (err) {
+        if (Math.abs(delta) < 0.05) return abs.toFixed(decimals);
+        const sign = delta >= 0 ? '+' : '−';
+        return `${sign}${abs.toFixed(decimals)}`;
+      }
+    }
+
+    function buildSparkMeta(delta){
+      if (!Number.isFinite(delta)) return null;
+      const trend = sparkTrend(delta);
+      const trendLabel = sparkTrendLabel(trend);
+      const deltaText = formatSparkDelta(delta);
+      const deltaLabel = window.I18N?.t('trend.delta', {delta: deltaText}) || `${deltaText} vs last`;
+      const tooltip = `${trendLabel}; ${deltaLabel}`;
+      return {trend, tooltip, aria: tooltip};
     }
 
     function formatDate(input){
@@ -417,6 +515,18 @@ function initPage(){
     }
 }
 
+window.renderEngagementPage = function(){
+  const boot = () => initPage();
+  if (window.I18N?.onReady) {
+    window.I18N.onReady(boot);
+  } else {
+    boot();
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-  window.I18N.onReady(initPage);
+  const lazyHost = document.querySelector('[data-mount="renderEngagementPage"]');
+  if (!lazyHost) {
+    window.renderEngagementPage();
+  }
 });

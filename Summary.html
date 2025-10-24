@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="./assets/css/app-shell.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/nav.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/app.css?v=2025.10.19-05">
+<link rel="stylesheet" href="./assets/css/charts.css?v=2025.10.19-05">
+<link rel="stylesheet" href="./assets/css/print.css?v=2025.10.19-05" media="print">
 <!-- optional page CSS -->
 <link rel="stylesheet" href="./assets/css/hr-board.neon.css?v=2025.10.19-05">
 <link rel="stylesheet" href="./assets/css/summary.css?v=2025.10.19-05">
@@ -17,6 +19,8 @@
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/config.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/summary.js?v=2025.10.19-05"></script>
@@ -64,14 +68,14 @@
       <span data-i18n="summary.demoActive">Demo scenario active — simulated night-shift data</span>
       <a id="btn-return-live" href="#" class="link-quiet" data-i18n="summary.return">Return to live</a>
     </div>
-    <p id="global-caption" class="header__caption" aria-live="polite"></p>
+    <div id="global-caption" class="header__caption" aria-live="polite"></div>
     <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label" aria-label="Scenario toggles">
       <button type="button" id="btn-night-scenario" class="btn btn--ghost" data-i18n="summary.applyDemo">Apply Night-Shift Demo</button>
       <button type="button" id="btn-night-reset" class="btn btn--ghost" data-i18n="ui.returnLive">Return to Live View</button>
     </div>
     <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
-    <section id="hr-board" class="panel" aria-live="polite"></section>
+    <section id="hr-board" class="panel" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>renderSideNav('summary'));</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('summary');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.renderCaption('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

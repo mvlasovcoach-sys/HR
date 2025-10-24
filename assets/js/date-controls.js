@@ -1,133 +1,229 @@
-(function(){
-  function init(){
-    const el = document.getElementById('date-controls');
-    if (!el) return;
+(function(g){
+  const RANGE_KEY = 'hr:range';
+  const COMPARE_KEY = 'hr:compare';
+  const DEFAULT_PRESETS = ['today', '7d', 'mtd', 'qtd', 'ytd'];
+  const DEFAULT_PRESET = '7d';
 
-    const presets = ['day', '7d', 'month', 'year'];
+  function normalizePreset(value){
+    if (!value && value !== 0) return null;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === 'day') return 'today';
+    return normalized;
+  }
+
+  function translateRange(key, fallback){
+    const translated = g.I18N?.t?.(`range.${key}`);
+    if (translated && translated !== `range.${key}`) return translated;
+    if (fallback) return fallback;
+    return key.toUpperCase();
+  }
+
+  function translate(key, fallback){
+    const translated = g.I18N?.t?.(key);
+    if (translated && translated !== key) return translated;
+    return fallback != null ? fallback : key;
+  }
+
+  function readRange(){
+    try {
+      const raw = localStorage.getItem(RANGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed) return null;
+      if (parsed.preset) return {preset: parsed.preset};
+      if (parsed.start && parsed.end) {
+        return {start: parsed.start, end: parsed.end};
+      }
+    } catch (err) {
+      return null;
+    }
+    return null;
+  }
+
+  function readCompare(){
+    try {
+      const raw = localStorage.getItem(COMPARE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed && parsed.enabled);
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function saveRange(value){
+    try {
+      localStorage.setItem(RANGE_KEY, JSON.stringify(value));
+    } catch (err) {
+      /* ignore quota errors */
+    }
+    dispatchEvent(new StorageEvent('storage', {key: RANGE_KEY}));
+  }
+
+  function saveCompare(enabled){
+    try {
+      localStorage.setItem(COMPARE_KEY, JSON.stringify({enabled}));
+    } catch (err) {
+      /* ignore quota errors */
+    }
+    dispatchEvent(new StorageEvent('storage', {key: COMPARE_KEY}));
+  }
+
+  function mount(hostSelector, options={}){
+    const host = typeof hostSelector === 'string' ? document.querySelector(hostSelector) : hostSelector;
+    if (!host) return;
+
+    const config = {
+      presets: Array.isArray(options.presets) && options.presets.length
+        ? options.presets.map(normalizePreset)
+        : DEFAULT_PRESETS,
+      compare: Boolean(options.compare)
+    };
+
+    host.innerHTML = '';
     const wrapper = document.createElement('div');
     wrapper.className = 'dc';
-    el.appendChild(wrapper);
+    host.appendChild(wrapper);
 
-    const buttons = presets.map(preset => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.dataset.preset = preset;
-      btn.textContent = window.I18N?.t(`range.${preset}`) || preset;
-      wrapper.appendChild(btn);
-      btn.addEventListener('click', () => setRange(preset));
-      return btn;
-    });
+    const presetButtons = config.presets.map(key => createPresetButton(key, wrapper));
 
-    const sep = document.createElement('span');
-    sep.className = 'dc__sep';
-    wrapper.appendChild(sep);
+    const separator = document.createElement('span');
+    separator.className = 'dc__sep';
+    wrapper.appendChild(separator);
 
     const start = document.createElement('input');
     start.type = 'date';
     start.id = 'dc-start';
-    start.setAttribute('aria-label', window.I18N?.t('range.start') || 'Start date');
+    start.className = 'dc__input';
     wrapper.appendChild(start);
 
     const end = document.createElement('input');
     end.type = 'date';
     end.id = 'dc-end';
-    end.setAttribute('aria-label', window.I18N?.t('range.end') || 'End date');
+    end.className = 'dc__input';
     wrapper.appendChild(end);
 
     [start, end].forEach(input => {
       input.addEventListener('change', () => {
         if (start.value && end.value) {
-          setRange({start: start.value, end: end.value});
+          saveRange({start: start.value, end: end.value});
         }
       });
     });
 
-    window.addEventListener('storage', evt => {
-      if (!evt || evt.key !== 'hr:range') return;
-      restoreSelection();
-    });
-
-    document.addEventListener('i18n:change', () => {
-      buttons.forEach(btn => {
-        btn.textContent = window.I18N?.t(`range.${btn.dataset.preset}`) || btn.dataset.preset;
-      });
-      start.setAttribute('aria-label', window.I18N?.t('range.start') || 'Start date');
-      end.setAttribute('aria-label', window.I18N?.t('range.end') || 'End date');
-    });
-
-    function setRange(value){
-      if (typeof value === 'string') {
-        localStorage.setItem('hr:range', JSON.stringify({preset: value}));
-        start.value = '';
-        end.value = '';
-      } else {
-        localStorage.setItem('hr:range', JSON.stringify(value));
-        start.value = value.start || '';
-        end.value = value.end || '';
-      }
-      dispatchEvent(new StorageEvent('storage', {key: 'hr:range'}));
-      updateActiveButton();
+    let compareToggle = null;
+    if (config.compare) {
+      compareToggle = createCompareToggle(wrapper);
     }
 
-    function updateActiveButton(){
-      let preset = null;
-      try {
-        const raw = localStorage.getItem('hr:range');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && parsed.preset) preset = parsed.preset;
-        }
-      } catch (e) {
-        preset = null;
-      }
-      buttons.forEach(btn => {
-        btn.classList.toggle('is-active', btn.dataset.preset === preset);
+    function updateLocale(){
+      presetButtons.forEach(button => {
+        const key = button.dataset.preset;
+        button.textContent = translateRange(key, key.toUpperCase());
       });
+      start.setAttribute('aria-label', translate('range.start', 'Start date'));
+      end.setAttribute('aria-label', translate('range.end', 'End date'));
+      if (compareToggle) {
+        const label = compareToggle.querySelector('.dc__compare-label');
+        if (label) label.textContent = translate('range.compare', 'Compare');
+      }
     }
 
-    function restoreSelection(){
-      const raw = localStorage.getItem('hr:range');
-      if (!raw) {
-        updateActiveButton();
-        return;
+    function updateActive(){
+      const range = readRange();
+      const preset = range && range.preset ? normalizePreset(range.preset) : null;
+      presetButtons.forEach(button => {
+        button.classList.toggle('is-active', preset && button.dataset.preset === preset);
+      });
+      if (range && range.start) start.value = range.start; else start.value = '';
+      if (range && range.end) end.value = range.end; else end.value = '';
+    }
+
+    function updateCompareState(){
+      if (!compareToggle) return;
+      const input = compareToggle.querySelector('input[type="checkbox"]');
+      if (input) {
+        input.checked = readCompare();
       }
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.preset) {
+    }
+
+    presetButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.preset;
+        if (key) {
+          saveRange({preset: key});
           start.value = '';
           end.value = '';
-        } else if (parsed && parsed.start && parsed.end) {
-          start.value = parsed.start;
-          end.value = parsed.end;
+          updateActive();
         }
-      } catch (e) {
-        // ignore malformed values
-      }
-      updateActiveButton();
+      });
+    });
+
+    if (compareToggle) {
+      const input = compareToggle.querySelector('input[type="checkbox"]');
+      input.addEventListener('change', () => {
+        saveCompare(Boolean(input.checked));
+      });
     }
 
-    restoreSelection();
-
-    if (!localStorage.getItem('hr:range')) {
-      setRange('7d');
+    document.addEventListener('i18n:change', updateLocale);
+    if (g.I18N?.onReady) {
+      g.I18N.onReady(updateLocale);
     } else {
-      updateActiveButton();
+      updateLocale();
     }
-  }
 
-  function boot(){
-    Promise.resolve().then(() => {
-      if (window.I18N?.onReady) {
-        window.I18N.onReady(init);
-      } else {
-        init();
+    updateActive();
+    updateCompareState();
+
+    if (!readRange()) {
+      saveRange({preset: DEFAULT_PRESET});
+    } else {
+      updateActive();
+    }
+
+    if (config.compare && !localStorage.getItem(COMPARE_KEY)) {
+      saveCompare(false);
+    }
+
+    window.addEventListener('storage', (evt) => {
+      if (!evt) return;
+      if (evt.key === RANGE_KEY) {
+        updateActive();
+      } else if (evt.key === COMPARE_KEY) {
+        updateCompareState();
       }
     });
   }
 
-  if (document.readyState !== 'loading') {
-    boot();
-  } else {
-    window.addEventListener('DOMContentLoaded', boot);
+  function createPresetButton(key, wrapper){
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.preset = key;
+    button.className = 'dc__preset';
+    button.textContent = translateRange(key, key.toUpperCase());
+    wrapper.appendChild(button);
+    return button;
   }
-})();
+
+  function createCompareToggle(wrapper){
+    const label = document.createElement('label');
+    label.className = 'dc__compare';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'dc__compare-input';
+    const span = document.createElement('span');
+    span.className = 'dc__compare-label';
+    span.textContent = translate('range.compare', 'Compare');
+    label.appendChild(input);
+    label.appendChild(span);
+    wrapper.appendChild(label);
+    return label;
+  }
+
+  g.DateControls = {
+    mount,
+    readRange,
+    readCompare
+  };
+})(window);

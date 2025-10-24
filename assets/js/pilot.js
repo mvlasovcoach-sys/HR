@@ -4,7 +4,7 @@
     if (!kpiSection) return;
     const heatmapSection = document.getElementById('pilot-heatmap');
     const eventsSection = document.getElementById('pilot-events');
-    const captionEl = document.getElementById('pilot-caption');
+    const captionEl = document.getElementById('global-caption');
     const exportBtn = document.getElementById('btn-export-pilot');
 
     let events = [];
@@ -22,6 +22,26 @@
     const defaultDateOptions = lang => (lang === 'ru'
       ? {day: '2-digit', month: '2-digit', year: 'numeric'}
       : {day: 'numeric', month: 'short', year: 'numeric'});
+
+    function canonicalPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return '7d';
+      if (key === 'mtd' || key === 'month') return 'month';
+      if (key === 'qtd' || key === 'quarter') return 'month';
+      if (key === 'ytd' || key === 'year') return 'year';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
+
+    function displayPreset(value){
+      const key = String(value || '').toLowerCase();
+      if (key === 'today' || key === 'day') return 'today';
+      if (key === 'mtd' || key === 'month') return 'mtd';
+      if (key === 'qtd' || key === 'quarter') return 'qtd';
+      if (key === 'ytd' || key === 'year') return 'ytd';
+      if (key === '7d') return '7d';
+      return '7d';
+    }
 
     function formatLocaleDate(value){
       const date = value instanceof Date ? value : new Date(value);
@@ -77,8 +97,7 @@
 
     function presetForRange(range){
       if (range.preset) {
-        if (range.preset === 'month' || range.preset === 'year') return range.preset;
-        return '7d';
+        return canonicalPreset(range.preset);
       }
       if (range.start && range.end) {
         const start = new Date(range.start);
@@ -122,7 +141,12 @@
       renderKpis(engagement, preset, team, range);
       renderHeatmap(metrics);
       renderEvents(range, team);
-      if (captionEl) captionEl.textContent = buildCaption(range, team);
+      const insight = buildCaption(range, team);
+      if (captionEl && window.Caption?.renderCaption) {
+        window.Caption.renderCaption(captionEl, {asOf: new Date(), insight});
+      } else if (captionEl) {
+        captionEl.textContent = insight;
+      }
     }
 
     async function loadEngagement(preset, range, team){
@@ -406,20 +430,23 @@
     function buildCaption(range, team){
       const rangeText = rangeLabel(range);
       const teamText = team === 'all' ? window.t('caption.teamAll') : teamMap()[team] || team;
-      const prefix = window.t('caption.orgAvg') || window.t('caption.orgAverage');
-      return `${scenarioPrefix()}${prefix}${window.t('caption.separator')}${rangeText}${window.t('caption.separator')}${teamText}`;
+      const prefix = window.t('caption.orgAvg') || window.t('caption.orgAverage') || 'Org average';
+      const separator = window.t('caption.separator') || ' · ';
+      return `${scenarioPrefix()}${prefix}${separator}${rangeText}${separator}${teamText}`;
     }
 
     function rangeLabel(range){
       if (!range) return window.t('range.7d');
       if (range.preset) {
+        const presetKey = displayPreset(range.preset);
         const map = {
-          day: window.t('range.day'),
-          '7d': window.t('range.7d'),
-          month: window.t('range.month'),
-          year: window.t('range.year')
+          today: window.t('range.today') || 'Today',
+          '7d': window.t('range.7d') || '7 Days',
+          mtd: window.t('range.mtd') || 'Month to date',
+          qtd: window.t('range.qtd') || 'Quarter to date',
+          ytd: window.t('range.ytd') || 'Year to date'
         };
-        return map[range.preset] || window.t('range.7d');
+        return map[presetKey] || window.t('range.7d');
       }
       if (range.start && range.end) {
         const start = formatLocaleDate(range.start);
@@ -439,7 +466,7 @@
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? window.t('caption.scenarioPrefix') : '';
+      return readScenario() === 'night' ? (window.t('caption.scenarioPrefix') || 'Night scenario · ') : '';
     }
 
     async function handleExport(){

@@ -4,6 +4,9 @@
     if (!trigger) return;
 
     let overlay = null;
+    let lastFocus = null;
+    const focusSelectors = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
     trigger.setAttribute('aria-expanded', 'false');
 
     function t(key, fallback){
@@ -77,18 +80,20 @@
       overlay.addEventListener('click', handleOverlayClick);
       overlay.querySelector('.legend-close')?.addEventListener('click', closeLegend);
       document.addEventListener('keydown', handleKeydown);
+      lastFocus = document.activeElement;
+      focusFirst(overlay.querySelector('.legend-modal'));
     }
 
     function template(){
       const title = t('legend.title', 'Legend');
       const closeLabel = t('legend.close', 'Close');
       return `
-        <div class="legend-modal summary-legend" role="dialog" aria-modal="true" aria-labelledby="legend-title">
+        <div class="legend-modal summary-legend" role="dialog" aria-modal="true" aria-labelledby="legend-title" aria-describedby="legend-body">
           <div class="legend-header">
             <h3 id="legend-title">${title}</h3>
             <button type="button" class="legend-close" aria-label="${closeLabel}">×</button>
           </div>
-          <div class="legend-body">${buildBody()}</div>
+          <div class="legend-body" id="legend-body">${buildBody()}</div>
         </div>`;
     }
 
@@ -99,7 +104,11 @@
       overlay = null;
       trigger.setAttribute('aria-expanded', 'false');
       document.removeEventListener('keydown', handleKeydown);
-      try { trigger.focus(); } catch (err) { /* ignore focus failures */ }
+      const focusTarget = lastFocus || trigger;
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        try { focusTarget.focus(); } catch (err) { /* ignore focus failures */ }
+      }
+      lastFocus = null;
     }
 
     function handleOverlayClick(evt){
@@ -109,9 +118,25 @@
     }
 
     function handleKeydown(evt){
+      if (!overlay) return;
       if (evt.key === 'Escape') {
         evt.preventDefault();
         closeLegend();
+        return;
+      }
+      if (evt.key !== 'Tab') return;
+      const dialog = overlay.querySelector('.legend-modal');
+      if (!dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll(focusSelectors)).filter(el => el.offsetParent !== null);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (evt.shiftKey && document.activeElement === first) {
+        evt.preventDefault();
+        last.focus();
+      } else if (!evt.shiftKey && document.activeElement === last) {
+        evt.preventDefault();
+        first.focus();
       }
     }
 
@@ -120,6 +145,7 @@
       overlay.innerHTML = template();
       overlay.querySelector('.legend-close')?.addEventListener('click', closeLegend);
       insertDisclaimers(overlay.querySelector('.legend-body'));
+      focusFirst(overlay.querySelector('.legend-modal'));
     }
 
     trigger.addEventListener('click', evt => {
@@ -152,6 +178,14 @@
         window.I18N?.t('badge.fixedThresholds'),
         window.I18N?.t('badge.noMl')
       ].filter(Boolean).join(' · ');
+    }
+
+    function focusFirst(container){
+      if (!container) return;
+      const focusable = Array.from(container.querySelectorAll(focusSelectors)).filter(el => el.offsetParent !== null);
+      if (focusable.length) {
+        try { focusable[0].focus(); } catch (err) { /* ignore */ }
+      }
     }
   });
 })();
