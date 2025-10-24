@@ -5,6 +5,7 @@
   const state = { data: null, version: null };
   const DEMO_CHARTS = {};
   const utils = window.DEMO_UTILS || {};
+  const DEMO_SOURCE_ID = 'demo-synth-2025';
   const warnOnMismatch = typeof utils.warnMismatch === 'function' ? utils.warnMismatch : () => {};
   const computeBands = typeof utils.computeAgeBands === 'function'
     ? utils.computeAgeBands
@@ -198,6 +199,7 @@
     renderAgeOverall(data.age_overall, headcount);
     renderByDepartment(departments, data.byDeptBattery);
     renderShiftGrid(departments);
+    updateSourceMeta(headcount);
   }
 
   function renderBadge(name, headcount){
@@ -734,6 +736,20 @@
       pattern: row.pattern.map(value => mapShiftLabel(value, dayLabel, nightLabel, offLabel)).join(', ')
     })).join('; ');
     setDescription(els.shiftGrid, 'shift-desc', `${getText('demo.shiftPattern', 'Shift Pattern')}. ${summary}`);
+  }
+
+  function updateSourceMeta(headcount){
+    if (typeof document === 'undefined') return;
+    const panels = document.querySelectorAll(`[data-source-id="${DEMO_SOURCE_ID}"]`);
+    if (!panels.length) return;
+    const applyOverrides = window.Sources?.applyOverrides;
+    if (typeof applyOverrides !== 'function') return;
+    const total = Number(headcount);
+    const payload = { period: getPeriodLabel() };
+    if (Number.isFinite(total) && total > 0) {
+      payload.sampleN = Math.round(total);
+    }
+    panels.forEach(panel => applyOverrides(panel, payload));
   }
 
   function getPeriodLabel(){
