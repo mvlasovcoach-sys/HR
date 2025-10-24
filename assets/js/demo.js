@@ -2,10 +2,12 @@
   const heroEl = document.getElementById('demo-hero');
   if (!heroEl) return;
 
-  const state = { data: null, version: null };
+  const state = { data: null, version: null, headcount: 0 };
   const DEMO_CHARTS = {};
   const utils = window.DEMO_UTILS || {};
   const DEMO_SOURCE_ID = 'demo-synth-2025';
+  const META_HOST_IDS = ['age-meta', 'dept-meta', 'shift-meta'];
+  const metaState = { threshold: '', period: '' };
   const warnOnMismatch = typeof utils.warnMismatch === 'function' ? utils.warnMismatch : () => {};
   const computeBands = typeof utils.computeAgeBands === 'function'
     ? utils.computeAgeBands
@@ -87,7 +89,10 @@
       });
     }
     window.addEventListener('i18n:change', () => {
+      metaState.threshold = '';
+      metaState.period = '';
       if (state.data) render(state.data);
+      updateDemoMeta();
     });
     loadData().catch(err => {
       console.error('demo: data load failed', err);
@@ -106,6 +111,10 @@
       els.exportBtn.setAttribute('title', baseLabel);
       els.exportBtn.addEventListener('click', handleExport);
     }
+    document.addEventListener('app:periodChanged', handlePeriodChanged);
+    document.addEventListener('app:thresholdChanged', handleThresholdChanged);
+    document.addEventListener('app:scenarioChanged', handleScenarioChanged);
+    window.addEventListener('storage', handleStorageChanged);
   }
 
   function handleExport(){
@@ -188,6 +197,7 @@
     if (!data) return;
     const departments = Array.isArray(data.departments) ? data.departments : [];
     const headcount = departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+    state.headcount = headcount;
     if (typeof window !== 'undefined') {
       window.DEMO_TOTAL = headcount;
     }
@@ -424,6 +434,7 @@
       warnOnMismatch('Age bands sum', total, globalTotal);
     }
     mountChart('#chart-age-overall', drawAgeOverall, { data: bands, total });
+    updateDemoMeta();
   }
 
   function renderByDepartment(departments, wellnessByDept){
@@ -431,14 +442,8 @@
     if (!container) return;
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
-    const noteHost = document.querySelector('[data-note-host="dept"]');
-    const note = noteHost?.querySelector('#dept-note');
-    if (note) {
-      note.textContent = getText('demo.note.byDept', 'Threshold: Wellness Score ≥ 60 (demo). Period: {period}.', {
-        period: getPeriodLabel()
-      });
-    }
     mountChart('#chart-by-dept', drawByDept, { departments, wellnessByDept });
+    updateDemoMeta();
   }
 
   function drawAgeOverall(root, payload){
@@ -736,6 +741,7 @@
       pattern: row.pattern.map(value => mapShiftLabel(value, dayLabel, nightLabel, offLabel)).join(', ')
     })).join('; ');
     setDescription(els.shiftGrid, 'shift-desc', `${getText('demo.shiftPattern', 'Shift Pattern')}. ${summary}`);
+    updateDemoMeta();
   }
 
   function updateSourceMeta(headcount){
@@ -745,22 +751,27 @@
     const applyOverrides = window.Sources?.applyOverrides;
     if (typeof applyOverrides !== 'function') return;
     const total = Number(headcount);
-    const payload = { period: getPeriodLabel() };
+    const payload = {};
+    const periodLabel = getCurrentPeriodLabel();
+    if (periodLabel) payload.period = periodLabel;
+    const thresholdLabel = getCurrentThresholdLabel();
+    if (thresholdLabel) payload.threshold = thresholdLabel;
     if (Number.isFinite(total) && total > 0) {
       payload.sampleN = Math.round(total);
     }
     panels.forEach(panel => applyOverrides(panel, payload));
+    updateDemoMeta({ period: periodLabel, threshold: thresholdLabel });
   }
 
-  function getPeriodLabel(){
+  function getPrimarySourcePanel(){
+    return document.querySelector(`[data-source-id="${DEMO_SOURCE_ID}"]`);
+  }
+
+  function computePeriodLabelFromRange(){
     const readRange = window.DateControls?.readRange;
-    if (typeof readRange !== 'function') {
-      return getText('demo.period.default', 'Selected period');
-    }
+    if (typeof readRange !== 'function') return '';
     const range = readRange();
-    if (!range) {
-      return getText('demo.period.default', 'Selected period');
-    }
+    if (!range) return '';
     if (range.preset) {
       const key = `range.${range.preset}`;
       const translated = window.I18N?.t?.(key);
@@ -780,7 +791,100 @@
       }
       return `${range.start} – ${range.end}`;
     }
+    return '';
+  }
+
+  function getCurrentPeriodLabel(){
+    const fromRange = computePeriodLabelFromRange();
+    if (fromRange) {
+      metaState.period = fromRange;
+      return fromRange;
+    }
+    if (metaState.period) return metaState.period;
+    const panel = getPrimarySourcePanel();
+    if (panel?.dataset?.sourcePeriodDisplay) {
+      return panel.dataset.sourcePeriodDisplay;
+    }
+    const describe = window.Sources?.describe;
+    const descriptor = typeof describe === 'function' ? describe(DEMO_SOURCE_ID, getLang()) : null;
+    if (descriptor?.periodDefault) {
+      return descriptor.periodDefault;
+    }
     return getText('demo.period.default', 'Selected period');
+  }
+
+  function deriveSourceThreshold(){
+    const describe = window.Sources?.describe;
+    const descriptor = typeof describe === 'function' ? describe(DEMO_SOURCE_ID, getLang()) : null;
+    if (descriptor?.methodology?.threshold) {
+      return descriptor.methodology.threshold;
+    }
+    const getSource = window.Sources?.get;
+    const source = typeof getSource === 'function' ? getSource(DEMO_SOURCE_ID) : null;
+    return source?.methodology?.threshold || '';
+  }
+
+  function getCurrentThresholdLabel(){
+    if (metaState.threshold) return metaState.threshold;
+    const panel = getPrimarySourcePanel();
+    if (panel?.dataset?.sourceThresholdDisplay) {
+      return panel.dataset.sourceThresholdDisplay;
+    }
+    return deriveSourceThreshold();
+  }
+
+  function updateDemoMeta(overrides={}){
+    if (typeof window.renderSourceNote !== 'function') return;
+    const nextThreshold = overrides.threshold != null ? overrides.threshold : getCurrentThresholdLabel();
+    const nextPeriod = overrides.period != null ? overrides.period : getCurrentPeriodLabel();
+    if (typeof nextThreshold === 'string' && nextThreshold.trim()) {
+      metaState.threshold = nextThreshold;
+    }
+    if (typeof nextPeriod === 'string' && nextPeriod.trim()) {
+      metaState.period = nextPeriod;
+    }
+    const payload = {
+      sourceId: DEMO_SOURCE_ID,
+      threshold: metaState.threshold || '',
+      period: metaState.period || ''
+    };
+    META_HOST_IDS.forEach(id => {
+      const host = document.getElementById(id);
+      if (host) {
+        window.renderSourceNote(host, payload);
+      }
+    });
+  }
+
+  function handlePeriodChanged(event){
+    const label = typeof event?.detail?.label === 'string' ? event.detail.label : '';
+    const resolved = label || computePeriodLabelFromRange() || getCurrentPeriodLabel();
+    updateDemoMeta({ period: resolved });
+    updateSourceMeta(state.headcount || window.DEMO_TOTAL || 0);
+  }
+
+  function handleThresholdChanged(event){
+    const label = typeof event?.detail?.label === 'string' ? event.detail.label : '';
+    const resolved = label || deriveSourceThreshold();
+    updateDemoMeta({ threshold: resolved });
+    updateSourceMeta(state.headcount || window.DEMO_TOTAL || 0);
+  }
+
+  function handleScenarioChanged(){
+    updateDemoMeta();
+    updateSourceMeta(state.headcount || window.DEMO_TOTAL || 0);
+  }
+
+  function handleStorageChanged(event){
+    if (!event || !event.key) return;
+    if (event.key === 'hr:range') {
+      const periodLabel = computePeriodLabelFromRange() || getCurrentPeriodLabel();
+      updateDemoMeta({ period: periodLabel });
+      updateSourceMeta(state.headcount || window.DEMO_TOTAL || 0);
+    } else if (event.key === 'hr:scenario' || event.key === 'hr:threshold') {
+      updateDemoMeta();
+      updateSourceMeta(state.headcount || window.DEMO_TOTAL || 0);
+    }
   }
 
   function getGenderLabel(key){

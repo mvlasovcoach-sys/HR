@@ -29,7 +29,7 @@
   "demo.age.band5": "60+",
   "demo.gender_title": "Gender — Headcount",
   "demo.genderOverall": "Gender — Overall",
-  "demo.ageOverall": "Age — Overall",
+  "demo.ageOverall": "Age — Headcount overall",
   "demo.byDepartment": "By department",
   "demo.shiftPattern": "Shift Pattern",
   "demo.exportBrief": "Export Site Brief (PDF)",
