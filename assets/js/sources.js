@@ -86,10 +86,10 @@
       ru: 'Демонстрационные данные (не реальные)'
     },
     methodology: {
-      threshold: 'Wellness Score ≥ 60',
+      threshold: "Stress bands: <40 Low, 40–59 Normal, 60–79 Moderate, 80–100 High",
       stats: [
-        '95% Wilson CI for proportions',
-        'Two-proportion z-test vs overall (two-tailed)'
+        "Hourly mean across users marked as 'on measurement' (connected)",
+        'No imputation for missing hours'
       ]
     },
     sample: {

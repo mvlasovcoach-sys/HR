@@ -1,0 +1,1024 @@
+[
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T00:05:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T00:12:00Z",
+    "value": 74,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T00:19:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T00:26:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T00:33:00Z",
+    "value": 79,
+    "on": false
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T00:40:00Z",
+    "value": 77,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T01:05:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T01:12:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T01:19:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T01:26:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T01:33:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T01:40:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T02:05:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T02:12:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T02:19:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T02:26:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T02:33:00Z",
+    "value": 82,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T02:40:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T03:05:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T03:12:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T03:19:00Z",
+    "value": 86,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T03:26:00Z",
+    "value": 84,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T03:33:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T03:40:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T04:05:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T04:12:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T04:19:00Z",
+    "value": 84,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T04:26:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T04:33:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T04:40:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T05:05:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T05:12:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T05:19:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T05:26:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T05:33:00Z",
+    "value": 72,
+    "on": false
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T05:40:00Z",
+    "value": 69,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T06:05:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T06:12:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T06:19:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T06:26:00Z",
+    "value": 74,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T06:33:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T06:40:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T07:05:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T07:12:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T07:19:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T07:26:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T07:33:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T07:40:00Z",
+    "value": 60,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T08:05:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T08:12:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T08:19:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T08:26:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T08:33:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T08:40:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T09:05:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T09:12:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-24T09:12:00Z",
+    "value": 59,
+    "on": false
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T09:19:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T09:26:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T09:33:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T09:40:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T10:05:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T10:12:00Z",
+    "value": 78,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T10:19:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T10:26:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T10:33:00Z",
+    "value": 60,
+    "on": false
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T10:40:00Z",
+    "value": 50,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T11:05:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T11:12:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T11:19:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T11:26:00Z",
+    "value": 58,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T11:33:00Z",
+    "value": 56,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T11:40:00Z",
+    "value": 49,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T12:05:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T12:12:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T12:19:00Z",
+    "value": 56,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T12:26:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T12:33:00Z",
+    "value": 52,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T12:40:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T13:05:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T13:12:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T13:19:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T13:26:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T13:33:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T13:40:00Z",
+    "value": 40,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T14:05:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T14:12:00Z",
+    "value": 61,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T14:19:00Z",
+    "value": 48,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T14:26:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T14:33:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T14:40:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T15:05:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T15:12:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T15:19:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T15:26:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T15:33:00Z",
+    "value": 37,
+    "on": false
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T15:40:00Z",
+    "value": 37,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T16:05:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T16:12:00Z",
+    "value": 48,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T16:19:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T16:26:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T16:33:00Z",
+    "value": 34,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T16:40:00Z",
+    "value": 31,
+    "on": true
+  },
+  {
+    "uid": "support-03",
+    "team": "support",
+    "ts": "2025-10-24T16:42:00Z",
+    "value": 72,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T17:05:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T17:12:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T17:19:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T17:26:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T17:33:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T17:40:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T18:05:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T18:12:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T18:19:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T18:26:00Z",
+    "value": 31,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T18:33:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T18:40:00Z",
+    "value": 32,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T19:05:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T19:12:00Z",
+    "value": 38,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T19:19:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T19:26:00Z",
+    "value": 38,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T19:33:00Z",
+    "value": 30,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T19:40:00Z",
+    "value": 34,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T20:05:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T20:12:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T20:19:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T20:26:00Z",
+    "value": 34,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T20:33:00Z",
+    "value": 35,
+    "on": false
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T20:40:00Z",
+    "value": 34,
+    "on": false
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T21:05:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T21:12:00Z",
+    "value": 32,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T21:19:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T21:26:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T21:33:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T21:40:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T22:05:00Z",
+    "value": 34,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T22:12:00Z",
+    "value": 32,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T22:19:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T22:26:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T22:33:00Z",
+    "value": 38,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T22:40:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-24T23:05:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-24T23:12:00Z",
+    "value": 38,
+    "on": true
+  },
+  {
+    "uid": "support-01",
+    "team": "support",
+    "ts": "2025-10-24T23:19:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "support-02",
+    "team": "support",
+    "ts": "2025-10-24T23:26:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "hq-01",
+    "team": "hq",
+    "ts": "2025-10-24T23:33:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "hq-02",
+    "team": "hq",
+    "ts": "2025-10-24T23:40:00Z",
+    "value": 49,
+    "on": true
+  }
+]
