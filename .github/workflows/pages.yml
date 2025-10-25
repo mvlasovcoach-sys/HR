@@ -5,10 +5,8 @@ on:
     branches: [main]
     paths:
       - '**/*.html'
+      - 'assets/**'
       - 'shared/**'
-      - 'assets/js/**'
-      - 'assets/images/**'
-      - '!README.md'
       - '!**/*.md'
   workflow_dispatch:
 

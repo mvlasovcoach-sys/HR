@@ -81,6 +81,12 @@
   font-family: var(--font-sans);
 }
 
+.chart__axis text,
+.chart__legend,
+.chart__tooltip {
+  font-variant-numeric: tabular-nums;
+}
+
 .chart__axis line {
   stroke: rgba(255, 255, 255, 0.12);
 }
