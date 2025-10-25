@@ -1,4 +1,48 @@
 (function(){
+  const loaderGlobals = window.AnalyticsDataLoader || window.dataLoader || {};
+  const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || loaderGlobals.BUILD_VERSION || '2025-10-25-01';
+  const resolveBase = typeof loaderGlobals.base === 'function'
+    ? loaderGlobals.base
+    : path => {
+        const origin = window.location?.href || document.baseURI || '';
+        const href = new URL(path || '.', origin).toString();
+        return href.endsWith('/') ? href : `${href.replace(/\/?$/, '/')}`;
+      };
+  const DEVICES_BASE = resolveBase('data/devices/');
+
+  const versionHelper = typeof loaderGlobals.withV === 'function'
+    ? loaderGlobals.withV
+    : typeof loaderGlobals.urlWithV === 'function'
+      ? loaderGlobals.urlWithV
+      : input => {
+          if (!input) return input;
+          try {
+            const url = input instanceof URL
+              ? new URL(input.toString())
+              : new URL(String(input), window.location?.href || document.baseURI || '');
+            if (DEFAULT_BUILD_V && !url.searchParams.has('v')) {
+              url.searchParams.set('v', DEFAULT_BUILD_V);
+            }
+            return url.toString();
+          } catch (err) {
+            return input;
+          }
+        };
+
+  const fetchHelper = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} for ${url}`);
+        }
+        return response.json();
+      };
+
+  const versioned = url => versionHelper ? versionHelper(url) : url;
+  const EXPORT_DISABLED_TITLE = 'Load data to export';
+
   const STORAGE_KEYS = {
     range: 'hr:range',
     team: 'hr:team',
@@ -70,14 +114,17 @@
     }
   }
 
-  function boot(){
+  async function boot(){
     const ready = [];
     ready.push(waitForI18n());
     ready.push(waitForSite());
     ready.push(waitForDom());
-    Promise.all(ready).then(initPage).catch(err => {
-      console.error('devices: init failed', err);
-    });
+    try {
+      await Promise.all(ready);
+      await initPage();
+    } catch (err) {
+      console.error('[Devices] init failed', err);
+    }
   }
 
   function waitForDom(){
@@ -114,7 +161,7 @@
     });
   }
 
-  function initPage(){
+  async function initPage(){
     siteState = window.SITE || null;
 
     const cardsEl = document.getElementById('fleet-cards');
@@ -131,8 +178,12 @@
     cardsEl.classList.add('devices-kpis');
 
     if (exportBtn) {
+      exportBtn.disabled = true;
+      exportBtn.setAttribute('aria-disabled', 'true');
+      exportBtn.setAttribute('title', EXPORT_DISABLED_TITLE);
       exportBtn.addEventListener('click', () => {
         if (exportBtn.disabled || exportBtn.getAttribute('aria-disabled') === 'true') return;
+        if (!lastData) return;
         window.exporter?.notifyStart?.(exportBtn);
         exportCsv(tableEl);
       });
@@ -142,17 +193,27 @@
     window.addEventListener('storage', evt => {
       if (!evt) return;
       if (evt.key === STORAGE_KEYS.range || evt.key === STORAGE_KEYS.team || evt.key === STORAGE_KEYS.scenario) {
-        render();
+        safeRender();
       }
     });
 
-    document.addEventListener('i18n:change', () => render());
+    document.addEventListener('i18n:change', () => safeRender());
     window.addEventListener('site:ready', event => {
       siteState = event?.detail?.site || window.SITE || siteState;
-      render();
+      safeRender();
     });
 
-    render();
+    const safeRender = () => render().catch(err => {
+      console.error('[Devices] load failed', err);
+      showError('Unable to load devices data.');
+    });
+
+    try {
+      await render();
+    } catch (err) {
+      console.error('[Devices] load failed', err);
+      showError('Unable to load devices data.');
+    }
 
     async function render(){
       const token = ++renderToken;
@@ -160,12 +221,7 @@
       const team = readTeam();
       const preset = presetForRange(range);
       lastTeam = team;
-      let data = null;
-      try {
-        data = await loadFleet(preset, range, team);
-      } catch (err) {
-        console.error('devices: data load failed', err);
-      }
+      const data = await loadFleet(preset);
       if (token !== renderToken) return;
 
       if (!data) {
@@ -182,12 +238,13 @@
       if (exportBtn) {
         const baseLabel = exportBtn.getAttribute('data-export-label') || t('ui.exportCSV') || t('label.export.csv');
         exportBtn.setAttribute('aria-label', `${baseLabel} (${preset})`);
-        exportBtn.setAttribute('title', `${baseLabel} (${preset})`);
         exportBtn.disabled = insufficient || !rows.length;
         if (!rows.length || insufficient) {
           exportBtn.setAttribute('aria-disabled', 'true');
+          exportBtn.setAttribute('title', EXPORT_DISABLED_TITLE);
         } else {
           exportBtn.removeAttribute('aria-disabled');
+          exportBtn.setAttribute('title', `${baseLabel} (${preset})`);
         }
       }
       runIntegrityChecks(data, allRows, siteState, toastEl);
@@ -219,8 +276,9 @@
     }
 
     function renderEmpty(){
-      const emptyText = t('status.noData');
-      cardsEl.innerHTML = `<p role="status">${emptyText}</p>`;
+      lastData = null;
+      const emptyText = t('status.noData') || 'No data available';
+      cardsEl.innerHTML = `<p role="status">${escapeHtml(emptyText)}</p>`;
       tableEl.innerHTML = '';
       histogramEl.innerHTML = '';
       if (captionEl && window.Caption?.render) {
@@ -235,7 +293,31 @@
       if (exportBtn) {
         exportBtn.disabled = true;
         exportBtn.setAttribute('aria-disabled', 'true');
+        exportBtn.setAttribute('title', EXPORT_DISABLED_TITLE);
       }
+      hideToast(toastEl);
+    }
+
+    function showError(message){
+      lastData = null;
+      cardsEl.innerHTML = `<p role="alert">${escapeHtml(message)}</p>`;
+      tableEl.innerHTML = '';
+      histogramEl.innerHTML = '';
+      if (captionEl && window.Caption?.render) {
+        window.Caption?.render(captionEl, {asOf: new Date(), insight: ''});
+      } else if (captionEl) {
+        captionEl.textContent = '';
+      }
+      if (coverageEl) {
+        coverageEl.textContent = '';
+        coverageEl.hidden = true;
+      }
+      if (exportBtn) {
+        exportBtn.disabled = true;
+        exportBtn.setAttribute('aria-disabled', 'true');
+        exportBtn.setAttribute('title', EXPORT_DISABLED_TITLE);
+      }
+      hideToast(toastEl);
     }
   }
 
@@ -279,9 +361,49 @@
     return '7d';
   }
 
-  async function loadFleet(preset, range, team){
-    const path = `./data/org/fleet_${preset}.json`;
-    return await window.dataLoader.fetch(path, {range, team});
+  async function loadFleet(preset){
+    const indexUrl = versioned(`${DEVICES_BASE}index.json`);
+    const index = await fetchHelper(indexUrl);
+    if (!index) return null;
+    const targetFile = resolvePresetFile(index, preset);
+    if (!targetFile) return null;
+    const dayUrl = versioned(`${DEVICES_BASE}${targetFile}`);
+    const payload = await fetchHelper(dayUrl);
+    if (!payload) return null;
+    return extractPresetData(payload, preset);
+  }
+
+  function resolvePresetFile(index, preset){
+    const key = canonicalPreset(preset);
+    const fromPresets = index?.presets?.[key] ?? index?.presets?.[preset];
+    const candidate = pickFile(fromPresets);
+    if (candidate) return candidate;
+    return pickFile(index?.latest);
+  }
+
+  function pickFile(entry){
+    if (!entry) return null;
+    if (typeof entry === 'string') return ensureJson(entry);
+    if (typeof entry === 'object') {
+      const file = entry.file || entry.path || entry.url || entry.name || null;
+      if (file) return ensureJson(file);
+    }
+    return null;
+  }
+
+  function ensureJson(value){
+    if (!value) return null;
+    return value.endsWith('.json') ? value : `${value}.json`;
+  }
+
+  function extractPresetData(payload, preset){
+    if (!payload) return null;
+    const key = canonicalPreset(preset);
+    if (payload.presets && payload.presets[key]) return payload.presets[key];
+    if (payload.presets && payload.presets[preset]) return payload.presets[preset];
+    if (payload[key]) return payload[key];
+    if (payload[preset]) return payload[preset];
+    return payload;
   }
 
   function buildRows(site, rawRows){

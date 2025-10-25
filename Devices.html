@@ -17,11 +17,11 @@
 <script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
+<script defer type="module" src="./assets/js/data-loader.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/devices.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/data-loader.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
@@ -40,7 +40,7 @@
             <div id="date-controls" class="toolbar__filter"></div>
             <div class="toolbar__filter">
               <button class="btn btn--ghost btn--export" type="button" id="export-fleet"
-                      data-export-key="ui.exportCSV" data-export-icon="⇩">
+                      data-export-key="ui.exportCSV" data-export-icon="⇩" disabled aria-disabled="true" title="Load data to export">
                 <span class="btn__icon" aria-hidden="true">⇩</span>
                 <span class="btn__label" data-i18n="ui.exportCSV">Export CSV</span>
               </button>
