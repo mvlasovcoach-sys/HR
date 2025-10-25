@@ -31,3 +31,27 @@ The Analytics view reads stress metrics from static JSON files under `HR/data/st
 1. Unzip or copy the provided sample data so that `HR/data/stress/raw/index.json` exists.
 2. Ensure at least one daily file named `YYYY-MM-DD.json` is available in the same folder for the charts.
 3. Refresh `Analytics.html` after updating the files; requests are cache-busted automatically.
+
+Example `index.json`:
+
+```json
+{
+  "dates": ["2025-10-22", "2025-10-23", "2025-10-24"]
+}
+```
+
+Example day file (`2025-10-24.json`):
+
+```json
+{
+  "date": "2025-10-24",
+  "updated_at": "2025-10-24T16:29:00Z",
+  "n_users": 20,
+  "hourly": [
+    { "h": 0, "avg": 34, "n": 12, "anomalies": 0 },
+    { "h": 1, "avg": 38, "n": 14, "anomalies": 1 }
+  ]
+}
+```
+
+Additional hourly entries follow the same shape—`h` for the hour of day, `avg` for the average stress score, `n` for the connected population, and `anomalies` for any flagged spikes.
