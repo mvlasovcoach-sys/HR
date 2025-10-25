@@ -5,7 +5,6 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SCAN_DIRS = ['shared', 'docs'];
-const ALLOW_HEX_IN = ['assets/css'];
 const IGNORED_DIRS = new Set([
   'node_modules',
   '.git',
@@ -14,6 +13,7 @@ const IGNORED_DIRS = new Set([
   'assets/fonts',
   'tests/visual/__screenshots__'
 ]);
+const IGNORED_PATHS = ['assets/css', 'node_modules'];
 const IGNORED_FILES = new Set([
   path.join('shared', 'tokens.css')
 ]);
@@ -26,7 +26,7 @@ let violations = [];
 
 function shouldSkip(relPath) {
   const normalized = relPath.replace(/\\/g, '/');
-  return ALLOW_HEX_IN.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`));
+  return IGNORED_PATHS.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`));
 }
 
 function walk(dir){
