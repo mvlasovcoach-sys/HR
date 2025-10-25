@@ -1,0 +1,1682 @@
+[
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T00:05:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T00:20:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T00:30:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T00:30:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T00:40:00Z",
+    "value": 42,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T00:40:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T00:40:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T00:45:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T00:45:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T00:50:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T01:00:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T01:00:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T01:05:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T01:05:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T01:05:00Z",
+    "value": 61,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T01:25:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T01:35:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T01:45:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T01:45:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T01:55:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T02:10:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T02:15:00Z",
+    "value": 84,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T02:15:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T02:30:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T02:30:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T02:40:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T02:45:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T02:50:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T02:50:00Z",
+    "value": 61,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T02:55:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T03:10:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T03:15:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T03:25:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T03:35:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T03:35:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T03:35:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T03:40:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T03:40:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T03:40:00Z",
+    "value": 66,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T03:45:00Z",
+    "value": 42,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T04:00:00Z",
+    "value": 50,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T04:05:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T04:10:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T04:20:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T04:30:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T04:35:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T04:35:00Z",
+    "value": 42,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T04:40:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T04:50:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T04:50:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T05:00:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T05:15:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T05:20:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T05:30:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T05:35:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T05:35:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T05:35:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T05:50:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T05:50:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T05:55:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T06:00:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T06:05:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T06:05:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T06:10:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T06:20:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T06:20:00Z",
+    "value": 64,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T06:30:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T06:35:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T06:45:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T06:50:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T07:00:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T07:00:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T07:15:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T07:20:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T07:25:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T07:30:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T07:40:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T07:40:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T07:45:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T07:50:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T08:00:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T08:15:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T08:15:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T08:20:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T08:20:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T08:25:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T08:40:00Z",
+    "value": 64,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T08:40:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T08:55:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T08:55:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T09:00:00Z",
+    "value": 49,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T09:05:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T09:10:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T09:20:00Z",
+    "value": 76,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T09:30:00Z",
+    "value": 65,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T09:35:00Z",
+    "value": 42,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T09:40:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T09:40:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T09:50:00Z",
+    "value": 82,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T09:50:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T10:05:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T10:10:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T10:25:00Z",
+    "value": 58,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T10:25:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T10:30:00Z",
+    "value": 74,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T10:40:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T10:50:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T10:50:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T10:55:00Z",
+    "value": 64,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T10:55:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T11:00:00Z",
+    "value": 58,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T11:00:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T11:05:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T11:05:00Z",
+    "value": 49,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T11:10:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T11:20:00Z",
+    "value": 52,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T11:30:00Z",
+    "value": 58,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T11:30:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T11:35:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T11:55:00Z",
+    "value": 58,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T12:00:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T12:05:00Z",
+    "value": 80,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T12:05:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T12:15:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T12:35:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T12:45:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T12:45:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T12:45:00Z",
+    "value": 55,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T12:50:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T12:55:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T13:00:00Z",
+    "value": 52,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T13:05:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T13:05:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T13:15:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T13:15:00Z",
+    "value": 53,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T13:35:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T13:35:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T13:40:00Z",
+    "value": 60,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T13:45:00Z",
+    "value": 49,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T13:55:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T14:00:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T14:05:00Z",
+    "value": 78,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T14:10:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T14:15:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T14:15:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T14:15:00Z",
+    "value": 74,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T14:25:00Z",
+    "value": 82,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T14:35:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T14:35:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T14:35:00Z",
+    "value": 42,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T15:00:00Z",
+    "value": 71,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T15:05:00Z",
+    "value": 66,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T15:10:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T15:15:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T15:15:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T15:20:00Z",
+    "value": 70,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T15:35:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T15:35:00Z",
+    "value": 38,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T15:40:00Z",
+    "value": 52,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T15:40:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T16:15:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T16:20:00Z",
+    "value": 83,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T16:30:00Z",
+    "value": 61,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T16:30:00Z",
+    "value": 63,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T16:35:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T16:35:00Z",
+    "value": 40,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T16:45:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T16:50:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T16:55:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T16:55:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T17:00:00Z",
+    "value": 82,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T17:00:00Z",
+    "value": 43,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T17:05:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T17:15:00Z",
+    "value": 40,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T17:20:00Z",
+    "value": 50,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T17:30:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T17:35:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T17:35:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T17:45:00Z",
+    "value": 78,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T17:55:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T18:00:00Z",
+    "value": 77,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T18:05:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T18:05:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T18:05:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T18:20:00Z",
+    "value": 74,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T18:20:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T18:20:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T18:25:00Z",
+    "value": 50,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T18:30:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T18:35:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T19:00:00Z",
+    "value": 40,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T19:00:00Z",
+    "value": 37,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T19:05:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T19:05:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T19:20:00Z",
+    "value": 44,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T19:25:00Z",
+    "value": 56,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T19:25:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T19:30:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T19:35:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T19:35:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T20:00:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T20:10:00Z",
+    "value": 52,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T20:25:00Z",
+    "value": 66,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T20:25:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T20:25:00Z",
+    "value": 36,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T20:35:00Z",
+    "value": 41,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T20:40:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T20:45:00Z",
+    "value": 48,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T20:45:00Z",
+    "value": 59,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T20:55:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T21:00:00Z",
+    "value": 81,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T21:05:00Z",
+    "value": 85,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T21:10:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T21:10:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T21:15:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T21:30:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T21:35:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T21:35:00Z",
+    "value": 49,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T21:50:00Z",
+    "value": 73,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T21:55:00Z",
+    "value": 69,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T22:05:00Z",
+    "value": 45,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T22:15:00Z",
+    "value": 51,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T22:25:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T22:30:00Z",
+    "value": 48,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T22:30:00Z",
+    "value": 57,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T22:40:00Z",
+    "value": 67,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T22:40:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T22:45:00Z",
+    "value": 68,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T22:45:00Z",
+    "value": 47,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T22:50:00Z",
+    "value": 66,
+    "on": true
+  },
+  {
+    "uid": "ops-04",
+    "team": "ops",
+    "ts": "2025-10-19T23:00:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "ops-01",
+    "team": "ops",
+    "ts": "2025-10-19T23:10:00Z",
+    "value": 75,
+    "on": true
+  },
+  {
+    "uid": "ops-03",
+    "team": "ops",
+    "ts": "2025-10-19T23:15:00Z",
+    "value": 35,
+    "on": true
+  },
+  {
+    "uid": "ops-05",
+    "team": "ops",
+    "ts": "2025-10-19T23:20:00Z",
+    "value": 54,
+    "on": true
+  },
+  {
+    "uid": "sales-02",
+    "team": "sales",
+    "ts": "2025-10-19T23:35:00Z",
+    "value": 46,
+    "on": true
+  },
+  {
+    "uid": "sales-04",
+    "team": "sales",
+    "ts": "2025-10-19T23:40:00Z",
+    "value": 39,
+    "on": true
+  },
+  {
+    "uid": "ops-02",
+    "team": "ops",
+    "ts": "2025-10-19T23:50:00Z",
+    "value": 72,
+    "on": true
+  },
+  {
+    "uid": "sales-01",
+    "team": "sales",
+    "ts": "2025-10-19T23:55:00Z",
+    "value": 62,
+    "on": true
+  },
+  {
+    "uid": "sales-03",
+    "team": "sales",
+    "ts": "2025-10-19T23:55:00Z",
+    "value": 79,
+    "on": true
+  },
+  {
+    "uid": "sales-05",
+    "team": "sales",
+    "ts": "2025-10-19T23:55:00Z",
+    "value": 75,
+    "on": true
+  }
+]

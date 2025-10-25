@@ -148,6 +148,12 @@
     "normal": "Normaal",
     "moderate": "Matig",
     "high": "Hoog",
+    "connected": "Verbonden",
+    "avg": "Gemiddelde stress",
+    "anomHigh": "Afwijkingen: veel hoge waarden",
+    "anomModerate": "Afwijkingen: verhoogd",
+    "anomNone": "Geen afwijkingen vastgesteld",
+    "burnoutNone": "Geen burn-outpatroon gedetecteerd",
     "emotion": "Emotie",
     "stress": "Stress",
     "test": "Stresstest",
@@ -155,6 +161,9 @@
     "chartAria": "Grafiek emotioneel welzijn",
     "lowSample": "Kleine steekproef (n={n})",
     "metricGroup": "Meting"
+  },
+  "stats": {
+    "lowSample": "Kleine steekproef — interpreteer met voorzichtigheid"
   },
   "date.from": "Van",
   "date.to": "Tot",

@@ -148,6 +148,12 @@
     "normal": "Normal",
     "moderate": "Moderate",
     "high": "High",
+    "connected": "Connected",
+    "avg": "Avg stress",
+    "anomHigh": "Anomalies: many high",
+    "anomModerate": "Anomalies: elevated",
+    "anomNone": "No anomalies detected",
+    "burnoutNone": "No burnout pattern detected",
     "emotion": "Emotion",
     "stress": "Stress",
     "test": "Stress test",
@@ -155,6 +161,9 @@
     "chartAria": "Emotional wellbeing distribution chart",
     "lowSample": "Low sample size (n={n})",
     "metricGroup": "Metric"
+  },
+  "stats": {
+    "lowSample": "Low sample size — interpret with caution"
   },
   "date.from": "From",
   "date.to": "To",

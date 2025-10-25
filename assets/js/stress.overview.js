@@ -1,386 +1,391 @@
 (function(g, d){
   if (!g || !d) return;
 
-  const THRESHOLDS = { low:[0,39], normal:[40,59], moderate:[60,79], high:[80,100] };
-  const LABEL_KEYS = ['low','normal','moderate','high'];
-  const MIN_SAMPLE = 10;
-  const HOUR_MS = 60 * 60 * 1000;
-  const DAY_MS = 24 * HOUR_MS;
-
-  const datasetCache = new Map();
+  const THRESHOLDS = { low: [0, 39], normal: [40, 59], moderate: [60, 79], high: [80, 100] };
+  const chartRefs = new Map();
   const instances = new Map();
+  let chartPromise = null;
+  let availableDaysCache = null;
+  let availableDaysPromise = null;
 
-  function t(key, vars, fallback){
-    let options = vars;
-    let fallbackValue = fallback;
-    if (typeof vars === 'string' || typeof vars === 'number'){
-      fallbackValue = vars;
-      options = undefined;
-    }
-    const translated = g.I18N?.t?.(key, options);
+  function t(key, fallback){
+    if (!key) return fallback;
+    const translated = g.I18N?.t?.(key);
     if (typeof translated === 'string' && translated && translated !== key) {
       return translated;
     }
-    if (fallbackValue != null) {
-      return typeof fallbackValue === 'function' ? fallbackValue() : fallbackValue;
+    return typeof fallback === 'function' ? fallback() : (fallback ?? key);
+  }
+
+  function currentDayISO(date = new Date()){
+    const copy = new Date(date);
+    copy.setHours(0, 0, 0, 0);
+    return copy.toISOString().slice(0, 10);
+  }
+
+  async function ensureChart(){
+    if (g.Chart) return g.Chart;
+    if (chartPromise) return chartPromise;
+    chartPromise = new Promise((resolve, reject) => {
+      const script = d.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+      script.async = true;
+      script.onload = () => resolve(g.Chart);
+      script.onerror = () => reject(new Error('Failed to load Chart.js'));
+      d.head.appendChild(script);
+    }).catch(err => {
+      console.error(err);
+      chartPromise = null;
+      throw err;
+    });
+    return chartPromise;
+  }
+
+  async function loadStressRawDay(dayISO, teamId){
+    if (!dayISO) return [];
+    try {
+      const data = await g.API?.fetchJSON?.(`/data/stress/raw/${dayISO}.json`);
+      const rows = Array.isArray(data) ? data : [];
+      return rows
+        .filter(entry => entry && entry.on === true && (!teamId || entry.team === teamId))
+        .map(entry => ({
+          uid: String(entry.uid ?? ''),
+          ts: entry.ts,
+          value: Number(entry.value),
+          on: true,
+          team: entry.team
+        }))
+        .filter(entry => entry.uid && entry.ts && Number.isFinite(entry.value))
+        .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    } catch (err){
+      console.error('Failed to load stress raw day', err);
+      return [];
     }
-    return key;
   }
 
-  function getLocale(){
-    return g.I18N?.getLang?.() || d.documentElement.lang || 'en';
+  async function loadAvailableStressDays(){
+    if (Array.isArray(availableDaysCache)) return availableDaysCache;
+    if (!availableDaysPromise){
+      availableDaysPromise = (async ()=>{
+        try {
+          const data = await g.API?.fetchJSON?.('/data/stress/raw/index.json');
+          if (Array.isArray(data)){
+            const cleaned = data
+              .map(entry => typeof entry === 'string' ? entry.trim() : null)
+              .filter(Boolean);
+            availableDaysCache = cleaned.length ? cleaned : [];
+          } else availableDaysCache = [];
+        } catch (err){
+          console.warn('Failed to load stress day index', err);
+          availableDaysCache = [];
+        }
+        return availableDaysCache;
+      })();
+    }
+    return availableDaysPromise;
   }
 
-  function agg(values){
-    if (!Array.isArray(values) || !values.length) return null;
-    const sorted = values.map(Number).filter(Number.isFinite).sort((a, b) => a - b);
-    if (!sorted.length) return null;
-    const middle = Math.floor(sorted.length / 2);
-    return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  function normalizeDayISO(day){
+    if (typeof day !== 'string') return null;
+    const trimmed = day.trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
   }
 
-  function clamp(value, min = 0, max = 100){
-    const num = Number(value);
-    if (!Number.isFinite(num)) return min;
-    return Math.max(min, Math.min(max, num));
+  async function resolveAvailableDay(preferredDay){
+    const preferred = normalizeDayISO(preferredDay);
+    const days = await loadAvailableStressDays();
+    if (!days.length) return preferred ?? currentDayISO();
+    if (preferred && days.includes(preferred)) return preferred;
+    const sorted = [...days].sort();
+    if (!preferred){
+      return sorted[sorted.length - 1];
+    }
+    // find the closest day on or before the preferred value
+    for (let i = sorted.length - 1; i >= 0; i -= 1){
+      if (sorted[i] <= preferred) return sorted[i];
+    }
+    return sorted[sorted.length - 1];
+  }
+
+  function bucketHourly(rows, tz = Intl.DateTimeFormat().resolvedOptions().timeZone){
+    const formatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', hour12: false, timeZone: tz });
+    const buckets = Array.from({ length: 24 }, (_, h) => ({
+      h,
+      values: [],
+      uids: new Set(),
+      sampleN: 0,
+      modN: 0,
+      highN: 0
+    }));
+    for (const row of rows){
+      if (!row || !row.ts) continue;
+      const date = new Date(row.ts);
+      if (Number.isNaN(date.getTime())) continue;
+      const hour = formatter.format(date);
+      const idx = Number.parseInt(hour, 10);
+      if (!Number.isFinite(idx) || idx < 0 || idx > 23) continue;
+      const bucket = buckets[idx];
+      const value = Number(row.value);
+      if (!Number.isFinite(value)) continue;
+      bucket.values.push(value);
+      bucket.sampleN += 1;
+      bucket.uids.add(row.uid);
+      if (value >= 60) bucket.modN += 1;
+      if (value >= 80) bucket.highN += 1;
+    }
+    return buckets.map(bucket => {
+      if (!bucket.values.length){
+        return {
+          t: `${String(bucket.h).padStart(2, '0')}:00`,
+          avg: null,
+          n: 0,
+          sampleN: 0,
+          modN: 0,
+          highN: 0
+        };
+      }
+      const avg = Math.round(bucket.values.reduce((sum, value) => sum + value, 0) / bucket.values.length);
+      return {
+        t: `${String(bucket.h).padStart(2, '0')}:00`,
+        avg,
+        n: bucket.uids.size,
+        sampleN: bucket.sampleN,
+        modN: bucket.modN,
+        highN: bucket.highN
+      };
+    });
   }
 
   function stateOf(value){
-    if (value == null || Number.isNaN(value)) return null;
+    if (value == null) return null;
     const numeric = Number(value);
-    for (const key of LABEL_KEYS){
-      const range = THRESHOLDS[key];
-      if (!range) continue;
-      const [min, max] = range.map(Number);
-      if (numeric >= min && numeric <= max) return key;
-    }
-    return null;
+    if (!Number.isFinite(numeric)) return null;
+    const entry = Object.entries(THRESHOLDS).find(([, [min, max]]) => numeric >= min && numeric <= max);
+    return entry ? entry[0] : 'normal';
   }
 
-  function computeRangeDisplay(values){
-    const list = Array.isArray(values) ? values.filter(v => Number.isFinite(v)) : [];
-    if (!list.length) return '—';
-    const min = Math.min(...list);
-    const max = Math.max(...list);
-    return `${min}–${max}`;
+  function colorOf(state){
+    const styles = getComputedStyle(d.documentElement);
+    return {
+      low: styles.getPropertyValue('--stress-low').trim(),
+      normal: styles.getPropertyValue('--stress-normal').trim(),
+      moderate: styles.getPropertyValue('--stress-moderate').trim(),
+      high: styles.getPropertyValue('--stress-high').trim()
+    }[state || 'normal'] || styles.getPropertyValue('--stress-normal').trim() || '#2ec27e';
   }
 
-  function formatUpdated(raw){
-    if (!Array.isArray(raw) || !raw.length) return '—:—';
-    let ts = new Date(raw[raw.length - 1].ts || raw[raw.length - 1].date || raw[raw.length - 1].timestamp || Date.now());
-    if (!(ts instanceof Date) || Number.isNaN(ts)) ts = new Date();
+  function anomaliesSummary(bucket){
+    const total = Math.max(1, bucket.sampleN ?? bucket.n ?? 0);
+    const highShare = (bucket.highN ?? 0) / total;
+    const modShare = (bucket.modN ?? 0) / total;
+    if (highShare >= 0.3) return { level: 'high', text: t('stress.anomHigh', 'Anomalies: many high') };
+    if (modShare >= 0.5) return { level: 'moderate', text: t('stress.anomModerate', 'Anomalies: elevated') };
+    return { level: 'none', text: t('stress.anomNone', 'No anomalies detected') };
+  }
+
+  function burnoutHint(){
+    return t('stress.burnoutNone', 'No burnout pattern detected');
+  }
+
+  function hourlyTooltipCb(buckets){
+    return ctx => {
+      const idx = ctx?.dataIndex;
+      if (idx == null) return '';
+      const bucket = buckets[idx];
+      if (!bucket) return '';
+      const avg = bucket.avg ?? '—';
+      const state = stateOf(bucket.avg);
+      const stateLabel = state ? t(`stress.${state}`, state) : t('stress.normal', 'Normal');
+      const anomalies = anomaliesSummary(bucket);
+      const burnout = burnoutHint(bucket);
+      return [
+        `${ctx.label}`,
+        `${t('stress.connected', 'Connected')}: ${bucket.n}`,
+        `${t('stress.avg', 'Avg stress')}: ${avg} ${avg !== '—' ? `(${stateLabel})` : ''}`.trim(),
+        anomalies.text,
+        burnout
+      ];
+    };
+  }
+
+  function thresholdLabelFrom(){
+    return Object.entries(THRESHOLDS)
+      .map(([state, [min, max]]) => {
+        const label = t(`stress.${state}`, state.charAt(0).toUpperCase() + state.slice(1));
+        if (min === 0) return `<${max + 1} ${label}`;
+        if (max >= 100) return `${min}+ ${label}`;
+        return `${min}–${max} ${label}`;
+      })
+      .join(', ');
+  }
+
+  function formatTimeLocal(iso){
+    if (!iso) return '—';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '—';
     try {
-      return new Intl.DateTimeFormat(getLocale(), {hour: '2-digit', minute: '2-digit'}).format(ts);
+      return new Intl.DateTimeFormat(g.I18N?.getLang?.() || d.documentElement.lang || 'en', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
     } catch (err){
-      return ts.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
   }
 
-  function pseudoRandom(index, seed){
-    const x = Math.sin(seed * (index + 1)) * 10000;
-    return x - Math.floor(x);
-  }
-
-  function generateSeries(metric){
-    const now = new Date();
-    const rows = [];
-    const seed = metric === 'emotion' ? 1.27 : 1.73;
-    const base = metric === 'emotion' ? 60 : 54;
-    const amplitude = metric === 'emotion' ? 18 : 22;
-
-    for (let h = 0; h < 60; h++){
-      const ts = new Date(now.getTime() - h * HOUR_MS);
-      const wave = Math.sin((h / 6) + seed) * amplitude * 0.35;
-      const drift = Math.cos((h / 18) + seed * 0.6) * 6;
-      const noise = (pseudoRandom(h, seed) - 0.5) * 6;
-      const value = clamp(base + wave + drift + noise);
-      rows.push({ ts: ts.toISOString(), value: Number(value.toFixed(2)) });
+  function updateHeaderFromBuckets(buckets, updatedISO){
+    const values = buckets.map(bucket => bucket.avg).filter(value => Number.isFinite(value));
+    const min = values.length ? Math.min(...values) : null;
+    const max = values.length ? Math.max(...values) : null;
+    const lastIndex = [...buckets].reverse().findIndex(bucket => Number.isFinite(bucket.avg));
+    const lastValue = lastIndex >= 0 ? buckets[buckets.length - 1 - lastIndex].avg : null;
+    const rangeEl = d.getElementById('so-range');
+    if (rangeEl) rangeEl.textContent = values.length ? `${min}–${max}` : '—';
+    const lastEl = d.getElementById('so-last');
+    if (lastEl) lastEl.textContent = lastValue ?? '—';
+    const pill = d.getElementById('so-state');
+    const state = stateOf(lastValue);
+    if (pill){
+      pill.textContent = state ? t(`stress.${state}`, state) : '—';
+      pill.className = `pill pill--state state--${state || 'normal'}`;
     }
+    const updatedEl = d.getElementById('so-updated');
+    if (updatedEl) updatedEl.textContent = updatedISO ? formatTimeLocal(updatedISO) : '—';
+  }
 
-    for (let d = 1; d <= 420; d++){
-      const ts = new Date(now.getTime() - d * DAY_MS);
-      ts.setHours(12, 0, 0, 0);
-      const idx = d + 60;
-      const wave = Math.sin((idx / 9) + seed) * amplitude * 0.45;
-      const seasonal = Math.cos((idx / 36) + seed * 0.4) * 8;
-      const trend = metric === 'emotion' ? Math.sin(idx / 140) * 4 : Math.cos(idx / 160) * -5;
-      const noise = (pseudoRandom(idx, seed) - 0.5) * 7;
-      const value = clamp(base + wave + seasonal + trend + noise);
-      rows.push({ ts: ts.toISOString(), value: Number(value.toFixed(2)) });
+  function updateLowNBanner(buckets){
+    const banner = d.getElementById('so-lowN') || d.getElementById('so-low');
+    if (!banner) return;
+    const totalN = buckets.reduce((sum, bucket) => sum + (bucket.n || 0), 0);
+    const hoursWithData = buckets.filter(bucket => (bucket.n || 0) > 0).length;
+    if (totalN < 20 || hoursWithData < 4){
+      banner.innerHTML = t('stats.lowSample', 'Low sample size — interpret with caution');
+      banner.removeAttribute('hidden');
+      banner.style.display = 'block';
+    } else {
+      banner.setAttribute('hidden', '');
+      banner.style.display = 'none';
     }
-
-    return rows.sort((a, b) => new Date(a.ts) - new Date(b.ts));
-  }
-
-  function loadMetric(metric){
-    if (!datasetCache.has(metric)){
-      datasetCache.set(metric, generateSeries(metric));
-    }
-    return Promise.resolve(datasetCache.get(metric));
-  }
-
-  function alignHour(date){
-    const copy = new Date(date);
-    copy.setMinutes(0, 0, 0);
-    return copy;
-  }
-
-  function alignDay(date){
-    const copy = new Date(date);
-    copy.setHours(0, 0, 0, 0);
-    return copy;
-  }
-
-  function alignMonth(date){
-    const copy = new Date(date);
-    copy.setDate(1);
-    copy.setHours(0, 0, 0, 0);
-    return copy;
-  }
-
-  function sliceRange(raw, range){
-    const sorted = Array.isArray(raw) ? raw.slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)) : [];
-    if (!sorted.length){
-      const now = new Date();
-      return { rows: [], start: now, end: now };
-    }
-    let end = new Date(sorted[sorted.length - 1].ts);
-    if (!(end instanceof Date) || Number.isNaN(end)) end = new Date();
-    let start;
-    switch(range){
-      case 'day':
-        end = alignHour(end);
-        start = new Date(end.getTime() - 23 * HOUR_MS);
-        break;
-      case 'week':
-        end = alignDay(end);
-        start = new Date(end.getTime() - 6 * DAY_MS);
-        break;
-      case 'month':
-        end = alignDay(end);
-        start = new Date(end.getTime() - 29 * DAY_MS);
-        break;
-      case 'year':
-        end = alignMonth(end);
-        start = new Date(end.getFullYear(), end.getMonth() - 11, 1);
-        break;
-      default:
-        end = alignHour(end);
-        start = new Date(end.getTime() - 23 * HOUR_MS);
-    }
-    const upper = range === 'year'
-      ? new Date(end.getFullYear(), end.getMonth() + 1, 1).getTime()
-      : end.getTime() + (range === 'day' ? HOUR_MS : DAY_MS);
-    const startMs = start.getTime();
-    const filtered = sorted.filter(entry => {
-      const ts = new Date(entry.ts).getTime();
-      if (Number.isNaN(ts)) return false;
-      return ts >= startMs && ts < upper;
-    });
-    return { rows: filtered, start, end };
-  }
-
-  function formatHour(date){
-    return `${String(date.getHours()).padStart(2, '0')}:00`;
-  }
-
-  function formatWeekday(date){
-    try {
-      return new Intl.DateTimeFormat(getLocale(), { weekday: 'short' }).format(date);
-    } catch (err){
-      return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()] || '';
-    }
-  }
-
-  function formatMonthDay(date){
-    return String(date.getDate());
-  }
-
-  function formatMonth(date){
-    try {
-      return new Intl.DateTimeFormat(getLocale(), { month: 'short' }).format(date);
-    } catch (err){
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return months[date.getMonth()] || '';
-    }
-  }
-
-  function bucketize(rows, start, count, stepMs, formatter){
-    const buckets = [];
-    const startMs = start.getTime();
-    const arrays = Array.from({ length: count }, () => []);
-    rows.forEach(entry => {
-      const ts = new Date(entry.ts).getTime();
-      if (Number.isNaN(ts)) return;
-      const index = Math.floor((ts - startMs) / stepMs + 0.00001);
-      if (index < 0 || index >= count) return;
-      arrays[index].push(Number(entry.value));
-    });
-    for (let i = 0; i < count; i++){
-      const point = new Date(startMs + i * stepMs);
-      const values = arrays[i];
-      const median = agg(values);
-      buckets.push({ t: formatter(point), v: median });
-    }
-    return buckets;
-  }
-
-  function groupByHour(rows, ctx){
-    const end = alignHour(ctx.end);
-    const start = new Date(end.getTime() - 23 * HOUR_MS);
-    return bucketize(rows, start, 24, HOUR_MS, formatHour);
-  }
-
-  function groupByDay(rows, ctx){
-    const end = alignDay(ctx.end);
-    const start = new Date(end.getTime() - 6 * DAY_MS);
-    return bucketize(rows, start, 7, DAY_MS, formatWeekday);
-  }
-
-  function groupByDayOfMonth(rows, ctx){
-    const end = alignDay(ctx.end);
-    const start = new Date(end.getTime() - 29 * DAY_MS);
-    return bucketize(rows, start, 30, DAY_MS, formatMonthDay);
-  }
-
-  function groupByMonth(rows, ctx){
-    const end = alignMonth(ctx.end);
-    const result = [];
-    for (let i = 11; i >= 0; i--){
-      const monthStart = new Date(end.getFullYear(), end.getMonth() - i, 1);
-      const next = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
-      const values = [];
-      rows.forEach(entry => {
-        const ts = new Date(entry.ts).getTime();
-        if (Number.isNaN(ts)) return;
-        if (ts >= monthStart.getTime() && ts < next.getTime()){
-          values.push(Number(entry.value));
-        }
-      });
-      result.push({ t: formatMonth(monthStart), v: agg(values) });
-    }
-    return result;
-  }
-
-  const bucketers = {
-    day: groupByHour,
-    week: groupByDay,
-    month: groupByDayOfMonth,
-    year: groupByMonth
-  };
-
-  function getStateLabel(state){
-    if (!state) return '—';
-    const fallback = state.charAt(0).toUpperCase() + state.slice(1);
-    return t(`stress.${state}`, fallback);
-  }
-
-  function thresholdLabelFrom(thresholds){
-    const text = LABEL_KEYS.map(key => {
-      const range = thresholds[key];
-      if (!range) return '';
-      const [min, max] = range;
-      const label = getStateLabel(key);
-      if (min === 0) return `<${max + 1} ${label}`;
-      if (max >= 100) return `${min}+ ${label}`;
-      return `${min}–${max} ${label}`;
-    }).filter(Boolean);
-    return text.join(', ');
-  }
-
-  function currentRangeLabel(range){
-    switch(range){
-      case 'week': return t('range.week', 'Week');
-      case 'month': return t('range.month', 'Month');
-      case 'year': return t('range.year', 'Year');
-      default: return t('range.day', 'Day');
-    }
-  }
-
-  function renderBars(host, buckets){
-    if (!host) return;
-    host.innerHTML = '';
-    const wrapper = d.createElement('div');
-    wrapper.className = 'so-bars';
-    const track = d.createElement('div');
-    track.className = 'so-bars__track';
-    const labels = d.createElement('div');
-    labels.className = 'so-bars__labels';
-    const sr = d.createElement('div');
-    sr.className = 'sr-only';
-    const descId = `${host.id || 'so-chart'}-desc`;
-    sr.id = descId;
-
-    const description = [];
-
-    buckets.forEach(bucket => {
-      const bar = d.createElement('div');
-      bar.className = 'so-bar';
-      const fill = d.createElement('div');
-      fill.className = 'so-bar__fill';
-      const numeric = Number.isFinite(bucket.v) ? Math.round(bucket.v) : null;
-      const state = numeric != null ? stateOf(numeric) : null;
-      const label = getStateLabel(state);
-      if (numeric != null){
-        fill.style.height = `${Math.max(4, Math.min(100, numeric))}%`;
-        fill.dataset.value = String(numeric);
-        if (state) fill.classList.add(`state--${state}`);
-        const tooltip = `${bucket.t}: ${numeric} — ${label}`;
-        fill.title = tooltip;
-        description.push(tooltip);
-      } else {
-        fill.style.height = '6%';
-        fill.dataset.value = '—';
-        fill.classList.add('is-empty');
-        fill.title = `${bucket.t}: —`;
-        description.push(`${bucket.t}: —`);
-      }
-      bar.appendChild(fill);
-      track.appendChild(bar);
-
-      const labelEl = d.createElement('span');
-      labelEl.textContent = bucket.t;
-      labels.appendChild(labelEl);
-    });
-
-    sr.textContent = description.join('; ');
-    wrapper.appendChild(track);
-    wrapper.appendChild(labels);
-    wrapper.appendChild(sr);
-    host.appendChild(wrapper);
-    host.setAttribute('aria-describedby', descId);
   }
 
   function renderMetaLine(panel, range){
-    const host = panel.querySelector('#so-meta-line');
+    const host = panel?.querySelector('#so-meta-line');
     if (!host) return;
-    const thresholdText = thresholdLabelFrom(THRESHOLDS);
-    const period = currentRangeLabel(range);
+    const threshold = thresholdLabelFrom();
+    const period = t(`range.${range}`, range.charAt(0).toUpperCase() + range.slice(1));
     if (typeof g.renderSourceNote === 'function'){
       g.renderSourceNote(host, {
         sourceId: panel.getAttribute('data-source-id') || panel.dataset.sourceId,
-        threshold: thresholdText,
+        threshold,
         period
       });
     } else {
-      host.textContent = `${t('source.short', 'Source')}: ${panel.getAttribute('data-source-id') || ''}`;
-    }
-  }
-
-  function updateLowSample(panel, count){
-    const banner = panel.querySelector('#so-low');
-    if (!banner) return;
-    if (count < MIN_SAMPLE){
-      banner.hidden = false;
-      banner.textContent = t('stress.lowSample', { n: count }, () => `Low sample size (n=${count})`);
-    } else {
-      banner.hidden = true;
+      host.textContent = `${t('source.short', 'Source')}: ${threshold}`;
     }
   }
 
   function setLoading(panel, loading){
     if (!panel) return;
     panel.classList.toggle('is-loading', !!loading);
+  }
+
+  async function renderHourlyChart(hostId, buckets){
+    const ChartCtor = await ensureChart();
+    const el = typeof hostId === 'string' ? d.getElementById(hostId) : hostId;
+    if (!el) return null;
+    el.innerHTML = '<canvas></canvas>';
+    const canvas = el.querySelector('canvas');
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
+    const labels = buckets.map(bucket => bucket.t);
+    const values = buckets.map(bucket => bucket.avg);
+    const colors = buckets.map(bucket => colorOf(stateOf(bucket.avg)));
+    const tooltipCallback = hourlyTooltipCb(buckets);
+
+    const prev = chartRefs.get(el);
+    if (prev?.destroy) prev.destroy();
+
+    const chart = new ChartCtor(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 8,
+          barPercentage: 0.7,
+          categoryPercentage: 0.9
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: tooltipCallback
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { stepSize: 25 }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { autoSkip: false, maxRotation: 0 }
+          }
+        }
+      }
+    });
+
+    chartRefs.set(el, chart);
+    return chart;
+  }
+
+  function stopAutoRefresh(instance){
+    if (instance?.timer){
+      clearInterval(instance.timer);
+      instance.timer = null;
+    }
+  }
+
+  async function refreshDay(instance, options = {}){
+    const { updatedISO } = options;
+    const raw = await loadStressRawDay(instance.dayISO, instance.teamId);
+    const buckets = bucketHourly(raw, instance.timeZone);
+    instance.buckets = buckets;
+    await renderHourlyChart(instance.host, buckets);
+    const lastTs = raw.length ? raw[raw.length - 1].ts : updatedISO;
+    updateHeaderFromBuckets(buckets, lastTs || new Date().toISOString());
+    updateLowNBanner(buckets);
+    renderMetaLine(instance.panel, instance.range);
+  }
+
+  function startAutoRefresh(instance){
+    stopAutoRefresh(instance);
+    instance.timer = setInterval(() => {
+      refreshDay(instance, { updatedISO: new Date().toISOString() }).catch(err => {
+        console.error('Auto-refresh failed', err);
+      });
+    }, 60000);
+  }
+
+  async function renderInstance(instance){
+    if (!instance) return;
+    if (instance.range !== 'day'){
+      stopAutoRefresh(instance);
+    }
+    if (instance.range === 'day'){
+      await refreshDay(instance);
+      startAutoRefresh(instance);
+      return;
+    }
+    await refreshDay(instance);
   }
 
   function syncTabs(tabs, active){
@@ -392,58 +397,8 @@
     });
   }
 
-  function syncSegments(buttons, active){
-    buttons.forEach(btn => {
-      const isActive = btn.dataset.metric === active;
-      btn.classList.toggle('is-active', isActive);
-      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    });
-  }
-
-  function renderAll(instance){
-    if (!instance) return;
-    const panel = instance.panel;
-    const host = instance.host;
-    const raw = instance.rawByMetric.get(instance.metric) || [];
-    const { rows, start, end } = sliceRange(raw, instance.range);
-    const bucketFn = bucketers[instance.range] || bucketers.day;
-    const buckets = bucketFn(rows, { start, end }).map(entry => ({
-      t: entry.t,
-      v: entry.v == null ? null : Number(entry.v),
-      s: entry.v == null ? null : stateOf(Number(entry.v))
-    }));
-
-    const values = buckets
-      .map(entry => Number.isFinite(entry.v) ? Math.round(entry.v) : null)
-      .filter(v => v != null);
-
-    const rangeEl = panel.querySelector('#so-range');
-    if (rangeEl) rangeEl.textContent = computeRangeDisplay(values);
-
-    const lastValue = values.length ? values[values.length - 1] : null;
-    const lastEl = panel.querySelector('#so-last');
-    if (lastEl) lastEl.textContent = lastValue != null ? lastValue : '—';
-
-    const pill = panel.querySelector('#so-state');
-    const lastState = lastValue != null ? stateOf(lastValue) : null;
-    if (pill){
-      pill.textContent = lastState ? getStateLabel(lastState) : '—';
-      pill.className = `pill pill--state state--${lastState || 'none'}`;
-    }
-
-    const updated = panel.querySelector('#so-updated');
-    if (updated) updated.textContent = formatUpdated(raw);
-
-    const metricLabel = t(`stress.${instance.metric}`, instance.metric === 'emotion' ? 'Emotion' : 'Stress');
-    const chartLabel = `${t('stress.chartAria', 'Emotional wellbeing distribution chart')} — ${metricLabel}, ${currentRangeLabel(instance.range)}`;
-    host.setAttribute('aria-label', chartLabel);
-
-    renderBars(host, buckets);
-    updateLowSample(panel, values.length);
-    renderMetaLine(panel, instance.range);
-  }
-
   function focusNext(items, currentIndex, direction){
+    if (!items.length) return;
     const max = items.length - 1;
     let index = currentIndex + direction;
     if (index > max) index = 0;
@@ -462,67 +417,32 @@
           focusNext(tabs, index, -1);
         } else if (event.key === 'Home'){
           event.preventDefault();
-          tabs[0].focus();
+          tabs[0]?.focus();
         } else if (event.key === 'End'){
           event.preventDefault();
-          tabs[tabs.length - 1].focus();
+          tabs[tabs.length - 1]?.focus();
         }
       });
     });
-  }
-
-  function handleSegmentKeys(buttons){
-    buttons.forEach((btn, index) => {
-      btn.addEventListener('keydown', event => {
-        if (event.key === 'ArrowRight' || event.key === 'ArrowDown'){
-          event.preventDefault();
-          focusNext(buttons, index, 1);
-        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp'){
-          event.preventDefault();
-          focusNext(buttons, index, -1);
-        }
-      });
-    });
-  }
-
-  async function ensureData(instance, metric){
-    if (!instance.rawByMetric.has(metric)){
-      const data = await loadMetric(metric);
-      instance.rawByMetric.set(metric, data);
-    }
   }
 
   function setupInteractions(instance){
     const panel = instance.panel;
     const tabs = Array.from(panel.querySelectorAll('.so-tabs .tab'));
-    const segments = Array.from(panel.querySelectorAll('.seg__btn'));
-
     syncTabs(tabs, instance.range);
-    syncSegments(segments, instance.metric);
     handleTabKeys(tabs);
-    handleSegmentKeys(segments);
-
     tabs.forEach(tab => {
       tab.addEventListener('click', async () => {
         const range = tab.dataset.range || 'day';
         if (instance.range === range) return;
         instance.range = range;
-        syncTabs(tabs, instance.range);
-        renderAll(instance);
-        renderMetaLine(instance.panel, instance.range);
-      });
-    });
-
-    segments.forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const metric = btn.dataset.metric || 'stress';
-        if (instance.metric === metric) return;
-        syncSegments(segments, metric);
-        instance.metric = metric;
+        syncTabs(tabs, range);
         setLoading(panel, true);
-        await ensureData(instance, metric);
-        setLoading(panel, false);
-        renderAll(instance);
+        try {
+          await renderInstance(instance);
+        } finally {
+          setLoading(panel, false);
+        }
       });
     });
   }
@@ -532,37 +452,58 @@
     if (!host) return;
     const panel = host.closest('.panel--stress') || d.querySelector('.panel--stress');
     if (!panel) return;
+
     host.setAttribute('role', 'img');
     host.setAttribute('aria-live', 'polite');
+
+    const initialDay = await resolveAvailableDay(currentDayISO());
+
     const instance = {
       host,
       panel,
       range: initialRange || 'day',
-      metric: 'emotion',
-      rawByMetric: new Map()
+      teamId: panel.getAttribute('data-team') || panel.dataset.team,
+      dayISO: initialDay,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timer: null,
+      buckets: []
     };
+
     instances.set(hostId, instance);
 
     setLoading(panel, true);
-    await ensureData(instance, instance.metric);
-    setLoading(panel, false);
-    setupInteractions(instance);
-    renderAll(instance);
+    try {
+      await ensureChart();
+      setupInteractions(instance);
+      await renderInstance(instance);
+    } catch (err){
+      console.error('Failed to mount stress overview', err);
+    } finally {
+      setLoading(panel, false);
+    }
   }
 
   g.addEventListener?.('i18n:change', () => {
-    instances.forEach(instance => renderAll(instance));
-  });
-
-  g.addEventListener?.('resize', () => {
-    instances.forEach(instance => renderAll(instance));
+    instances.forEach(instance => {
+      if (!instance) return;
+      if (instance.buckets?.length){
+        renderHourlyChart(instance.host, instance.buckets).catch(err => console.error(err));
+        updateHeaderFromBuckets(instance.buckets, new Date().toISOString());
+        updateLowNBanner(instance.buckets);
+        renderMetaLine(instance.panel, instance.range);
+      } else {
+        renderInstance(instance).catch(err => console.error(err));
+      }
+    });
   });
 
   g.StressOverview = {
     mount,
-    thresholds: THRESHOLDS,
+    loadStressRawDay,
+    bucketHourly,
     stateOf,
-    thresholdLabelFrom,
-    computeRangeDisplay
+    colorOf,
+    anomaliesSummary,
+    resolveAvailableDay
   };
 })(window, document);
