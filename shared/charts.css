@@ -1,0 +1,84 @@
+@import url("./tokens.css");
+
+.chart-card .x-expand,
+.chart-card .src-info {
+  border-radius: var(--brand-radius-pill);
+  border: 1px solid var(--brand-color-border);
+  background: color-mix(in oklch, var(--brand-color-surface) 92%, transparent);
+  color: var(--brand-color-text);
+  padding: var(--brand-space-xs) var(--brand-space-sm);
+  font-size: var(--brand-font-size-xs);
+  cursor: pointer;
+  transition: background var(--brand-transition-base), color var(--brand-transition-base), box-shadow var(--brand-transition-base);
+}
+
+.chart-card .x-expand:hover,
+.chart-card .x-expand:focus-visible,
+.chart-card .src-info:hover,
+.chart-card .src-info:focus-visible {
+  background: color-mix(in oklch, var(--brand-color-accent) 18%, transparent);
+  color: var(--brand-color-text);
+  box-shadow: var(--brand-shadow-ring);
+  outline: none;
+}
+
+.chart-legend {
+  display: flex;
+  gap: var(--brand-space-md);
+  flex-wrap: wrap;
+  color: var(--brand-color-text-muted);
+  font-size: var(--brand-font-size-sm);
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--brand-space-xs);
+}
+
+.chart-legend .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--brand-radius-pill);
+  background: var(--brand-color-border-strong);
+}
+
+.chart-grid {
+  stroke: color-mix(in oklch, var(--brand-color-border-soft) 62%, transparent);
+  stroke-width: 1;
+}
+
+.chart-axis {
+  fill: none;
+  stroke: color-mix(in oklch, var(--brand-color-border-soft) 72%, transparent);
+  stroke-width: 1.2;
+}
+
+.chart-axis-label {
+  fill: var(--brand-color-text-subtle);
+  font-size: var(--brand-font-size-xs);
+  font-family: var(--brand-font-sans);
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -110%);
+  padding: var(--brand-space-xs) var(--brand-space-sm);
+  border-radius: var(--brand-radius-sm);
+  background: color-mix(in oklch, var(--brand-color-surface-raised) 86%, transparent);
+  border: 1px solid var(--brand-color-border);
+  color: var(--brand-color-text);
+  font-size: var(--brand-font-size-xs);
+  pointer-events: none;
+  box-shadow: var(--brand-shadow-card);
+}
+
+.chart-card .updated-meta {
+  font-size: var(--brand-font-size-xs);
+  color: var(--brand-color-text-subtle);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

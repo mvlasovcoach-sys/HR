@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UI Catalog — SPA2099 HR Health</title>
+  <link rel="preload" href="../assets/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="../shared/fonts.css">
+  <link rel="stylesheet" href="../shared/components.css">
+  <link rel="stylesheet" href="../shared/charts.css">
+  <link rel="stylesheet" href="../shared/styles.css">
+  <style>
+    body { padding: var(--brand-space-xl); }
+    h2 { margin-top: var(--brand-space-2xl); }
+    section { margin-bottom: var(--brand-space-2xl); }
+    .catalog-grid { display: grid; gap: var(--brand-space-lg); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .catalog-row { display: flex; gap: var(--brand-space-lg); flex-wrap: wrap; }
+    .catalog-sidebar { max-width: 260px; }
+  </style>
+</head>
+<body>
+  <h1>UI Catalog</h1>
+
+  <section data-spec="card">
+    <h2>Cards</h2>
+    <div class="catalog-grid">
+      <article class="card">
+        <div class="card__header">
+          <h3 class="card__title">Standard Card</h3>
+          <span class="card__subtitle">Subtitle text</span>
+        </div>
+        <div class="card__body">
+          <p>Cards use brand elevations, spacing tokens, and typography.</p>
+        </div>
+        <footer class="card__footer">
+          <span>Updated just now</span>
+          <button class="btn btn--ghost" type="button">Action</button>
+        </footer>
+      </article>
+      <article class="card">
+        <div class="card__header">
+          <h3 class="card__title">Interactive Card</h3>
+          <span class="pill pill--strong">Live</span>
+        </div>
+        <div class="card__body">
+          <div class="kpi__value">72<small>%</small></div>
+          <p class="muted">Week over week change</p>
+        </div>
+        <footer class="card__footer">
+          <span class="updated-meta">Updated 5m ago</span>
+          <span class="delta-badge">▲ +4.2%</span>
+        </footer>
+      </article>
+    </div>
+  </section>
+
+  <section data-spec="tabs">
+    <h2>Tabs</h2>
+    <nav class="tabs">
+      <div class="tabs__list" role="tablist" aria-label="Demo tabs">
+        <button class="tabs__trigger" role="tab" aria-selected="true" tabindex="0">Active</button>
+        <button class="tabs__trigger" role="tab" aria-selected="false" tabindex="-1">Hover</button>
+        <button class="tabs__trigger" role="tab" aria-selected="false" tabindex="-1">Focus</button>
+        <button class="tabs__trigger" role="tab" aria-selected="false" tabindex="-1" disabled>Disabled</button>
+      </div>
+    </nav>
+  </section>
+
+  <section data-spec="kpi">
+    <h2>KPI Tiles</h2>
+    <div class="kpi-grid">
+      <div class="tile tile--interactive">
+        <div class="tile__head">Productivity<span class="tile__badge pill pill--strong">▲ 3.4%</span></div>
+        <div class="tile__value">82<small>%</small></div>
+        <div class="tile__spark spark" aria-hidden="true"><span class="skeleton skeleton--spark"></span></div>
+      </div>
+      <div class="tile tile--interactive">
+        <div class="tile__head">Attrition<span class="tile__badge pill pill--critical">▼ 1.2%</span></div>
+        <div class="tile__value">12<small>%</small></div>
+        <div class="tile__spark spark" aria-hidden="true"><span class="skeleton skeleton--spark"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section data-spec="chart-card">
+    <h2>Chart Card States</h2>
+    <div class="catalog-grid">
+      <article class="card chart-card">
+        <div class="card__header">
+          <h3 class="card__title">Analytics Chart</h3>
+          <div class="trk-controls">
+            <span class="delta-badge">▲ +1.8%</span>
+            <button class="btn-link x-expand" type="button">Expand</button>
+          </div>
+        </div>
+        <div class="card__body chart-card__body">
+          <div class="chart-legend">
+            <span><i class="dot"></i>Series A</span>
+            <span><i class="dot"></i>Series B</span>
+          </div>
+          <div class="chart-host"></div>
+        </div>
+        <footer class="card__footer">
+          <span class="updated-meta">Updated 2m ago · n=128</span>
+        </footer>
+      </article>
+      <article class="card chart-card">
+        <div class="card__header">
+          <h3 class="card__title">Loading</h3>
+        </div>
+        <div class="card__body">
+          <div class="skeleton skeleton--spark"></div>
+        </div>
+      </article>
+      <article class="card chart-card">
+        <div class="card__header">
+          <h3 class="card__title">Empty State</h3>
+        </div>
+        <div class="card__body">
+          <div class="empty-state">No data available.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section data-spec="sidebar">
+    <h2>Sidebar Item States</h2>
+    <ul class="side__nav catalog-sidebar">
+      <li><a href="#" class="is-default">Default</a></li>
+      <li class="is-active"><a href="#">Active</a></li>
+      <li><a href="#" data-focus="true">Focus</a></li>
+      <li><a href="#" class="hover">Hover</a></li>
+    </ul>
+  </section>
+
+  <section data-spec="buttons">
+    <h2>Buttons</h2>
+    <div class="catalog-row">
+      <button class="btn btn--primary" type="button">Primary</button>
+      <button class="btn btn--ghost" type="button">Ghost</button>
+      <button class="btn btn--ghost" type="button" disabled>Disabled</button>
+      <button class="btn-link" type="button">Link Button</button>
+    </div>
+  </section>
+</body>
+</html>

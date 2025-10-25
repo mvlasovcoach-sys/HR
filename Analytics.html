@@ -3,18 +3,12 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>SPA2099 HR Health — Analytics</title>
-<link rel="stylesheet" href="./assets/css/ui.tokens.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/ui.components.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/app-shell.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/nav.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/app.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/charts.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/stress.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/print.css?v=2025.10.19-05" media="print">
-<!-- optional page CSS -->
-<link rel="stylesheet" href="./assets/css/corporate.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./assets/css/analytics.css?v=2025.10.19-05">
-<link rel="stylesheet" href="./shared/styles.css?v=2025.10.25-01">
+<link rel="preload" href="./assets/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="./shared/tokens.css">
+<link rel="stylesheet" href="./shared/fonts.css">
+<link rel="stylesheet" href="./shared/components.css">
+<link rel="stylesheet" href="./shared/charts.css">
+<link rel="stylesheet" href="./shared/styles.css">
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
@@ -40,7 +34,7 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--analytics">
-    <div id="app-topbar">
+    <div id="app-topbar" class="card card--topbar">
       <div class="topbar-left">
         <div class="toolbar">
           <div class="toolbar__title">
@@ -59,49 +53,53 @@
       </div>
     </div>
     <div id="global-caption"></div>
-    <section class="analytics-tracker">
-      <div class="panel chart-card" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
-        <div class="panel__head">
-          <h2 class="trk-title">
-            <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
-            <span id="trk-delta" class="delta-badge"></span>
-          </h2>
-          <div class="trk-controls">
-            <label class="switch">
-              <input id="maToggle" type="checkbox">
-              <span data-i18n="label.movingAverage">MA(3)</span>
-            </label>
-            <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
-            <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
-              data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source &amp; methodology">i</button>
-          </div>
+    <section class="card chart-card analytics-tracker" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
+      <div class="card__header">
+        <h2 class="card__title">
+          <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
+        </h2>
+        <div class="trk-controls">
+          <span id="trk-delta" class="delta-badge" aria-live="polite"></span>
+          <label class="switch">
+            <input id="maToggle" type="checkbox">
+            <span data-i18n="label.movingAverage">MA(3)</span>
+          </label>
+          <button class="btn-link x-expand" aria-label="Expand chart">Expand</button>
+          <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source &amp; methodology">i</button>
         </div>
-        <div class="panel__body analytics-tracker__body">
-          <div class="tracker-legend" id="wellbeing-legend"></div>
-          <div id="wlb-chart" class="analytics-chart hero-chart chart" role="img" aria-live="polite" data-mount="renderAnalyticsPage"></div>
-        </div>
-        <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
-        <div class="panel__meta note note--meta" id="trk-meta"></div>
+      </div>
+      <div class="card__body chart-card__body">
+        <div class="chart-legend" id="wellbeing-legend"></div>
+        <div id="wlb-chart" class="analytics-chart hero-chart chart-host" role="img" aria-live="polite" data-mount="renderAnalyticsPage"></div>
+      </div>
+      <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
+      <div class="card__footer note note--meta" id="trk-meta"></div>
+    </section>
+    <section class="card analytics-breakdown">
+      <header class="card__header">
+        <div class="card__subtitle" data-i18n="section.breakdowns">Risk Breakdown</div>
+      </header>
+      <div class="card__body">
+        <div class="breakdown-grid" id="analytics-breakdown" aria-live="polite"></div>
       </div>
     </section>
-    <section class="panel analytics-breakdown">
-      <div class="panel__meta" data-i18n="section.breakdowns">Risk Breakdown</div>
-      <div class="breakdown-grid" id="analytics-breakdown" aria-live="polite"></div>
-    </section>
-    <section class="panel panel--stress" data-stats="true" data-source-id="demo-synth-2025">
+    <section class="card card--stress panel--stress" data-stats="true" data-source-id="demo-synth-2025">
       <div class="so-skeleton" aria-hidden="true">
         <div class="skeleton__line skeleton__line--wide"></div>
         <div class="skeleton__line skeleton__line--mid"></div>
         <div class="skeleton__block"></div>
       </div>
-      <header class="so-head">
-        <h2 data-i18n="stress.title">Emotional wellbeing</h2>
-        <div class="so-tabs" role="tablist" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
-          <button role="tab" data-range="day"   class="tab is-active"  data-i18n="range.day">Day</button>
-          <button role="tab" data-range="week"  class="tab"            data-i18n="range.week">Week</button>
-          <button role="tab" data-range="month" class="tab"            data-i18n="range.month">Month</button>
-          <button role="tab" data-range="year"  class="tab"            data-i18n="range.year">Year</button>
-        </div>
+      <header class="card__header so-head">
+        <h2 class="card__title" data-i18n="stress.title">Emotional wellbeing</h2>
+        <nav class="tabs" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
+          <div class="tabs__list" role="tablist">
+            <button role="tab" data-range="day"   class="tabs__trigger is-active"  data-i18n="range.day" aria-selected="true" tabindex="0">Day</button>
+            <button role="tab" data-range="week"  class="tabs__trigger"            data-i18n="range.week" aria-selected="false" tabindex="-1">Week</button>
+            <button role="tab" data-range="month" class="tabs__trigger"            data-i18n="range.month" aria-selected="false" tabindex="-1">Month</button>
+            <button role="tab" data-range="year"  class="tabs__trigger"            data-i18n="range.year" aria-selected="false" tabindex="-1">Year</button>
+          </div>
+        </nav>
         <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
                 data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source & methodology">i</button>
       </header>

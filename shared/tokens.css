@@ -1,0 +1,72 @@
+:root {
+  color-scheme: dark;
+
+  --brand-font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --brand-font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  --brand-color-page: oklch(18% 0.02 240);
+  --brand-color-surface: color-mix(in oklch, oklch(22% 0.02 240) 94%, transparent);
+  --brand-color-surface-raised: color-mix(in oklch, oklch(28% 0.04 230) 92%, transparent);
+  --brand-color-surface-muted: color-mix(in oklch, oklch(24% 0.03 240) 86%, transparent);
+  --brand-color-overlay: color-mix(in oklch, oklch(35% 0.06 220) 18%, transparent);
+  --brand-color-border: color-mix(in oklch, oklch(52% 0.05 210) 12%, transparent);
+  --brand-color-border-strong: color-mix(in oklch, oklch(68% 0.09 198) 26%, transparent);
+  --brand-color-border-soft: color-mix(in oklch, oklch(52% 0.02 240) 6%, transparent);
+  --brand-color-text: oklch(92% 0.03 240);
+  --brand-color-text-muted: color-mix(in oklch, var(--brand-color-text) 68%, transparent);
+  --brand-color-text-subtle: color-mix(in oklch, var(--brand-color-text) 48%, transparent);
+  --brand-color-accent: oklch(74% 0.18 188);
+  --brand-color-accent-strong: oklch(68% 0.16 196);
+  --brand-color-positive: oklch(76% 0.18 165);
+  --brand-color-critical: oklch(65% 0.22 30);
+  --brand-color-warning: oklch(86% 0.19 85);
+  --brand-color-info: oklch(78% 0.14 220);
+  --brand-color-focus-ring: color-mix(in oklch, var(--brand-color-accent) 45%, transparent);
+
+  --brand-glow-card: 0 24px 56px rgba(6, 16, 25, 0.55);
+  --brand-shadow-card: 0 12px 40px rgba(6, 16, 25, 0.48);
+  --brand-shadow-hover: 0 16px 44px rgba(6, 16, 25, 0.6);
+  --brand-shadow-ring: 0 0 0 1px color-mix(in oklch, var(--brand-color-accent) 38%, transparent);
+
+  --brand-radius-sm: 10px;
+  --brand-radius-md: 16px;
+  --brand-radius-lg: 22px;
+  --brand-radius-xl: 32px;
+  --brand-radius-pill: 999px;
+
+  --brand-space-2xs: 4px;
+  --brand-space-xs: 8px;
+  --brand-space-sm: 12px;
+  --brand-space-md: 16px;
+  --brand-space-lg: 24px;
+  --brand-space-xl: 32px;
+  --brand-space-2xl: 48px;
+  --brand-space-3xl: 64px;
+
+  --brand-font-size-xs: clamp(12px, 1.1vw, 13px);
+  --brand-font-size-sm: clamp(13px, 1.2vw, 14px);
+  --brand-font-size-md: clamp(14px, 1.4vw, 16px);
+  --brand-font-size-lg: clamp(18px, 1.8vw, 20px);
+  --brand-font-size-xl: clamp(24px, 2.2vw, 28px);
+  --brand-font-size-2xl: clamp(32px, 2.8vw, 40px);
+
+  --brand-line-height-tight: 1.1;
+  --brand-line-height-snug: 1.3;
+  --brand-line-height-normal: 1.5;
+  --brand-line-height-relaxed: 1.7;
+
+  --brand-transition-fast: 160ms ease;
+  --brand-transition-base: 220ms ease;
+  --brand-transition-slow: 320ms ease;
+
+  --brand-container-max: 1280px;
+  --brand-container-wide: 1440px;
+}
+
+@media (max-width: 960px) {
+  :root {
+    --brand-space-xl: 28px;
+    --brand-space-2xl: 40px;
+    --brand-space-3xl: 54px;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "spa2099-hr-health",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "lint:css": "stylelint \"shared/**/*.css\" \"*.css\"",
+    "lint:html": "htmlhint \"*.html\" \"docs/**/*.html\"",
+    "brand-check": "node scripts/brand-check.js",
+    "lint": "npm run lint:css && npm run lint:html && npm run brand-check",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "htmlhint": "^1.1.4",
+    "husky": "^9.0.0",
+    "stylelint": "^16.9.0",
+    "stylelint-config-standard": "^36.0.0",
+    "stylelint-declaration-strict-value": "^1.11.1"
+  }
+}

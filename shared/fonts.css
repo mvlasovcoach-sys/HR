@@ -1,0 +1,13 @@
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local("Inter"),
+       local("Inter Variable"),
+       url("../assets/fonts/Inter-Variable.woff2") format("woff2-variations");
+}
+
+:root {
+  font-family: var(--brand-font-sans);
+}
