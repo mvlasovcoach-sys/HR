@@ -5,6 +5,7 @@
   const chartRefs = new Map();
   const instances = new Map();
   let chartPromise = null;
+  let availableDaysPromise = null;
 
   function t(key, fallback){
     if (!key) return fallback;
@@ -39,12 +40,62 @@
     return chartPromise;
   }
 
+  function normaliseDayISO(dayISO){
+    if (!dayISO) return null;
+    if (typeof dayISO !== 'string') return null;
+    const match = dayISO.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+    const [ , year, month, day ] = match;
+    return `${year}-${month}-${day}`;
+  }
+
+  async function loadAvailableDays(){
+    if (!availableDaysPromise){
+      availableDaysPromise = (async () => {
+        try {
+          const payload = await g.API?.fetchJSON?.('/data/stress/raw/index.json');
+          const list = Array.isArray(payload?.days) ? payload.days : Array.isArray(payload) ? payload : [];
+          const uniques = Array.from(new Set(list.map(normaliseDayISO).filter(Boolean)));
+          return uniques.sort((a, b) => {
+            const timeA = new Date(a).getTime();
+            const timeB = new Date(b).getTime();
+            if (!Number.isFinite(timeA) && !Number.isFinite(timeB)) return 0;
+            if (!Number.isFinite(timeA)) return 1;
+            if (!Number.isFinite(timeB)) return -1;
+            return timeB - timeA;
+          });
+        } catch (err){
+          console.error('Failed to load stress day index', err);
+          return [];
+        }
+      })();
+    }
+    return availableDaysPromise;
+  }
+
+  async function resolveAvailableDay(dayISO){
+    const available = await loadAvailableDays();
+    if (!available.length) return normaliseDayISO(dayISO);
+    const target = normaliseDayISO(dayISO);
+    if (target && available.includes(target)) return target;
+    const targetTime = target ? new Date(target).getTime() : Number.NaN;
+    if (Number.isFinite(targetTime)){
+      const found = available.find(day => {
+        const time = new Date(day).getTime();
+        return Number.isFinite(time) && time <= targetTime;
+      });
+      if (found) return found;
+    }
+    return available[0];
+  }
+
   async function loadStressRawDay(dayISO, teamId){
-    if (!dayISO) return [];
+    const resolvedDay = await resolveAvailableDay(dayISO);
+    if (!resolvedDay) return [];
     try {
-      const data = await g.API?.fetchJSON?.(`/data/stress/raw/${dayISO}.json`);
+      const data = await g.API?.fetchJSON?.(`/data/stress/raw/${resolvedDay}.json`);
       const rows = Array.isArray(data) ? data : [];
-      return rows
+      const filtered = rows
         .filter(entry => entry && entry.on === true && (!teamId || entry.team === teamId))
         .map(entry => ({
           uid: String(entry.uid ?? ''),
@@ -55,9 +106,13 @@
         }))
         .filter(entry => entry.uid && entry.ts && Number.isFinite(entry.value))
         .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+      filtered.dayISO = resolvedDay;
+      return filtered;
     } catch (err){
       console.error('Failed to load stress raw day', err);
-      return [];
+      const empty = [];
+      empty.dayISO = resolvedDay;
+      return empty;
     }
   }
 
@@ -311,6 +366,9 @@
   async function refreshDay(instance, options = {}){
     const { updatedISO } = options;
     const raw = await loadStressRawDay(instance.dayISO, instance.teamId);
+    if (raw?.dayISO) {
+      instance.dayISO = raw.dayISO;
+    }
     const buckets = bucketHourly(raw, instance.timeZone);
     instance.buckets = buckets;
     await renderHourlyChart(instance.host, buckets);
