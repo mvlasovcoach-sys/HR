@@ -1,6 +1,6 @@
 @import url("./tokens.css");
 
-.empty-state {
+.brand-v1 .empty-state {
   background: color-mix(in oklch, var(--brand-color-surface-muted) 92%, transparent);
   border: 1px dashed var(--brand-color-border);
   border-radius: var(--brand-radius-lg);
@@ -9,23 +9,23 @@
   min-height: 180px;
 }
 
-.chart-host--bars .empty-state {
+.brand-v1 .chart-host--bars .empty-state {
   width: 100%;
 }
 
-.chart-host--bars.is-skeleton {
+.brand-v1 .chart-host--bars.is-skeleton {
   align-items: center;
   display: flex;
   justify-content: center;
 }
 
-[data-range].is-active {
+.brand-v1 [data-range].is-active {
   box-shadow: var(--brand-shadow-ring);
   background: color-mix(in oklch, var(--brand-color-accent) 16%, transparent);
   color: var(--brand-color-text);
 }
 
-.so-sample {
+.brand-v1 .so-sample {
   display: inline-flex;
   align-items: center;
   gap: var(--brand-space-xs);
@@ -34,7 +34,7 @@
   font-size: var(--brand-font-size-xs);
 }
 
-.skeleton-bar {
+.brand-v1 .skeleton-bar {
   width: 100%;
   height: 200px;
   border-radius: var(--brand-radius-lg);
@@ -43,7 +43,7 @@
   animation: shimmer 1.6s ease infinite;
 }
 
-.skeleton__line {
+.brand-v1 .skeleton__line {
   height: 14px;
   border-radius: var(--brand-radius-pill);
   background: linear-gradient(90deg, color-mix(in oklch, var(--brand-color-text-subtle) 16%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 6%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 16%, transparent));
@@ -51,15 +51,15 @@
   animation: shimmer 1.6s ease infinite;
 }
 
-.skeleton__line--wide {
+.brand-v1 .skeleton__line--wide {
   width: 80%;
 }
 
-.skeleton__line--mid {
+.brand-v1 .skeleton__line--mid {
   width: 60%;
 }
 
-.skeleton__block {
+.brand-v1 .skeleton__block {
   height: 160px;
   border-radius: var(--brand-radius-lg);
   background: linear-gradient(90deg, color-mix(in oklch, var(--brand-color-text-subtle) 14%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 4%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 14%, transparent));
@@ -67,22 +67,22 @@
   animation: shimmer 1.8s ease infinite;
 }
 
-.note--info {
+.brand-v1 .note--info {
   background: color-mix(in oklch, var(--brand-color-info) 24%, transparent);
   border-color: color-mix(in oklch, var(--brand-color-info) 38%, transparent);
   color: var(--brand-color-text);
 }
 
-.note--info[hidden] {
+.brand-v1 .note--info[hidden] {
   display: none;
 }
 
-.so-head {
+.brand-v1 .so-head {
   align-items: center;
   gap: var(--brand-space-lg);
 }
 
-.so-meta {
+.brand-v1 .so-meta {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--brand-space-md);
@@ -90,25 +90,25 @@
   color: var(--brand-color-text-subtle);
 }
 
-.so-range__value,
-.so-last__value {
+.brand-v1 .so-range__value,
+.brand-v1 .so-last__value {
   font-size: var(--brand-font-size-lg);
   font-weight: 600;
   color: var(--brand-color-text);
 }
 
-.so-last__time {
+.brand-v1 .so-last__time {
   font-family: var(--brand-font-mono);
   font-size: var(--brand-font-size-sm);
   color: var(--brand-color-text-subtle);
 }
 
-.so-actions {
+.brand-v1 .so-actions {
   display: inline-flex;
   gap: var(--brand-space-sm);
 }
 
-@keyframes shimmer {
+.brand-v1 @keyframes shimmer {
   0% {
     background-position: 200% 0;
   }

@@ -1,9 +1,10 @@
-html {
+.brand-v1 html,
+html.brand-v1 {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.kpi,
-.chart,
-.table {
+.brand-v1 .kpi,
+.brand-v1 .chart,
+.brand-v1 .table {
   font-variant-numeric: tabular-nums;
 }
