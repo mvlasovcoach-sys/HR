@@ -1,0 +1,12 @@
+{
+  "generated": "2025-03-15T08:00:00Z",
+  "latest": {
+    "preset": "7d",
+    "file": "fleet_7d.json"
+  },
+  "presets": {
+    "7d": { "file": "fleet_7d.json" },
+    "month": { "file": "fleet_month.json" },
+    "year": { "file": "fleet_year.json" }
+  }
+}

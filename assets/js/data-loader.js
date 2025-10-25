@@ -10,18 +10,32 @@ const FALLBACK_BASE = (() => {
 })();
 
 export const BASE_PATH = d?.querySelector('base')?.href || FALLBACK_BASE;
-export const DATA_BASE_URL = new URL('data/stress/', BASE_PATH).toString();
-export const BUILD_VERSION = '2025.10.25-01';
+export const BUILD_V = '2025-10-25-01';
+export const BUILD_VERSION = BUILD_V;
+
+export function base(path = '') {
+  const origin = BASE_PATH || g?.location?.href || '';
+  const href = new URL(path || '.', origin).toString();
+  return href.endsWith('/') ? href : `${href.replace(/\/?$/, '/')}`;
+}
+
+export const DATA_BASE_URL = base('data/stress/');
 
 const LOG_PREFIX = '[Analytics]';
 
-export function urlWithV(u) {
-  if (!u) return u;
-  const url = u instanceof URL ? new URL(u.toString()) : new URL(u, BASE_PATH);
-  if (BUILD_VERSION && !url.searchParams.has('v')) {
-    url.searchParams.set('v', BUILD_VERSION);
+export const withV = input => {
+  if (!input) return input;
+  const origin = BASE_PATH || g?.location?.href || '';
+  const url = input instanceof URL ? new URL(input.toString()) : new URL(String(input), origin);
+  if (BUILD_V && !url.searchParams.has('v')) {
+    url.searchParams.set('v', BUILD_V);
   }
   return url.toString();
+};
+
+export function urlWithV(u) {
+  if (!u) return u;
+  return withV(u);
 }
 
 export function dataUrl(...parts) {
@@ -216,14 +230,20 @@ const legacyApi = {
   resolveDataUrl: (...parts) => dataUrl(...parts),
   loadDayJson: loadDay,
   loadIndex,
-  constants: { BASE_PATH, DATA_BASE_URL, BUILD_VERSION }
+  fetchJson,
+  withV,
+  base,
+  constants: { BASE_PATH, DATA_BASE_URL, BUILD_V, BUILD_VERSION }
 };
 
 if (g) {
   g.AnalyticsDataLoader = {
     BASE_PATH,
     DATA_BASE_URL,
+    BUILD_V,
     BUILD_VERSION,
+    base,
+    withV,
     urlWithV,
     dataUrl,
     fetchJson,
@@ -237,7 +257,10 @@ if (g) {
 export default {
   BASE_PATH,
   DATA_BASE_URL,
+  BUILD_V,
   BUILD_VERSION,
+  base,
+  withV,
   urlWithV,
   dataUrl,
   fetchJson,
