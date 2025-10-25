@@ -23,3 +23,11 @@ The Corporate leadership experience reuses the shared UI token + component syste
 * Export buttons and filters operate entirely on the aggregate JSON bundles—no personal data or biosignal payloads are ever loaded.
 
 All Corporate UI panels share the same tokens (colors, radii, shadows, typography) as the Wellness dashboards to guarantee consistency.
+
+## Analytics demo data
+
+The Analytics view reads stress metrics from static JSON files under `HR/data/stress/raw/`.
+
+1. Unzip or copy the provided sample data so that `HR/data/stress/raw/index.json` exists.
+2. Ensure at least one daily file named `YYYY-MM-DD.json` is available in the same folder for the charts.
+3. Refresh `Analytics.html` after updating the files; requests are cache-busted automatically.

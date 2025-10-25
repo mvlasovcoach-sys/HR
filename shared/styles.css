@@ -1,0 +1,49 @@
+.empty-state{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+  min-height:160px;
+  border-radius:12px;
+  border:1px dashed rgba(255,255,255,.16);
+  background:rgba(7,23,32,.55);
+  color:var(--muted, rgba(255,255,255,.72));
+  font-size:14px;
+  line-height:1.5;
+}
+
+.chart-host--bars .empty-state{ width:100%; }
+
+.chart-host--bars.is-skeleton{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.skeleton-bar{
+  width:100%;
+  height:180px;
+  border-radius:14px;
+  background:linear-gradient(90deg, rgba(255,255,255,.16), rgba(255,255,255,.06), rgba(255,255,255,.16));
+  background-size:200% 100%;
+  animation:analytics-shimmer 1.4s infinite;
+}
+
+.note--info{
+  background:color-mix(in oklab, var(--cyan, #5ad4ff) 18%, transparent);
+  color:color-mix(in oklab, var(--cyan, #5ad4ff) 68%, white 32%);
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:12px;
+  margin-top:12px;
+}
+
+.note--info[hidden]{
+  display:none;
+}
+
+@keyframes analytics-shimmer{
+  0%{ background-position:200% 0; }
+  100%{ background-position:-200% 0; }
+}

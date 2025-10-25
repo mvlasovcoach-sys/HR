@@ -6,6 +6,15 @@
   const instances = new Map();
   let chartPromise = null;
   let availableDaysPromise = null;
+  const LOG_PREFIX = '[Analytics]';
+
+  if (typeof g.dataLoader?.clear === 'function'){
+    const originalClear = g.dataLoader.clear.bind(g.dataLoader);
+    g.dataLoader.clear = (...args) => {
+      availableDaysPromise = null;
+      return originalClear(...args);
+    };
+  }
 
   function t(key, fallback){
     if (!key) return fallback;
@@ -22,6 +31,51 @@
     return copy.toISOString().slice(0, 10);
   }
 
+  function emptyStateMessage(){
+    return t('stress.emptyState', 'No stress data for the selected period.');
+  }
+
+  function resolveHost(host){
+    if (typeof host === 'string') {
+      return d.getElementById(host);
+    }
+    return host;
+  }
+
+  function showChartSkeleton(host){
+    const el = resolveHost(host);
+    if (!el) return;
+    const prev = chartRefs.get(el);
+    if (prev?.destroy) prev.destroy();
+    chartRefs.delete(el);
+    el.innerHTML = '<div class="skeleton-bar" aria-hidden="true"></div>';
+    el.classList.add('is-skeleton');
+  }
+
+  function hideEmptyState(host){
+    const el = resolveHost(host);
+    if (!el) return;
+    if (el.firstElementChild?.classList.contains('empty-state')) {
+      el.innerHTML = '';
+    }
+    el.classList.remove('is-skeleton');
+  }
+
+  function showEmptyState(host, message){
+    const el = resolveHost(host);
+    if (!el) return;
+    const prev = chartRefs.get(el);
+    if (prev?.destroy) prev.destroy();
+    chartRefs.delete(el);
+    el.innerHTML = '';
+    const block = d.createElement('div');
+    block.className = 'empty-state';
+    block.setAttribute('role', 'status');
+    block.textContent = message;
+    el.appendChild(block);
+    el.classList.remove('is-skeleton');
+  }
+
   async function ensureChart(){
     if (g.Chart) return g.Chart;
     if (chartPromise) return chartPromise;
@@ -33,7 +87,7 @@
       script.onerror = () => reject(new Error('Failed to load Chart.js'));
       d.head.appendChild(script);
     }).catch(err => {
-      console.error(err);
+      console.error(`${LOG_PREFIX} Failed to load Chart.js`, err);
       chartPromise = null;
       throw err;
     });
@@ -49,11 +103,48 @@
     return `${year}-${month}-${day}`;
   }
 
+  function ensureFallbackNote(panel){
+    if (!panel) return null;
+    let note = panel.querySelector('#so-fallback');
+    if (!note) {
+      note = d.createElement('div');
+      note.id = 'so-fallback';
+      note.className = 'panel__note note note--info so-fallback';
+      note.hidden = true;
+      const meta = panel.querySelector('#so-meta-line');
+      if (meta?.parentNode) {
+        meta.insertAdjacentElement('afterend', note);
+      } else {
+        panel.appendChild(note);
+      }
+    }
+    return note;
+  }
+
+  function updateFallbackNote(panel, requested, actual){
+    const note = ensureFallbackNote(panel);
+    if (!note) return;
+    const req = normaliseDayISO(requested);
+    const act = normaliseDayISO(actual);
+    if (!req || !act || req === act) {
+      note.hidden = true;
+      note.textContent = '';
+      return;
+    }
+    const label = t('stress.fallbackShowing', 'Showing');
+    const nearest = t('stress.fallbackNearest', 'nearest available');
+    note.textContent = `${label}: ${act} (${nearest})`;
+    note.hidden = false;
+  }
+
   async function loadAvailableDays(){
     if (!availableDaysPromise){
       availableDaysPromise = (async () => {
         try {
-          const payload = await g.API?.fetchJSON?.('/data/stress/raw/index.json');
+          const payload = typeof g.dataLoader?.loadIndex === 'function'
+            ? await g.dataLoader.loadIndex()
+            : await g.API?.fetchJSON?.('/data/stress/raw/index.json');
+          if (!payload) return [];
           const list = Array.isArray(payload?.days) ? payload.days : Array.isArray(payload) ? payload : [];
           const uniques = Array.from(new Set(list.map(normaliseDayISO).filter(Boolean)));
           return uniques.sort((a, b) => {
@@ -65,7 +156,7 @@
             return timeB - timeA;
           });
         } catch (err){
-          console.error('Failed to load stress day index', err);
+          console.error(`${LOG_PREFIX} Failed to load stress day index`, err);
           return [];
         }
       })();
@@ -90,30 +181,120 @@
   }
 
   async function loadStressRawDay(dayISO, teamId){
-    const resolvedDay = await resolveAvailableDay(dayISO);
-    if (!resolvedDay) return [];
-    try {
-      const data = await g.API?.fetchJSON?.(`/data/stress/raw/${resolvedDay}.json`);
-      const rows = Array.isArray(data) ? data : [];
-      const filtered = rows
-        .filter(entry => entry && entry.on === true && (!teamId || entry.team === teamId))
-        .map(entry => ({
-          uid: String(entry.uid ?? ''),
-          ts: entry.ts,
-          value: Number(entry.value),
-          on: true,
-          team: entry.team
-        }))
-        .filter(entry => entry.uid && entry.ts && Number.isFinite(entry.value))
-        .sort((a, b) => new Date(a.ts) - new Date(b.ts));
-      filtered.dayISO = resolvedDay;
-      return filtered;
-    } catch (err){
-      console.error('Failed to load stress raw day', err);
+    const requestedISO = normaliseDayISO(dayISO) || currentDayISO();
+
+    const loadPayload = async iso => {
+      if (!iso) return null;
+      if (typeof g.dataLoader?.loadDayJson === 'function') {
+        try {
+          return await g.dataLoader.loadDayJson(iso);
+        } catch (err) {
+          console.error(`${LOG_PREFIX} Failed to load stress day`, { iso, err });
+          return null;
+        }
+      }
+      try {
+        return await g.API?.fetchJSON?.(`/data/stress/raw/${iso}.json`);
+      } catch (err) {
+        const message = String(err?.message || '');
+        if (/404/.test(message)) {
+          console.warn(`${LOG_PREFIX} Data not found:`, `/data/stress/raw/${iso}.json`);
+          return null;
+        }
+        console.error(`${LOG_PREFIX} Failed to load stress day`, { iso, err });
+        return null;
+      }
+    };
+
+    const candidates = [];
+    if (requestedISO) candidates.push(requestedISO);
+
+    let payload = await loadPayload(requestedISO);
+    if (!payload){
+      const available = await loadAvailableDays();
+      const normalized = available.filter(Boolean);
+      if (requestedISO){
+        const targetTime = new Date(requestedISO).getTime();
+        if (Number.isFinite(targetTime)) {
+          const nearest = normalized.find(day => {
+            const time = new Date(day).getTime();
+            return Number.isFinite(time) && time <= targetTime;
+          });
+          if (nearest && !candidates.includes(nearest)) {
+            candidates.push(nearest);
+          }
+        }
+      }
+      for (const day of normalized) {
+        if (!candidates.includes(day)) {
+          candidates.push(day);
+        }
+      }
+    }
+
+    let resolvedDay = null;
+    let fallbackISO = null;
+    for (const candidate of candidates){
+      const normalised = normaliseDayISO(candidate);
+      if (!normalised) continue;
+      const result = await loadPayload(normalised);
+      if (result){
+        payload = result;
+        resolvedDay = normalised;
+        if (requestedISO && normalised !== requestedISO) {
+          fallbackISO = normalised;
+        }
+        break;
+      }
+      if (!resolvedDay) {
+        resolvedDay = normalised;
+      }
+      if (requestedISO && normalised !== requestedISO && !fallbackISO) {
+        fallbackISO = normalised;
+      }
+    }
+
+    if (!payload){
       const empty = [];
-      empty.dayISO = resolvedDay;
+      empty.dayISO = resolvedDay || null;
+      empty.requestedISO = requestedISO;
+      empty.fallbackISO = fallbackISO && fallbackISO !== requestedISO ? fallbackISO : null;
+      empty.updatedISO = null;
+      empty.isMissing = true;
       return empty;
     }
+
+    const rawRows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.rows)
+        ? payload.rows
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
+
+    const filtered = rawRows
+      .filter(entry => entry && entry.on === true && (!teamId || entry.team === teamId))
+      .map(entry => ({
+        uid: String(entry.uid ?? ''),
+        ts: entry.ts,
+        value: Number(entry.value),
+        on: true,
+        team: entry.team
+      }))
+      .filter(entry => entry.uid && entry.ts && Number.isFinite(entry.value))
+      .sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
+    const lastRowTs = filtered.length ? filtered[filtered.length - 1].ts : rawRows[rawRows.length - 1]?.ts;
+    const updatedISO = typeof payload?.updated_at === 'string'
+      ? payload.updated_at
+      : lastRowTs || (resolvedDay ? `${resolvedDay}T00:00:00Z` : null);
+
+    filtered.dayISO = resolvedDay || requestedISO || null;
+    filtered.requestedISO = requestedISO;
+    filtered.fallbackISO = fallbackISO && fallbackISO !== requestedISO ? fallbackISO : null;
+    filtered.updatedISO = updatedISO;
+    filtered.payload = payload;
+    return filtered;
   }
 
   function bucketHourly(rows, tz = Intl.DateTimeFormat().resolvedOptions().timeZone){
@@ -265,6 +446,11 @@
   function updateLowNBanner(buckets){
     const banner = d.getElementById('so-lowN') || d.getElementById('so-low');
     if (!banner) return;
+    if (!Array.isArray(buckets) || !buckets.some(bucket => (bucket?.n || 0) > 0)){
+      banner.setAttribute('hidden', '');
+      banner.style.display = 'none';
+      return;
+    }
     const totalN = buckets.reduce((sum, bucket) => sum + (bucket.n || 0), 0);
     const hoursWithData = buckets.filter(bucket => (bucket.n || 0) > 0).length;
     if (totalN < 20 || hoursWithData < 4){
@@ -302,6 +488,8 @@
     const ChartCtor = await ensureChart();
     const el = typeof hostId === 'string' ? d.getElementById(hostId) : hostId;
     if (!el) return null;
+    hideEmptyState(el);
+    el.classList.remove('is-skeleton');
     el.innerHTML = '<canvas></canvas>';
     const canvas = el.querySelector('canvas');
     if (!canvas) return null;
@@ -365,16 +553,32 @@
 
   async function refreshDay(instance, options = {}){
     const { updatedISO } = options;
-    const raw = await loadStressRawDay(instance.dayISO, instance.teamId);
+    if (!instance.buckets?.length) {
+      showChartSkeleton(instance.host);
+    }
+    const requestedISO = instance.requestedISO || instance.dayISO;
+    const raw = await loadStressRawDay(requestedISO, instance.teamId);
     if (raw?.dayISO) {
       instance.dayISO = raw.dayISO;
     }
-    const buckets = bucketHourly(raw, instance.timeZone);
+    instance.requestedISO = raw?.requestedISO || requestedISO;
+    const rows = Array.isArray(raw) ? raw : [];
+    const buckets = bucketHourly(rows, instance.timeZone);
     instance.buckets = buckets;
-    await renderHourlyChart(instance.host, buckets);
-    const lastTs = raw.length ? raw[raw.length - 1].ts : updatedISO;
-    updateHeaderFromBuckets(buckets, lastTs || new Date().toISOString());
-    updateLowNBanner(buckets);
+
+    const lastTs = raw?.updatedISO || (rows.length ? rows[rows.length - 1].ts : updatedISO);
+    const resolvedUpdated = lastTs || new Date().toISOString();
+
+    if (!rows.length){
+      showEmptyState(instance.host, emptyStateMessage());
+      updateLowNBanner([]);
+    } else {
+      await renderHourlyChart(instance.host, buckets);
+      updateLowNBanner(buckets);
+    }
+
+    updateHeaderFromBuckets(buckets, resolvedUpdated);
+    updateFallbackNote(instance.panel, raw?.requestedISO || requestedISO, raw?.dayISO);
     renderMetaLine(instance.panel, instance.range);
   }
 
@@ -382,7 +586,7 @@
     stopAutoRefresh(instance);
     instance.timer = setInterval(() => {
       refreshDay(instance, { updatedISO: new Date().toISOString() }).catch(err => {
-        console.error('Auto-refresh failed', err);
+        console.error(`${LOG_PREFIX} Auto-refresh failed`, err);
       });
     }, 60000);
   }
@@ -474,6 +678,7 @@
       range: initialRange || 'day',
       teamId: panel.getAttribute('data-team') || panel.dataset.team,
       dayISO: currentDayISO(),
+      requestedISO: currentDayISO(),
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       timer: null,
       buckets: []
@@ -481,13 +686,15 @@
 
     instances.set(hostId, instance);
 
+    ensureFallbackNote(panel);
+
     setLoading(panel, true);
     try {
       await ensureChart();
       setupInteractions(instance);
       await renderInstance(instance);
     } catch (err){
-      console.error('Failed to mount stress overview', err);
+      console.error(`${LOG_PREFIX} Failed to mount stress overview`, err);
     } finally {
       setLoading(panel, false);
     }
@@ -497,12 +704,13 @@
     instances.forEach(instance => {
       if (!instance) return;
       if (instance.buckets?.length){
-        renderHourlyChart(instance.host, instance.buckets).catch(err => console.error(err));
+        renderHourlyChart(instance.host, instance.buckets).catch(err => console.error(`${LOG_PREFIX} Chart render failed`, err));
         updateHeaderFromBuckets(instance.buckets, new Date().toISOString());
         updateLowNBanner(instance.buckets);
         renderMetaLine(instance.panel, instance.range);
+        updateFallbackNote(instance.panel, instance.requestedISO, instance.dayISO);
       } else {
-        renderInstance(instance).catch(err => console.error(err));
+        renderInstance(instance).catch(err => console.error(`${LOG_PREFIX} Refresh failed`, err));
       }
     });
   });
