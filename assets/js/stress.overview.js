@@ -29,6 +29,7 @@ const elements = {
   statePill: null,
   updated: null,
   sample: null,
+  metaLine: null,
   fallback: null,
   lowSample: null
 };
@@ -37,6 +38,21 @@ function todayISO(date = new Date()) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy.toISOString().slice(0, 10);
+}
+
+function translate(key, fallback) {
+  try {
+    const fn = globalThis.I18N?.t;
+    if (typeof fn === 'function') {
+      const result = fn(key, fallback);
+      if (typeof result === 'string' && result.trim()) {
+        return result;
+      }
+    }
+  } catch (err) {
+    // ignore translation errors
+  }
+  return fallback;
 }
 
 function initElements() {
@@ -48,6 +64,7 @@ function initElements() {
   elements.statePill = document.getElementById('so-state');
   elements.updated = document.getElementById('so-updated');
   elements.sample = document.getElementById('stress-sample');
+  elements.metaLine = document.getElementById('so-meta-line');
   elements.fallback = ensureFallbackNote(elements.panel);
   elements.lowSample = document.getElementById('so-low');
 }
@@ -236,17 +253,116 @@ function renderMeta(data) {
     const nValue = data.meta?.nUsers;
     elements.sample.textContent = Number.isFinite(nValue) ? `n=${nValue}` : 'n=—';
   }
+
+  renderMetaLine(data);
+}
+
+function renderMetaLine(data) {
+  if (!elements.metaLine) return;
+  const selected = typeof state.date === 'string' ? state.date.trim() : '';
+  const actual = typeof data?.meta?.actualDate === 'string' ? data.meta.actualDate.trim() : '';
+  const prefix = translate('stress.meta.showing', 'Showing');
+  const nearestLabel = translate('stress.meta.nearest', 'nearest available');
+
+  let message = '';
+  if (actual) {
+    if (selected && actual !== selected) {
+      message = `${prefix} ${actual} (${nearestLabel})`;
+    } else {
+      message = `${prefix} ${actual}`;
+    }
+  } else if (selected) {
+    message = `${prefix} ${selected}`;
+  }
+
+  const finalMessage = message.trim();
+  elements.metaLine.textContent = finalMessage;
+  elements.metaLine.hidden = finalMessage === '';
 }
 
 function renderLowSample(data) {
   if (!elements.lowSample) return;
-  const total = data.meta?.sampleN ?? data.buckets.reduce((sum, bucket) => sum + (bucket.sampleN || 0), 0);
-  const hasData = data.buckets.some(bucket => (bucket.sampleN || 0) > 0);
-  if (!hasData || total >= 20) {
-    renderLowBanner(false);
-    return;
+  renderLowBanner(shouldShowLowSample(data));
+}
+
+function shouldShowLowSample(data) {
+  if (!data) return false;
+  const ratio = coverageRatio(data);
+  if (ratio !== null) {
+    return ratio >= 0 && ratio < 0.1;
   }
-  renderLowBanner(true);
+
+  const total = totalSamples(data);
+  if (!Number.isFinite(total)) return false;
+  if (total <= 0) return false;
+  const hasData = data.buckets.some(bucket => {
+    const value = Number(bucket.sampleN ?? bucket.n ?? 0);
+    return Number.isFinite(value) && value > 0;
+  });
+  if (!hasData) return false;
+  return total < 20;
+}
+
+function coverageRatio(data) {
+  const meta = data?.meta || {};
+  const directKeys = ['sampleRate', 'coverage', 'sampleCoverage', 'nRate', 'nShare'];
+  for (const key of directKeys) {
+    const ratio = normaliseRate(meta[key]);
+    if (ratio !== null) return ratio;
+  }
+
+  const headcount = getHeadcount();
+  const nUsers = Number(meta.nUsers);
+  if (Number.isFinite(headcount) && headcount > 0 && Number.isFinite(nUsers) && nUsers >= 0) {
+    return nUsers / headcount;
+  }
+
+  const sampleN = Number(meta.sampleN);
+  if (Number.isFinite(sampleN) && sampleN >= 0) {
+    const populationKeys = ['population', 'totalUsers', 'devicesIssued', 'deviceTotal', 'participantTotal'];
+    for (const key of populationKeys) {
+      const base = Number(meta[key]);
+      if (Number.isFinite(base) && base > 0) {
+        return sampleN / base;
+      }
+    }
+  }
+
+  return null;
+}
+
+function normaliseRate(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  if (num < 0) return null;
+  if (num <= 1) return num;
+  if (num <= 100) return num / 100;
+  return null;
+}
+
+function totalSamples(data) {
+  if (!data) return null;
+  const metaTotal = Number(data.meta?.sampleN);
+  if (Number.isFinite(metaTotal) && metaTotal >= 0) {
+    return metaTotal;
+  }
+  return data.buckets.reduce((sum, bucket) => {
+    const value = Number(bucket.sampleN ?? bucket.n ?? 0);
+    return Number.isFinite(value) ? sum + value : sum;
+  }, 0);
+}
+
+function getHeadcount() {
+  const site = globalThis.SITE;
+  if (!site) return null;
+  const sources = [site?.totals?.headcount, site?.raw?.headcount, site?.raw?.devicesIssued];
+  for (const value of sources) {
+    const num = Number(value);
+    if (Number.isFinite(num) && num > 0) {
+      return num;
+    }
+  }
+  return null;
 }
 
 function renderLowBanner(show) {
@@ -820,6 +936,11 @@ function bootstrap() {
 }
 
 bootstrap();
+
+window.addEventListener('site:ready', () => {
+  if (!state.data) return;
+  renderLowSample(state.data);
+});
 
 window.addEventListener('i18n:change', () => {
   if (!state.data) return;
