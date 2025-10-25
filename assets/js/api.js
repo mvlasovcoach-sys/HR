@@ -30,6 +30,10 @@
       }
       return directFetch(path, options || {});
     },
+    async fetchJSON(path, options){
+      const opts = Object.assign({}, options, { as: 'json' });
+      return this.fetch(path, opts);
+    },
     clearCache(){
       g.dataLoader?.clear?.();
     }

@@ -22,7 +22,8 @@
 }
 
 /* Height responsive */
-.chart-host--bars{ position:relative; width:100%; height:clamp(220px, 38vh, 360px); }
+.chart-host--bars{ position:relative; width:100%; height:clamp(220px,38vh,360px); }
+@media (max-width:1366px){ .chart-host--bars{ height:clamp(200px,34vh,320px); } }
 
 /* Category colors (map to your palette) */
 :root{
@@ -64,6 +65,7 @@
 .so-actions .btn{ min-width:120px; }
 
 .chart-host--bars{ border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:16px; background:rgba(7,23,32,.5); }
+.chart-host--bars canvas{ position:absolute; inset:0; width:100%; height:100%; }
 .chart-host--bars:focus-visible{ outline:2px solid var(--cyan); outline-offset:3px; box-shadow:var(--focus-ring); }
 
 .so-bars{ display:flex; flex-direction:column; gap:12px; height:100%; }
@@ -94,8 +96,8 @@
 .panel--stress.is-loading .panel__meta,
 .panel--stress.is-loading .chart-host--bars{ opacity:0; pointer-events:none; }
 
-.so-low{ position:absolute; inset:auto 20px 20px 20px; padding:10px 14px; border-radius:12px; background:rgba(255,176,32,.16); color:var(--stress-moderate); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,176,32,.2); z-index:2; box-shadow:0 10px 30px rgba(0,0,0,.2); }
-.so-low[hidden]{ display:none; }
+.so-low,.so-lowN{ font-size:12px; opacity:.9; margin-top:6px; display:none; color:var(--muted); }
+.so-low a,.so-lowN a{ color:inherit; text-decoration:underline; }
 
 @keyframes so-shimmer{
   0%{background-position:200% 0;}
