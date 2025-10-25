@@ -1,726 +1,831 @@
-(function(g, d){
-  if (!g || !d) return;
+import { loadIndex, loadDay } from './data-loader.js';
 
-  const THRESHOLDS = { low: [0, 39], normal: [40, 59], moderate: [60, 79], high: [80, 100] };
-  const chartRefs = new Map();
-  const instances = new Map();
-  let chartPromise = null;
-  let availableDaysPromise = null;
-  const LOG_PREFIX = '[Analytics]';
+const THRESHOLDS = {
+  low: [0, 39],
+  normal: [40, 59],
+  moderate: [60, 79],
+  high: [80, 100]
+};
 
-  if (typeof g.dataLoader?.clear === 'function'){
-    const originalClear = g.dataLoader.clear.bind(g.dataLoader);
-    g.dataLoader.clear = (...args) => {
-      availableDaysPromise = null;
-      return originalClear(...args);
-    };
+const state = {
+  range: 'day',
+  date: todayISO(),
+  index: null,
+  data: null,
+  actualDate: null
+};
+
+const dayCache = new Map();
+const aggregateCache = new Map();
+let chartPromise = null;
+let chartInstance = null;
+
+const elements = {
+  panel: null,
+  chartHost: null,
+  skeleton: null,
+  rangeValue: null,
+  lastValue: null,
+  statePill: null,
+  updated: null,
+  sample: null,
+  fallback: null,
+  lowSample: null
+};
+
+function todayISO(date = new Date()) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy.toISOString().slice(0, 10);
+}
+
+function initElements() {
+  elements.panel = document.querySelector('.panel--stress');
+  elements.chartHost = document.getElementById('so-chart');
+  elements.skeleton = elements.panel?.querySelector('.so-skeleton');
+  elements.rangeValue = document.getElementById('so-range');
+  elements.lastValue = document.getElementById('so-last');
+  elements.statePill = document.getElementById('so-state');
+  elements.updated = document.getElementById('so-updated');
+  elements.sample = document.getElementById('stress-sample');
+  elements.fallback = ensureFallbackNote(elements.panel);
+  elements.lowSample = document.getElementById('so-low');
+}
+
+function ensureFallbackNote(panel) {
+  if (!panel) return null;
+  let note = panel.querySelector('#so-fallback');
+  if (note) return note;
+  note = document.createElement('div');
+  note.id = 'so-fallback';
+  note.className = 'panel__note note note--info';
+  note.hidden = true;
+  const meta = panel.querySelector('#so-meta-line');
+  if (meta) {
+    meta.insertAdjacentElement('afterend', note);
+  } else {
+    panel.appendChild(note);
   }
+  return note;
+}
 
-  function t(key, fallback){
-    if (!key) return fallback;
-    const translated = g.I18N?.t?.(key);
-    if (typeof translated === 'string' && translated && translated !== key) {
-      return translated;
-    }
-    return typeof fallback === 'function' ? fallback() : (fallback ?? key);
-  }
+export function initStressTabs() {
+  initElements();
+  if (!elements.chartHost || !elements.panel) return;
 
-  function currentDayISO(date = new Date()){
-    const copy = new Date(date);
-    copy.setHours(0, 0, 0, 0);
-    return copy.toISOString().slice(0, 10);
-  }
+  const params = new URLSearchParams(location.search);
+  state.range = params.get('range') || 'day';
 
-  function emptyStateMessage(){
-    return t('stress.emptyState', 'No stress data for the selected period.');
-  }
-
-  function resolveHost(host){
-    if (typeof host === 'string') {
-      return d.getElementById(host);
-    }
-    return host;
-  }
-
-  function showChartSkeleton(host){
-    const el = resolveHost(host);
-    if (!el) return;
-    const prev = chartRefs.get(el);
-    if (prev?.destroy) prev.destroy();
-    chartRefs.delete(el);
-    el.innerHTML = '<div class="skeleton-bar" aria-hidden="true"></div>';
-    el.classList.add('is-skeleton');
-  }
-
-  function hideEmptyState(host){
-    const el = resolveHost(host);
-    if (!el) return;
-    if (el.firstElementChild?.classList.contains('empty-state')) {
-      el.innerHTML = '';
-    }
-    el.classList.remove('is-skeleton');
-  }
-
-  function showEmptyState(host, message){
-    const el = resolveHost(host);
-    if (!el) return;
-    const prev = chartRefs.get(el);
-    if (prev?.destroy) prev.destroy();
-    chartRefs.delete(el);
-    el.innerHTML = '';
-    const block = d.createElement('div');
-    block.className = 'empty-state';
-    block.setAttribute('role', 'status');
-    block.textContent = message;
-    el.appendChild(block);
-    el.classList.remove('is-skeleton');
-  }
-
-  async function ensureChart(){
-    if (g.Chart) return g.Chart;
-    if (chartPromise) return chartPromise;
-    chartPromise = new Promise((resolve, reject) => {
-      const script = d.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
-      script.async = true;
-      script.onload = () => resolve(g.Chart);
-      script.onerror = () => reject(new Error('Failed to load Chart.js'));
-      d.head.appendChild(script);
-    }).catch(err => {
-      console.error(`${LOG_PREFIX} Failed to load Chart.js`, err);
-      chartPromise = null;
-      throw err;
-    });
-    return chartPromise;
-  }
-
-  function normaliseDayISO(dayISO){
-    if (!dayISO) return null;
-    if (typeof dayISO !== 'string') return null;
-    const match = dayISO.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return null;
-    const [ , year, month, day ] = match;
-    return `${year}-${month}-${day}`;
-  }
-
-  function ensureFallbackNote(panel){
-    if (!panel) return null;
-    let note = panel.querySelector('#so-fallback');
-    if (!note) {
-      note = d.createElement('div');
-      note.id = 'so-fallback';
-      note.className = 'panel__note note note--info so-fallback';
-      note.hidden = true;
-      const meta = panel.querySelector('#so-meta-line');
-      if (meta?.parentNode) {
-        meta.insertAdjacentElement('afterend', note);
-      } else {
-        panel.appendChild(note);
-      }
-    }
-    return note;
-  }
-
-  function updateFallbackNote(panel, requested, actual){
-    const note = ensureFallbackNote(panel);
-    if (!note) return;
-    const req = normaliseDayISO(requested);
-    const act = normaliseDayISO(actual);
-    if (!req || !act || req === act) {
-      note.hidden = true;
-      note.textContent = '';
-      return;
-    }
-    const label = t('stress.fallbackShowing', 'Showing');
-    const nearest = t('stress.fallbackNearest', 'nearest available');
-    note.textContent = `${label}: ${act} (${nearest})`;
-    note.hidden = false;
-  }
-
-  async function loadAvailableDays(){
-    if (!availableDaysPromise){
-      availableDaysPromise = (async () => {
-        try {
-          const payload = typeof g.dataLoader?.loadIndex === 'function'
-            ? await g.dataLoader.loadIndex()
-            : await g.API?.fetchJSON?.('/data/stress/raw/index.json');
-          if (!payload) return [];
-          const list = Array.isArray(payload?.days) ? payload.days : Array.isArray(payload) ? payload : [];
-          const uniques = Array.from(new Set(list.map(normaliseDayISO).filter(Boolean)));
-          return uniques.sort((a, b) => {
-            const timeA = new Date(a).getTime();
-            const timeB = new Date(b).getTime();
-            if (!Number.isFinite(timeA) && !Number.isFinite(timeB)) return 0;
-            if (!Number.isFinite(timeA)) return 1;
-            if (!Number.isFinite(timeB)) return -1;
-            return timeB - timeA;
-          });
-        } catch (err){
-          console.error(`${LOG_PREFIX} Failed to load stress day index`, err);
-          return [];
-        }
-      })();
-    }
-    return availableDaysPromise;
-  }
-
-  async function resolveAvailableDay(dayISO){
-    const available = await loadAvailableDays();
-    if (!available.length) return normaliseDayISO(dayISO);
-    const target = normaliseDayISO(dayISO);
-    if (target && available.includes(target)) return target;
-    const targetTime = target ? new Date(target).getTime() : Number.NaN;
-    if (Number.isFinite(targetTime)){
-      const found = available.find(day => {
-        const time = new Date(day).getTime();
-        return Number.isFinite(time) && time <= targetTime;
+  const buttons = Array.from(document.querySelectorAll('[data-range]'));
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setRange(btn.dataset.range).catch(err => {
+        console.error('[Analytics] Failed to switch stress range', err);
       });
-      if (found) return found;
-    }
-    return available[0];
-  }
-
-  async function loadStressRawDay(dayISO, teamId){
-    const requestedISO = normaliseDayISO(dayISO) || currentDayISO();
-
-    const loadPayload = async iso => {
-      if (!iso) return null;
-      if (typeof g.dataLoader?.loadDayJson === 'function') {
-        try {
-          return await g.dataLoader.loadDayJson(iso);
-        } catch (err) {
-          console.error(`${LOG_PREFIX} Failed to load stress day`, { iso, err });
-          return null;
-        }
-      }
-      try {
-        return await g.API?.fetchJSON?.(`/data/stress/raw/${iso}.json`);
-      } catch (err) {
-        const message = String(err?.message || '');
-        if (/404/.test(message)) {
-          console.warn(`${LOG_PREFIX} Data not found:`, `/data/stress/raw/${iso}.json`);
-          return null;
-        }
-        console.error(`${LOG_PREFIX} Failed to load stress day`, { iso, err });
-        return null;
-      }
-    };
-
-    const candidates = [];
-    if (requestedISO) candidates.push(requestedISO);
-
-    let payload = await loadPayload(requestedISO);
-    if (!payload){
-      const available = await loadAvailableDays();
-      const normalized = available.filter(Boolean);
-      if (requestedISO){
-        const targetTime = new Date(requestedISO).getTime();
-        if (Number.isFinite(targetTime)) {
-          const nearest = normalized.find(day => {
-            const time = new Date(day).getTime();
-            return Number.isFinite(time) && time <= targetTime;
-          });
-          if (nearest && !candidates.includes(nearest)) {
-            candidates.push(nearest);
-          }
-        }
-      }
-      for (const day of normalized) {
-        if (!candidates.includes(day)) {
-          candidates.push(day);
-        }
-      }
-    }
-
-    let resolvedDay = null;
-    let fallbackISO = null;
-    for (const candidate of candidates){
-      const normalised = normaliseDayISO(candidate);
-      if (!normalised) continue;
-      const result = await loadPayload(normalised);
-      if (result){
-        payload = result;
-        resolvedDay = normalised;
-        if (requestedISO && normalised !== requestedISO) {
-          fallbackISO = normalised;
-        }
-        break;
-      }
-      if (!resolvedDay) {
-        resolvedDay = normalised;
-      }
-      if (requestedISO && normalised !== requestedISO && !fallbackISO) {
-        fallbackISO = normalised;
-      }
-    }
-
-    if (!payload){
-      const empty = [];
-      empty.dayISO = resolvedDay || null;
-      empty.requestedISO = requestedISO;
-      empty.fallbackISO = fallbackISO && fallbackISO !== requestedISO ? fallbackISO : null;
-      empty.updatedISO = null;
-      empty.isMissing = true;
-      return empty;
-    }
-
-    const rawRows = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.rows)
-        ? payload.rows
-        : Array.isArray(payload?.data)
-          ? payload.data
-          : [];
-
-    const filtered = rawRows
-      .filter(entry => entry && entry.on === true && (!teamId || entry.team === teamId))
-      .map(entry => ({
-        uid: String(entry.uid ?? ''),
-        ts: entry.ts,
-        value: Number(entry.value),
-        on: true,
-        team: entry.team
-      }))
-      .filter(entry => entry.uid && entry.ts && Number.isFinite(entry.value))
-      .sort((a, b) => new Date(a.ts) - new Date(b.ts));
-
-    const lastRowTs = filtered.length ? filtered[filtered.length - 1].ts : rawRows[rawRows.length - 1]?.ts;
-    const updatedISO = typeof payload?.updated_at === 'string'
-      ? payload.updated_at
-      : lastRowTs || (resolvedDay ? `${resolvedDay}T00:00:00Z` : null);
-
-    filtered.dayISO = resolvedDay || requestedISO || null;
-    filtered.requestedISO = requestedISO;
-    filtered.fallbackISO = fallbackISO && fallbackISO !== requestedISO ? fallbackISO : null;
-    filtered.updatedISO = updatedISO;
-    filtered.payload = payload;
-    return filtered;
-  }
-
-  function bucketHourly(rows, tz = Intl.DateTimeFormat().resolvedOptions().timeZone){
-    const formatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', hour12: false, timeZone: tz });
-    const buckets = Array.from({ length: 24 }, (_, h) => ({
-      h,
-      values: [],
-      uids: new Set(),
-      sampleN: 0,
-      modN: 0,
-      highN: 0
-    }));
-    for (const row of rows){
-      if (!row || !row.ts) continue;
-      const date = new Date(row.ts);
-      if (Number.isNaN(date.getTime())) continue;
-      const hour = formatter.format(date);
-      const idx = Number.parseInt(hour, 10);
-      if (!Number.isFinite(idx) || idx < 0 || idx > 23) continue;
-      const bucket = buckets[idx];
-      const value = Number(row.value);
-      if (!Number.isFinite(value)) continue;
-      bucket.values.push(value);
-      bucket.sampleN += 1;
-      bucket.uids.add(row.uid);
-      if (value >= 60) bucket.modN += 1;
-      if (value >= 80) bucket.highN += 1;
-    }
-    return buckets.map(bucket => {
-      if (!bucket.values.length){
-        return {
-          t: `${String(bucket.h).padStart(2, '0')}:00`,
-          avg: null,
-          n: 0,
-          sampleN: 0,
-          modN: 0,
-          highN: 0
-        };
-      }
-      const avg = Math.round(bucket.values.reduce((sum, value) => sum + value, 0) / bucket.values.length);
-      return {
-        t: `${String(bucket.h).padStart(2, '0')}:00`,
-        avg,
-        n: bucket.uids.size,
-        sampleN: bucket.sampleN,
-        modN: bucket.modN,
-        highN: bucket.highN
-      };
-    });
-  }
-
-  function stateOf(value){
-    if (value == null) return null;
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return null;
-    const entry = Object.entries(THRESHOLDS).find(([, [min, max]]) => numeric >= min && numeric <= max);
-    return entry ? entry[0] : 'normal';
-  }
-
-  function colorOf(state){
-    const styles = getComputedStyle(d.documentElement);
-    return {
-      low: styles.getPropertyValue('--stress-low').trim(),
-      normal: styles.getPropertyValue('--stress-normal').trim(),
-      moderate: styles.getPropertyValue('--stress-moderate').trim(),
-      high: styles.getPropertyValue('--stress-high').trim()
-    }[state || 'normal'] || styles.getPropertyValue('--stress-normal').trim() || '#2ec27e';
-  }
-
-  function anomaliesSummary(bucket){
-    const total = Math.max(1, bucket.sampleN ?? bucket.n ?? 0);
-    const highShare = (bucket.highN ?? 0) / total;
-    const modShare = (bucket.modN ?? 0) / total;
-    if (highShare >= 0.3) return { level: 'high', text: t('stress.anomHigh', 'Anomalies: many high') };
-    if (modShare >= 0.5) return { level: 'moderate', text: t('stress.anomModerate', 'Anomalies: elevated') };
-    return { level: 'none', text: t('stress.anomNone', 'No anomalies detected') };
-  }
-
-  function burnoutHint(){
-    return t('stress.burnoutNone', 'No burnout pattern detected');
-  }
-
-  function hourlyTooltipCb(buckets){
-    return ctx => {
-      const idx = ctx?.dataIndex;
-      if (idx == null) return '';
-      const bucket = buckets[idx];
-      if (!bucket) return '';
-      const avg = bucket.avg ?? '—';
-      const state = stateOf(bucket.avg);
-      const stateLabel = state ? t(`stress.${state}`, state) : t('stress.normal', 'Normal');
-      const anomalies = anomaliesSummary(bucket);
-      const burnout = burnoutHint(bucket);
-      return [
-        `${ctx.label}`,
-        `${t('stress.connected', 'Connected')}: ${bucket.n}`,
-        `${t('stress.avg', 'Avg stress')}: ${avg} ${avg !== '—' ? `(${stateLabel})` : ''}`.trim(),
-        anomalies.text,
-        burnout
-      ];
-    };
-  }
-
-  function thresholdLabelFrom(){
-    return Object.entries(THRESHOLDS)
-      .map(([state, [min, max]]) => {
-        const label = t(`stress.${state}`, state.charAt(0).toUpperCase() + state.slice(1));
-        if (min === 0) return `<${max + 1} ${label}`;
-        if (max >= 100) return `${min}+ ${label}`;
-        return `${min}–${max} ${label}`;
-      })
-      .join(', ');
-  }
-
-  function formatTimeLocal(iso){
-    if (!iso) return '—';
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return '—';
-    try {
-      return new Intl.DateTimeFormat(g.I18N?.getLang?.() || d.documentElement.lang || 'en', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (err){
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-  }
-
-  function updateHeaderFromBuckets(buckets, updatedISO){
-    const values = buckets.map(bucket => bucket.avg).filter(value => Number.isFinite(value));
-    const min = values.length ? Math.min(...values) : null;
-    const max = values.length ? Math.max(...values) : null;
-    const lastIndex = [...buckets].reverse().findIndex(bucket => Number.isFinite(bucket.avg));
-    const lastValue = lastIndex >= 0 ? buckets[buckets.length - 1 - lastIndex].avg : null;
-    const rangeEl = d.getElementById('so-range');
-    if (rangeEl) rangeEl.textContent = values.length ? `${min}–${max}` : '—';
-    const lastEl = d.getElementById('so-last');
-    if (lastEl) lastEl.textContent = lastValue ?? '—';
-    const pill = d.getElementById('so-state');
-    const state = stateOf(lastValue);
-    if (pill){
-      pill.textContent = state ? t(`stress.${state}`, state) : '—';
-      pill.className = `pill pill--state state--${state || 'normal'}`;
-    }
-    const updatedEl = d.getElementById('so-updated');
-    if (updatedEl) updatedEl.textContent = updatedISO ? formatTimeLocal(updatedISO) : '—';
-  }
-
-  function updateLowNBanner(buckets){
-    const banner = d.getElementById('so-lowN') || d.getElementById('so-low');
-    if (!banner) return;
-    if (!Array.isArray(buckets) || !buckets.some(bucket => (bucket?.n || 0) > 0)){
-      banner.setAttribute('hidden', '');
-      banner.style.display = 'none';
-      return;
-    }
-    const totalN = buckets.reduce((sum, bucket) => sum + (bucket.n || 0), 0);
-    const hoursWithData = buckets.filter(bucket => (bucket.n || 0) > 0).length;
-    if (totalN < 20 || hoursWithData < 4){
-      banner.innerHTML = t('stats.lowSample', 'Low sample size — interpret with caution');
-      banner.removeAttribute('hidden');
-      banner.style.display = 'block';
-    } else {
-      banner.setAttribute('hidden', '');
-      banner.style.display = 'none';
-    }
-  }
-
-  function renderMetaLine(panel, range){
-    const host = panel?.querySelector('#so-meta-line');
-    if (!host) return;
-    const threshold = thresholdLabelFrom();
-    const period = t(`range.${range}`, range.charAt(0).toUpperCase() + range.slice(1));
-    if (typeof g.renderSourceNote === 'function'){
-      g.renderSourceNote(host, {
-        sourceId: panel.getAttribute('data-source-id') || panel.dataset.sourceId,
-        threshold,
-        period
-      });
-    } else {
-      host.textContent = `${t('source.short', 'Source')}: ${threshold}`;
-    }
-  }
-
-  function setLoading(panel, loading){
-    if (!panel) return;
-    panel.classList.toggle('is-loading', !!loading);
-  }
-
-  async function renderHourlyChart(hostId, buckets){
-    const ChartCtor = await ensureChart();
-    const el = typeof hostId === 'string' ? d.getElementById(hostId) : hostId;
-    if (!el) return null;
-    hideEmptyState(el);
-    el.classList.remove('is-skeleton');
-    el.innerHTML = '<canvas></canvas>';
-    const canvas = el.querySelector('canvas');
-    if (!canvas) return null;
-    const ctx = canvas.getContext('2d');
-    const labels = buckets.map(bucket => bucket.t);
-    const values = buckets.map(bucket => bucket.avg);
-    const colors = buckets.map(bucket => colorOf(stateOf(bucket.avg)));
-    const tooltipCallback = hourlyTooltipCb(buckets);
-
-    const prev = chartRefs.get(el);
-    if (prev?.destroy) prev.destroy();
-
-    const chart = new ChartCtor(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          data: values,
-          backgroundColor: colors,
-          borderRadius: 8,
-          barPercentage: 0.7,
-          categoryPercentage: 0.9
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            enabled: true,
-            callbacks: {
-              label: tooltipCallback
-            }
-          }
-        },
-        scales: {
-          y: {
-            min: 0,
-            max: 100,
-            ticks: { stepSize: 25 }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { autoSkip: false, maxRotation: 0 }
-          }
-        }
-      }
-    });
-
-    chartRefs.set(el, chart);
-    return chart;
-  }
-
-  function stopAutoRefresh(instance){
-    if (instance?.timer){
-      clearInterval(instance.timer);
-      instance.timer = null;
-    }
-  }
-
-  async function refreshDay(instance, options = {}){
-    const { updatedISO } = options;
-    if (!instance.buckets?.length) {
-      showChartSkeleton(instance.host);
-    }
-    const requestedISO = instance.requestedISO || instance.dayISO;
-    const raw = await loadStressRawDay(requestedISO, instance.teamId);
-    if (raw?.dayISO) {
-      instance.dayISO = raw.dayISO;
-    }
-    instance.requestedISO = raw?.requestedISO || requestedISO;
-    const rows = Array.isArray(raw) ? raw : [];
-    const buckets = bucketHourly(rows, instance.timeZone);
-    instance.buckets = buckets;
-
-    const lastTs = raw?.updatedISO || (rows.length ? rows[rows.length - 1].ts : updatedISO);
-    const resolvedUpdated = lastTs || new Date().toISOString();
-
-    if (!rows.length){
-      showEmptyState(instance.host, emptyStateMessage());
-      updateLowNBanner([]);
-    } else {
-      await renderHourlyChart(instance.host, buckets);
-      updateLowNBanner(buckets);
-    }
-
-    updateHeaderFromBuckets(buckets, resolvedUpdated);
-    updateFallbackNote(instance.panel, raw?.requestedISO || requestedISO, raw?.dayISO);
-    renderMetaLine(instance.panel, instance.range);
-  }
-
-  function startAutoRefresh(instance){
-    stopAutoRefresh(instance);
-    instance.timer = setInterval(() => {
-      refreshDay(instance, { updatedISO: new Date().toISOString() }).catch(err => {
-        console.error(`${LOG_PREFIX} Auto-refresh failed`, err);
-      });
-    }, 60000);
-  }
-
-  async function renderInstance(instance){
-    if (!instance) return;
-    if (instance.range !== 'day'){
-      stopAutoRefresh(instance);
-    }
-    if (instance.range === 'day'){
-      await refreshDay(instance);
-      startAutoRefresh(instance);
-      return;
-    }
-    await refreshDay(instance);
-  }
-
-  function syncTabs(tabs, active){
-    tabs.forEach(tab => {
-      const isActive = tab.dataset.range === active;
-      tab.classList.toggle('is-active', isActive);
-      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      tab.tabIndex = isActive ? 0 : -1;
-    });
-  }
-
-  function focusNext(items, currentIndex, direction){
-    if (!items.length) return;
-    const max = items.length - 1;
-    let index = currentIndex + direction;
-    if (index > max) index = 0;
-    if (index < 0) index = max;
-    items[index].focus();
-  }
-
-  function handleTabKeys(tabs){
-    tabs.forEach((tab, index) => {
-      tab.addEventListener('keydown', event => {
-        if (event.key === 'ArrowRight' || event.key === 'ArrowDown'){
-          event.preventDefault();
-          focusNext(tabs, index, 1);
-        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp'){
-          event.preventDefault();
-          focusNext(tabs, index, -1);
-        } else if (event.key === 'Home'){
-          event.preventDefault();
-          tabs[0]?.focus();
-        } else if (event.key === 'End'){
-          event.preventDefault();
-          tabs[tabs.length - 1]?.focus();
-        }
-      });
-    });
-  }
-
-  function setupInteractions(instance){
-    const panel = instance.panel;
-    const tabs = Array.from(panel.querySelectorAll('.so-tabs .tab'));
-    syncTabs(tabs, instance.range);
-    handleTabKeys(tabs);
-    tabs.forEach(tab => {
-      tab.addEventListener('click', async () => {
-        const range = tab.dataset.range || 'day';
-        if (instance.range === range) return;
-        instance.range = range;
-        syncTabs(tabs, range);
-        setLoading(panel, true);
-        try {
-          await renderInstance(instance);
-        } finally {
-          setLoading(panel, false);
-        }
-      });
-    });
-  }
-
-  async function mount(hostId = 'so-chart', initialRange = 'day'){
-    const host = typeof hostId === 'string' ? d.getElementById(hostId) : hostId;
-    if (!host) return;
-    const panel = host.closest('.panel--stress') || d.querySelector('.panel--stress');
-    if (!panel) return;
-
-    host.setAttribute('role', 'img');
-    host.setAttribute('aria-live', 'polite');
-
-    const instance = {
-      host,
-      panel,
-      range: initialRange || 'day',
-      teamId: panel.getAttribute('data-team') || panel.dataset.team,
-      dayISO: currentDayISO(),
-      requestedISO: currentDayISO(),
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      timer: null,
-      buckets: []
-    };
-
-    instances.set(hostId, instance);
-
-    ensureFallbackNote(panel);
-
-    setLoading(panel, true);
-    try {
-      await ensureChart();
-      setupInteractions(instance);
-      await renderInstance(instance);
-    } catch (err){
-      console.error(`${LOG_PREFIX} Failed to mount stress overview`, err);
-    } finally {
-      setLoading(panel, false);
-    }
-  }
-
-  g.addEventListener?.('i18n:change', () => {
-    instances.forEach(instance => {
-      if (!instance) return;
-      if (instance.buckets?.length){
-        renderHourlyChart(instance.host, instance.buckets).catch(err => console.error(`${LOG_PREFIX} Chart render failed`, err));
-        updateHeaderFromBuckets(instance.buckets, new Date().toISOString());
-        updateLowNBanner(instance.buckets);
-        renderMetaLine(instance.panel, instance.range);
-        updateFallbackNote(instance.panel, instance.requestedISO, instance.dayISO);
-      } else {
-        renderInstance(instance).catch(err => console.error(`${LOG_PREFIX} Refresh failed`, err));
-      }
     });
   });
 
-  g.StressOverview = {
-    mount,
-    loadStressRawDay,
-    bucketHourly,
-    stateOf,
-    colorOf,
-    anomaliesSummary
+  handleTabKeys(buttons);
+  setRange(state.range, { pushUrl: false }).catch(err => {
+    console.error('[Analytics] Failed to initialise stress tabs', err);
+  });
+}
+
+function handleTabKeys(tabs) {
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('keydown', event => {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        focusNext(tabs, index, 1);
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        focusNext(tabs, index, -1);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        tabs[0]?.focus();
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        tabs[tabs.length - 1]?.focus();
+      }
+    });
+  });
+}
+
+function focusNext(items, currentIndex, direction) {
+  if (!items.length) return;
+  const max = items.length - 1;
+  let index = currentIndex + direction;
+  if (index > max) index = 0;
+  if (index < 0) index = max;
+  items[index].focus();
+}
+
+async function setRange(range, { pushUrl = true } = {}) {
+  if (!range) return;
+  state.range = range;
+  markActive(range);
+  showSkeleton();
+
+  try {
+    if (!state.index) {
+      state.index = await ensureIndex();
+    }
+    const data = await resolveDataForRange(range, state.date, state.index);
+    if (!data) {
+      showEmpty('No stress data for the selected period.');
+      state.data = null;
+      return;
+    }
+
+    state.data = data;
+    state.actualDate = data.meta.actualDate || state.date;
+    hideSkeleton();
+    renderMeta(data);
+    renderLowSample(data);
+    await renderStressChart(data);
+
+    if (pushUrl) {
+      const sp = new URLSearchParams(location.search);
+      sp.set('range', range);
+      const query = sp.toString();
+      const nextUrl = query ? `${location.pathname}?${query}` : location.pathname;
+      history.replaceState({}, '', nextUrl);
+    }
+  } catch (err) {
+    console.error('[Analytics] Failed to load stress data', err);
+    showEmpty('No stress data for the selected period.');
+  }
+}
+
+function markActive(range) {
+  document.querySelectorAll('[data-range]').forEach(el => {
+    const on = el.dataset.range === range;
+    el.classList.toggle('is-active', on);
+    el.setAttribute('aria-selected', String(on));
+    el.setAttribute('tabindex', on ? '0' : '-1');
+  });
+}
+
+function showSkeleton() {
+  if (elements.chartHost) {
+    elements.chartHost.innerHTML = '';
+    elements.chartHost.classList.add('is-skeleton');
+  }
+  if (elements.skeleton) {
+    elements.skeleton.hidden = false;
+  }
+  showInfo();
+}
+
+function hideSkeleton() {
+  if (elements.chartHost) {
+    elements.chartHost.classList.remove('is-skeleton');
+  }
+  if (elements.skeleton) {
+    elements.skeleton.hidden = true;
+  }
+}
+
+function showEmpty(message) {
+  hideSkeleton();
+  if (elements.chartHost) {
+    elements.chartHost.innerHTML = '';
+    const block = document.createElement('div');
+    block.className = 'empty-state';
+    block.textContent = message;
+    elements.chartHost.append(block);
+  }
+  showInfo();
+  renderLowBanner(false);
+}
+
+function showInfo(message) {
+  if (!elements.fallback) return;
+  if (!message) {
+    elements.fallback.hidden = true;
+    elements.fallback.textContent = '';
+    return;
+  }
+  elements.fallback.textContent = message;
+  elements.fallback.hidden = false;
+}
+
+function renderMeta(data) {
+  const buckets = data.buckets;
+  const values = buckets.map(bucket => bucket.avg).filter(value => Number.isFinite(value));
+  const min = values.length ? Math.min(...values) : null;
+  const max = values.length ? Math.max(...values) : null;
+  const lastValue = getLastValue(buckets);
+  const stateLabel = stateOf(lastValue);
+
+  if (elements.rangeValue) {
+    elements.rangeValue.textContent = values.length ? `${min}–${max}` : '—';
+  }
+  if (elements.lastValue) {
+    elements.lastValue.textContent = lastValue ?? '—';
+  }
+  if (elements.statePill) {
+    const stateText = stateLabel ? capitalise(stateLabel) : '—';
+    elements.statePill.textContent = stateText;
+    elements.statePill.className = `pill pill--state state--${stateLabel || 'normal'}`;
+  }
+  if (elements.updated) {
+    elements.updated.textContent = formatTime(data.meta.updatedAt);
+  }
+  if (elements.sample) {
+    const nValue = data.meta?.nUsers;
+    elements.sample.textContent = Number.isFinite(nValue) ? `n=${nValue}` : 'n=—';
+  }
+}
+
+function renderLowSample(data) {
+  if (!elements.lowSample) return;
+  const total = data.meta?.sampleN ?? data.buckets.reduce((sum, bucket) => sum + (bucket.sampleN || 0), 0);
+  const hasData = data.buckets.some(bucket => (bucket.sampleN || 0) > 0);
+  if (!hasData || total >= 20) {
+    renderLowBanner(false);
+    return;
+  }
+  renderLowBanner(true);
+}
+
+function renderLowBanner(show) {
+  if (!elements.lowSample) return;
+  if (show) {
+    elements.lowSample.removeAttribute('hidden');
+    elements.lowSample.style.display = 'block';
+  } else {
+    elements.lowSample.setAttribute('hidden', '');
+    elements.lowSample.style.display = 'none';
+  }
+}
+
+function getLastValue(buckets) {
+  const copy = [...buckets].reverse();
+  for (const bucket of copy) {
+    if (Number.isFinite(bucket.avg)) return bucket.avg;
+  }
+  return null;
+}
+
+function capitalise(value) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatTime(iso) {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) return '—';
+  try {
+    const locale = document.documentElement.lang || 'en';
+    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(date);
+  } catch (err) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function stateOf(value) {
+  if (!Number.isFinite(value)) return null;
+  const entry = Object.entries(THRESHOLDS).find(([, [min, max]]) => value >= min && value <= max);
+  return entry ? entry[0] : null;
+}
+
+function colorOf(state) {
+  const styles = getComputedStyle(document.documentElement);
+  const map = {
+    low: styles.getPropertyValue('--stress-low').trim(),
+    normal: styles.getPropertyValue('--stress-normal').trim(),
+    moderate: styles.getPropertyValue('--stress-moderate').trim(),
+    high: styles.getPropertyValue('--stress-high').trim()
   };
-})(window, document);
+  return map[state || 'normal'] || '#2ec27e';
+}
+
+async function ensureChart() {
+  if (window.Chart) return window.Chart;
+  if (!chartPromise) {
+    chartPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js';
+      script.async = true;
+      script.onload = () => resolve(window.Chart);
+      script.onerror = err => reject(err);
+      document.head.appendChild(script);
+    });
+  }
+  try {
+    return await chartPromise;
+  } catch (err) {
+    chartPromise = null;
+    throw err;
+  }
+}
+
+async function renderStressChart(data) {
+  const Chart = await ensureChart();
+  if (!elements.chartHost) return;
+  elements.chartHost.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  elements.chartHost.append(canvas);
+
+  const context = canvas.getContext('2d');
+  const labels = data.labels;
+  const values = data.values;
+  const colors = data.buckets.map(bucket => colorOf(stateOf(bucket.avg)));
+
+  const tooltipFormatter = tooltipCallback(data);
+  const axis = axisLabels(data.range);
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(context, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Avg stress',
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          barPercentage: 0.75,
+          categoryPercentage: 0.9
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          suggestedMax: 100,
+          title: { display: true, text: 'Stress score (0–100)' },
+          ticks: { maxTicksLimit: 8 }
+        },
+        x: {
+          title: { display: true, text: axis.x },
+          ticks: { maxTicksLimit: 8 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: tooltipFormatter
+          }
+        }
+      }
+    }
+  });
+}
+
+function tooltipCallback(data) {
+  return context => {
+    const index = context.dataIndex;
+    const bucket = data.buckets[index];
+    if (!bucket) return '';
+    const connected = bucket.n ?? bucket.sampleN ?? 0;
+    const avg = Number.isFinite(bucket.avg) ? bucket.avg : '—';
+    const anomalies = bucket.anomalies > 0 ? bucket.anomalies : 'none';
+    return [
+      `${context.label}`,
+      `Connected: ${connected}`,
+      `Avg stress: ${avg}`,
+      `Anomalies: ${anomalies}`
+    ];
+  };
+}
+
+function axisLabels(range) {
+  switch (range) {
+    case 'month':
+      return { x: 'Day of month' };
+    case 'year':
+      return { x: 'Month' };
+    default:
+      return { x: 'Hour (00–23)' };
+  }
+}
+
+async function ensureIndex() {
+  const index = await loadIndex();
+  const list = Array.isArray(index?.dates)
+    ? index.dates
+    : Array.isArray(index?.days)
+      ? index.days
+      : [];
+  const dates = list
+    .map(value => (typeof value === 'string' ? value.slice(0, 10) : null))
+    .filter(Boolean)
+    .sort();
+  return { dates };
+}
+
+async function resolveDataForRange(range, iso, index) {
+  if (range === 'day') {
+    const direct = await loadDayData(iso);
+    if (direct) {
+      showInfo();
+      return presentDay(direct, range);
+    }
+    const fallback = await loadNearestPast(iso, index);
+    if (fallback) {
+      showInfo(`Showing ${fallback.date} (nearest available)`);
+      return presentDay(fallback.data, range, fallback.date);
+    }
+    return null;
+  }
+
+  const key = `${range}|${iso}`;
+  if (aggregateCache.has(key)) return aggregateCache.get(key);
+
+  let view = null;
+  if (range === 'week') {
+    view = await aggregateWeek(iso, index);
+  } else if (range === 'month') {
+    view = await aggregateMonth(iso, index);
+  } else if (range === 'year') {
+    view = await aggregateYear(iso, index);
+  }
+
+  if (view) {
+    aggregateCache.set(key, view);
+  }
+  return view;
+}
+
+async function loadDayData(iso) {
+  if (!iso) return null;
+  const key = iso;
+  if (dayCache.has(key)) return dayCache.get(key);
+  const payload = await loadDay(iso);
+  if (!payload) return null;
+  const parsed = Array.isArray(payload)
+    ? parseDayFromEvents(payload, iso)
+    : parseDayFromHourly(payload, iso);
+  if (parsed) {
+    dayCache.set(key, parsed);
+  }
+  return parsed;
+}
+
+function parseDayFromEvents(rows, iso) {
+  const buckets = createHourlyBuckets();
+  const userSet = new Set();
+  let updatedAt = null;
+
+  rows.forEach(row => {
+    if (!row) return;
+    const value = Number(row.value ?? row.avg ?? row.score);
+    if (!Number.isFinite(value)) return;
+    const ts = row.ts || row.timestamp || row.time;
+    const date = ts ? new Date(ts) : null;
+    if (!date || !Number.isFinite(date.getTime())) return;
+    const hour = date.getHours();
+    const bucket = buckets[hour];
+    bucket.sum += value;
+    bucket.count += 1;
+    bucket.sampleN += 1;
+    if (value >= 80) bucket.anomalies += 1;
+    if (row.uid) {
+      bucket.users.add(row.uid);
+      userSet.add(row.uid);
+    }
+    if (!updatedAt || date > updatedAt) {
+      updatedAt = date;
+    }
+  });
+
+  const finalBuckets = buckets.map(bucket => ({
+    hour: bucket.hour,
+    label: `${String(bucket.hour).padStart(2, '0')}`,
+    sum: bucket.sum,
+    count: bucket.count,
+    avg: bucket.count ? Math.round(bucket.sum / bucket.count) : null,
+    n: bucket.users.size,
+    sampleN: bucket.sampleN,
+    anomalies: bucket.anomalies,
+    users: bucket.users
+  }));
+
+  const totals = finalBuckets.reduce((acc, bucket) => {
+    acc.sum += bucket.sum;
+    acc.count += bucket.count;
+    acc.sampleN += bucket.sampleN;
+    acc.anomalies += bucket.anomalies;
+    return acc;
+  }, { sum: 0, count: 0, sampleN: 0, anomalies: 0 });
+
+  return {
+    date: iso,
+    updatedAt: updatedAt ? updatedAt.toISOString() : null,
+    buckets: finalBuckets,
+    userSet,
+    totals
+  };
+}
+
+function parseDayFromHourly(payload, iso) {
+  if (!payload || !Array.isArray(payload.hourly)) return null;
+  const hourly = payload.hourly;
+  const updatedAt = payload.updated_at || payload.updatedAt || null;
+  const nUsers = Number(payload.n_users ?? payload.nUsers ?? 0);
+  const buckets = hourly.map(entry => {
+    const hour = Number(entry.h ?? entry.hour);
+    const avg = Number(entry.avg ?? entry.value);
+    const n = Number(entry.n ?? entry.count ?? entry.sample ?? 0);
+    const anomalies = Number(entry.anomalies ?? entry.anom ?? 0);
+    const sampleN = Number(entry.sampleN ?? entry.samples ?? n);
+    const label = Number.isFinite(hour) ? String(hour).padStart(2, '0') : '--';
+    const users = new Set();
+    for (let i = 0; i < n; i += 1) {
+      users.add(`${iso}-${label}-${i}`);
+    }
+    return {
+      hour: Number.isFinite(hour) ? hour : 0,
+      label,
+      sum: Number.isFinite(avg) && sampleN ? avg * sampleN : 0,
+      count: Number.isFinite(sampleN) ? sampleN : 0,
+      avg: Number.isFinite(avg) ? Math.round(avg) : null,
+      n,
+      sampleN,
+      anomalies: Number.isFinite(anomalies) ? anomalies : 0,
+      users
+    };
+  });
+
+  const totals = buckets.reduce((acc, bucket) => {
+    acc.sum += bucket.sum;
+    acc.count += bucket.count;
+    acc.sampleN += bucket.sampleN;
+    acc.anomalies += bucket.anomalies;
+    bucket.users.forEach(uid => acc.userSet.add(uid));
+    return acc;
+  }, { sum: 0, count: 0, sampleN: 0, anomalies: 0, userSet: new Set() });
+
+  const userSet = nUsers ? new Set(Array.from({ length: nUsers }, (_, idx) => `${iso}-user-${idx}`)) : totals.userSet;
+
+  return {
+    date: iso,
+    updatedAt,
+    buckets,
+    userSet,
+    totals: {
+      sum: totals.sum,
+      count: totals.count,
+      sampleN: totals.sampleN,
+      anomalies: totals.anomalies
+    }
+  };
+}
+
+function createHourlyBuckets() {
+  return Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    sum: 0,
+    count: 0,
+    sampleN: 0,
+    anomalies: 0,
+    users: new Set()
+  }));
+}
+
+function presentDay(day, range, actualDate) {
+  const meta = {
+    updatedAt: day.updatedAt,
+    nUsers: day.userSet.size,
+    sampleN: day.totals.sampleN,
+    actualDate: actualDate || day.date
+  };
+  const buckets = day.buckets.map(bucket => ({
+    label: bucket.label,
+    avg: bucket.avg,
+    n: bucket.n,
+    sampleN: bucket.sampleN,
+    anomalies: bucket.anomalies
+  }));
+  const labels = buckets.map(bucket => bucket.label);
+  const values = buckets.map(bucket => (Number.isFinite(bucket.avg) ? bucket.avg : null));
+  return { range, labels, values, buckets, meta };
+}
+
+async function loadNearestPast(iso, index) {
+  const dates = normalisedDates(index).filter(d => d <= iso).sort().reverse();
+  for (const date of dates) {
+    const day = await loadDayData(date);
+    if (day) {
+      return { date, data: day };
+    }
+  }
+  return null;
+}
+
+async function aggregateWeek(iso, index) {
+  const dates = normalisedDates(index).filter(d => d <= iso);
+  if (!dates.length) return null;
+  const slice = dates.slice(-7);
+  const buckets = createHourlyBuckets();
+  const userSet = new Set();
+  let updatedAt = null;
+  let sampleTotal = 0;
+
+  for (const date of slice) {
+    const day = await loadDayData(date);
+    if (!day) continue;
+    sampleTotal += day.totals.sampleN;
+    day.userSet.forEach(uid => userSet.add(uid));
+    if (!updatedAt || (day.updatedAt && day.updatedAt > updatedAt)) {
+      updatedAt = day.updatedAt;
+    }
+    day.buckets.forEach((bucket, index) => {
+      const target = buckets[index];
+      target.sum += bucket.sum;
+      target.count += bucket.count;
+      target.sampleN += bucket.sampleN;
+      target.anomalies += bucket.anomalies;
+      bucket.users.forEach(uid => target.users.add(uid));
+    });
+  }
+
+  const finalBuckets = buckets.map(bucket => ({
+    label: `${String(bucket.hour).padStart(2, '0')}`,
+    avg: bucket.count ? Math.round(bucket.sum / bucket.count) : null,
+    n: bucket.users.size,
+    sampleN: bucket.sampleN,
+    anomalies: bucket.anomalies
+  }));
+
+  const labels = finalBuckets.map(bucket => bucket.label);
+  const values = finalBuckets.map(bucket => (Number.isFinite(bucket.avg) ? bucket.avg : null));
+  return {
+    range: 'week',
+    labels,
+    values,
+    buckets: finalBuckets,
+    meta: {
+      updatedAt,
+      nUsers: userSet.size,
+      sampleN: sampleTotal
+    }
+  };
+}
+
+async function aggregateMonth(iso, index) {
+  const target = new Date(iso);
+  const month = target.getMonth();
+  const year = target.getFullYear();
+  const dates = normalisedDates(index).filter(date => {
+    const current = new Date(date);
+    return current.getFullYear() === year && current.getMonth() === month;
+  }).sort();
+  if (!dates.length) return null;
+
+  const buckets = [];
+  const userSet = new Set();
+  let updatedAt = null;
+  let sampleTotal = 0;
+
+  for (const date of dates) {
+    const day = await loadDayData(date);
+    if (!day) continue;
+    sampleTotal += day.totals.sampleN;
+    day.userSet.forEach(uid => userSet.add(uid));
+    if (!updatedAt || (day.updatedAt && day.updatedAt > updatedAt)) {
+      updatedAt = day.updatedAt;
+    }
+    const avg = day.totals.count ? Math.round(day.totals.sum / day.totals.count) : null;
+    const anomalies = day.totals.anomalies;
+    const label = String(new Date(date).getDate());
+    buckets.push({
+      label,
+      avg,
+      n: day.userSet.size,
+      sampleN: day.totals.sampleN,
+      anomalies
+    });
+  }
+
+  const labels = buckets.map(bucket => bucket.label);
+  const values = buckets.map(bucket => (Number.isFinite(bucket.avg) ? bucket.avg : null));
+  return {
+    range: 'month',
+    labels,
+    values,
+    buckets,
+    meta: {
+      updatedAt,
+      nUsers: userSet.size,
+      sampleN: sampleTotal
+    }
+  };
+}
+
+async function aggregateYear(iso, index) {
+  const target = new Date(iso);
+  const months = [];
+  const monthKeys = new Set();
+  for (let i = 0; i < 12; i += 1) {
+    const date = new Date(target.getFullYear(), target.getMonth() - i, 1);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    months.push({ date, key });
+    monthKeys.add(key);
+  }
+  const dates = normalisedDates(index).filter(date => {
+    const current = new Date(date);
+    const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    return monthKeys.has(key) && current <= target;
+  });
+
+  if (!dates.length) return null;
+
+  const monthBuckets = new Map();
+  const userMap = new Map();
+  let updatedAt = null;
+  let sampleTotal = 0;
+
+  for (const date of dates) {
+    const day = await loadDayData(date);
+    if (!day) continue;
+    const current = new Date(date);
+    const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+    const entry = monthBuckets.get(key) || { sum: 0, count: 0, anomalies: 0, sampleN: 0 };
+    entry.sum += day.totals.sum;
+    entry.count += day.totals.count;
+    entry.anomalies += day.totals.anomalies;
+    entry.sampleN += day.totals.sampleN;
+    monthBuckets.set(key, entry);
+    sampleTotal += day.totals.sampleN;
+    const set = userMap.get(key) || new Set();
+    day.userSet.forEach(uid => set.add(uid));
+    userMap.set(key, set);
+    if (!updatedAt || (day.updatedAt && day.updatedAt > updatedAt)) {
+      updatedAt = day.updatedAt;
+    }
+  }
+
+  const locale = document.documentElement.lang || 'en';
+  const formatter = new Intl.DateTimeFormat(locale, { month: 'short' });
+
+  const buckets = months
+    .reverse()
+    .map(({ date, key }) => {
+      const data = monthBuckets.get(key);
+      if (!data) {
+        return { label: formatter.format(date), avg: null, n: 0, sampleN: 0, anomalies: 0 };
+      }
+      const avg = data.count ? Math.round(data.sum / data.count) : null;
+      const n = userMap.get(key)?.size || 0;
+      return {
+        label: formatter.format(date),
+        avg,
+        n,
+        sampleN: data.sampleN,
+        anomalies: data.anomalies
+      };
+    });
+
+  const labels = buckets.map(bucket => bucket.label);
+  const values = buckets.map(bucket => (Number.isFinite(bucket.avg) ? bucket.avg : null));
+
+  const totalUsers = Array.from(userMap.values()).reduce((acc, set) => new Set([...acc, ...set]), new Set());
+
+  return {
+    range: 'year',
+    labels,
+    values,
+    buckets,
+    meta: {
+      updatedAt,
+      nUsers: totalUsers.size,
+      sampleN: sampleTotal
+    }
+  };
+}
+
+function normalisedDates(index) {
+  if (!index || !Array.isArray(index.dates)) return [];
+  return index.dates.slice();
+}
+
+function bootstrap() {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStressTabs, { once: true });
+  } else {
+    initStressTabs();
+  }
+}
+
+bootstrap();
+
+window.addEventListener('i18n:change', () => {
+  if (!state.data) return;
+  renderMeta(state.data);
+  renderLowSample(state.data);
+  renderStressChart(state.data).catch(err => {
+    console.error('[Analytics] Failed to refresh stress chart', err);
+  });
+});
