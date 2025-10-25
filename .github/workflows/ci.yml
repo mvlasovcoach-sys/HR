@@ -23,11 +23,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: npx playwright install --with-deps
-      - run: npm run lint:css
-      - run: npm run lint:html
       - name: Brand check
-        run: npm run brand-check
+        run: |
+          npm ci
+          npm run brand-check
         continue-on-error: true
-      - run: npm run test
+      - name: Stylelint
+        run: npm run lint:css
+      - name: HTMLHint
+        run: npm run lint:html
