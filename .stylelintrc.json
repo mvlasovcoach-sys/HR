@@ -1,0 +1,36 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-declaration-strict-value"],
+  "rules": {
+    "color-no-invalid-hex": true,
+    "scale-unlimited/declaration-strict-value": [
+      [
+        "/color$/",
+        "border",
+        "border-color",
+        "border-top-color",
+        "border-right-color",
+        "border-bottom-color",
+        "border-left-color",
+        "border-radius",
+        "border-top-left-radius",
+        "border-top-right-radius",
+        "border-bottom-left-radius",
+        "border-bottom-right-radius",
+        "font-family"
+      ],
+      {
+        "ignoreValues": ["inherit", "initial", "transparent", "currentColor"],
+        "ignoreKeywords": ["inherit", "initial", "unset"],
+        "ignoreFunctions": ["var", "url", "color-mix", "linear-gradient", "radial-gradient", "oklch", "rgba", "clamp"],
+        "ignoreSelectors": [":root"],
+        "disableFix": true
+      }
+    ],
+    "font-family-no-missing-generic-family-keyword": null
+  },
+  "ignoreFiles": [
+    "shared/tokens.css",
+    "assets/css/**/*.css"
+  ]
+}
