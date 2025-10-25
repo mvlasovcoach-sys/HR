@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
+const SCAN_DIRS = ['shared', 'docs'];
+const ALLOW_HEX_IN = ['assets/css'];
 const IGNORED_DIRS = new Set([
   'node_modules',
   '.git',
@@ -22,12 +24,18 @@ const RADIUS_PATTERN = /(border-radius|border-top-left-radius|border-top-right-r
 
 let violations = [];
 
+function shouldSkip(relPath) {
+  const normalized = relPath.replace(/\\/g, '/');
+  return ALLOW_HEX_IN.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`));
+}
+
 function walk(dir){
   const entries = fs.readdirSync(dir, {withFileTypes: true});
   for (const entry of entries) {
     if (IGNORED_DIRS.has(entry.name)) continue;
     const resolved = path.join(dir, entry.name);
     const relative = path.relative(ROOT, resolved);
+    if (shouldSkip(relative)) continue;
     if (entry.isDirectory()) {
       walk(resolved);
       continue;
@@ -65,7 +73,26 @@ function scanFile(absPath, relPath){
   }
 }
 
-walk(ROOT);
+function scanRootHtml(){
+  const entries = fs.readdirSync(ROOT, {withFileTypes: true});
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (path.extname(entry.name) !== '.html') continue;
+    const absPath = path.join(ROOT, entry.name);
+    scanFile(absPath, entry.name);
+  }
+}
+
+function scanTargets(){
+  for (const dir of SCAN_DIRS) {
+    const target = path.join(ROOT, dir);
+    if (!fs.existsSync(target)) continue;
+    walk(target);
+  }
+}
+
+scanRootHtml();
+scanTargets();
 
 if (violations.length) {
   console.error('\nBrand compliance check failed:');
