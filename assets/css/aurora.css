@@ -1,0 +1,24 @@
+/*!
+ * Aurora legacy theme bundle v2
+ * Aggregates the legacy UI system so that summary/analytics views
+ * can opt out of brand styling while retaining the prior appearance.
+ */
+@import url("./ui.tokens.css?v=2025.10.19-05");
+@import url("./ui.components.css?v=2025.10.19-05");
+@import url("./app-shell.css?v=2025.10.19-05");
+@import url("./nav.css?v=2025.10.19-05");
+@import url("./app.css?v=2025.10.19-05");
+@import url("./charts.css?v=2025.10.19-05");
+@import url("./tables.css?v=2025.10.19-05");
+@import url("./summary.css?v=2025.10.19-05");
+@import url("./analytics.css?v=2025.10.19-05");
+@import url("./stress.css?v=2025.10.19-05");
+@import url("./source.css?v=2025.10.19-05");
+@import url("./hr-board.neon.css?v=2025.10.19-05");
+@import url("./corporate.css?v=2025.10.19-05");
+@import url("./engagement.css?v=2025.10.19-05");
+@import url("./devices.css?v=2025.10.19-05");
+@import url("./demo.css?v=2025.10.19-05");
+@import url("./pilot.css?v=2025.10.19-05");
+@import url("./wellness.css?v=2025.10.19-05");
+@import url("./print.css?v=2025.10.19-05") print;

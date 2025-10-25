@@ -1,7 +1,7 @@
 @import url("./tokens.css");
 
-.chart-card .x-expand,
-.chart-card .src-info {
+.brand-v1 .chart-card .x-expand,
+.brand-v1 .chart-card .src-info {
   border-radius: var(--brand-radius-pill);
   border: 1px solid var(--brand-color-border);
   background: color-mix(in oklch, var(--brand-color-surface) 92%, transparent);
@@ -12,17 +12,17 @@
   transition: background var(--brand-transition-base), color var(--brand-transition-base), box-shadow var(--brand-transition-base);
 }
 
-.chart-card .x-expand:hover,
-.chart-card .x-expand:focus-visible,
-.chart-card .src-info:hover,
-.chart-card .src-info:focus-visible {
+.brand-v1 .chart-card .x-expand:hover,
+.brand-v1 .chart-card .x-expand:focus-visible,
+.brand-v1 .chart-card .src-info:hover,
+.brand-v1 .chart-card .src-info:focus-visible {
   background: color-mix(in oklch, var(--brand-color-accent) 18%, transparent);
   color: var(--brand-color-text);
   box-shadow: var(--brand-shadow-ring);
   outline: none;
 }
 
-.chart-legend {
+.brand-v1 .chart-legend {
   display: flex;
   gap: var(--brand-space-md);
   flex-wrap: wrap;
@@ -30,37 +30,37 @@
   font-size: var(--brand-font-size-sm);
 }
 
-.chart-legend span {
+.brand-v1 .chart-legend span {
   display: inline-flex;
   align-items: center;
   gap: var(--brand-space-xs);
 }
 
-.chart-legend .dot {
+.brand-v1 .chart-legend .dot {
   width: 12px;
   height: 12px;
   border-radius: var(--brand-radius-pill);
   background: var(--brand-color-border-strong);
 }
 
-.chart-grid {
+.brand-v1 .chart-grid {
   stroke: color-mix(in oklch, var(--brand-color-border-soft) 62%, transparent);
   stroke-width: 1;
 }
 
-.chart-axis {
+.brand-v1 .chart-axis {
   fill: none;
   stroke: color-mix(in oklch, var(--brand-color-border-soft) 72%, transparent);
   stroke-width: 1.2;
 }
 
-.chart-axis-label {
+.brand-v1 .chart-axis-label {
   fill: var(--brand-color-text-subtle);
   font-size: var(--brand-font-size-xs);
   font-family: var(--brand-font-sans);
 }
 
-.chart-tooltip {
+.brand-v1 .chart-tooltip {
   position: absolute;
   top: 0;
   left: 0;
@@ -75,7 +75,7 @@
   box-shadow: var(--brand-shadow-card);
 }
 
-.chart-card .updated-meta {
+.brand-v1 .chart-card .updated-meta {
   font-size: var(--brand-font-size-xs);
   color: var(--brand-color-text-subtle);
   display: inline-flex;
