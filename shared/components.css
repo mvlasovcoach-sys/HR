@@ -12,7 +12,6 @@ html.brand-v1 body {
   margin: 0;
   background: radial-gradient(circle at top left, color-mix(in oklch, var(--brand-color-accent) 6%, transparent), transparent 52%), var(--brand-color-page);
   color: var(--brand-color-text);
-  font-family: var(--brand-font-sans);
   font-size: var(--brand-font-size-md);
   line-height: var(--brand-line-height-normal);
   text-rendering: optimizeLegibility;
@@ -718,7 +717,6 @@ html.brand-v1:where(.panel__body) {
   border-radius: var(--brand-radius-md);
   color: var(--brand-color-text);
   padding: var(--brand-space-xs) var(--brand-space-sm);
-  font-family: var(--brand-font-sans);
   font-size: var(--brand-font-size-sm);
 }
 

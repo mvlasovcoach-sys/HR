@@ -98,7 +98,6 @@
 }
 
 .brand-v1 .so-last__time {
-  font-family: var(--brand-font-mono);
   font-size: var(--brand-font-size-sm);
   color: var(--brand-color-text-subtle);
 }

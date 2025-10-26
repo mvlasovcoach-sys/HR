@@ -78,7 +78,6 @@
 .chart__axis text {
   fill: rgba(215, 243, 255, 0.7);
   font-size: 12px;
-  font-family: var(--font-sans);
 }
 
 .chart__axis text,
@@ -135,7 +134,6 @@
   background: rgba(7, 23, 32, 0.92);
   color: var(--txt);
   font-size: 12px;
-  font-family: var(--font-sans);
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
