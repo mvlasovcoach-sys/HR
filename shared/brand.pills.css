@@ -18,3 +18,19 @@
 .brand-btn--primary:hover {
   background: var(--brand-mint-600);
 }
+
+.range-pills{display:flex;gap:12px;flex-wrap:wrap}
+.range-pill{
+  background:transparent;
+  border:1px solid rgba(0,239,208,.35);
+  color:#AAC0CB;
+  border-radius:999px;padding:8px 14px;line-height:1;
+  transition:border-color .18s ease,box-shadow .18s ease,color .18s ease;
+}
+.range-pill:hover{color:#E7F1F5;border-color:rgba(0,239,208,.55)}
+.range-pill[aria-pressed="true"],
+.range-pill.is-active{
+  color:#E7F1F5;
+  box-shadow:inset 0 -2px 0 #00EFD0,0 0 0 1px rgba(0,239,208,.55);
+}
+.panel--stress .range-pill{background:transparent!important}

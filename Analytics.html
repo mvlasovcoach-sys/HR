@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="./shared/fonts.css">
 <link rel="stylesheet" href="./shared/brand.tokens.css">
 <link rel="stylesheet" href="./shared/brand.pills.css">
+<link rel="stylesheet" href="./shared/ui.titlebar.css">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -40,21 +41,22 @@
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--analytics">
     <div id="app-topbar" class="card card--topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.analytics">Analytics</h1>
-          </div>
+      <div class="titlebar">
+        <div class="left">
+          <h1 class="page-title header__title" data-i18n="header.analytics">Analytics</h1>
+          <button class="info-dot" type="button" data-about-open
+            data-help="analytics"
+            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        </div>
+        <div class="right">
           <div class="toolbar__filters">
             <div id="team-filter" class="toolbar__filter"></div>
             <div id="date-controls" class="toolbar__filter"></div>
           </div>
+          <div class="topbar-right">
+            <div id="lang-switch" class="lang-switch"></div>
+          </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
       </div>
     </div>
     <div id="global-caption"></div>
@@ -97,14 +99,12 @@
       </div>
       <header class="card__header so-head">
         <h2 class="card__title" data-i18n="stress.title">Emotional wellbeing</h2>
-        <nav class="tabs" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
-          <div class="tabs__list" role="tablist">
-            <button role="tab" data-range="day"   class="tabs__trigger brand-pill is-active"  data-i18n="range.day" aria-selected="true" tabindex="0">Day</button>
-            <button role="tab" data-range="week"  class="tabs__trigger brand-pill"            data-i18n="range.week" aria-selected="false" tabindex="-1">Week</button>
-            <button role="tab" data-range="month" class="tabs__trigger brand-pill"            data-i18n="range.month" aria-selected="false" tabindex="-1">Month</button>
-            <button role="tab" data-range="year"  class="tabs__trigger brand-pill"            data-i18n="range.year" aria-selected="false" tabindex="-1">Year</button>
-          </div>
-        </nav>
+        <div class="range-pills" role="tablist" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
+          <button role="tab" data-range="day"   class="range-pill is-active" data-i18n="range.day" aria-selected="true" aria-pressed="true" tabindex="0">Day</button>
+          <button role="tab" data-range="week"  class="range-pill"        data-i18n="range.week" aria-selected="false" aria-pressed="false" tabindex="-1">Week</button>
+          <button role="tab" data-range="month" class="range-pill"        data-i18n="range.month" aria-selected="false" aria-pressed="false" tabindex="-1">Month</button>
+          <button role="tab" data-range="year"  class="range-pill"        data-i18n="range.year" aria-selected="false" aria-pressed="false" tabindex="-1">Year</button>
+        </div>
         <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
                 data-i18n="source.link" data-i18n-attr="aria-label" aria-label="Data source & methodology">i</button>
       </header>
