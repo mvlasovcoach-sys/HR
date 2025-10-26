@@ -1,6 +1,6 @@
 (function(){
-  const loaderGlobals = window.AnalyticsDataLoader || window.dataLoader || {};
-  const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || loaderGlobals.BUILD_VERSION || '2025-10-25-01';
+  const loaderGlobals = window.loaderGlobals || {};
+  const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || '2025-10-25-02';
   const resolveBase = typeof loaderGlobals.base === 'function'
     ? loaderGlobals.base
     : path => {

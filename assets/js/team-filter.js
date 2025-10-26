@@ -1,4 +1,20 @@
 (function(){
+  const loaderGlobals = window.loaderGlobals || {};
+  const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+  const loadJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      };
+
+  function fetchData(path){
+    const url = new URL(path, document.baseURI);
+    return loadJson(applyVersion(url.toString()));
+  }
+
   const STORAGE_KEY = 'hr:team';
   let selectEl = null;
   let mount = null;
@@ -40,7 +56,7 @@
 
   async function loadTeams(){
     try {
-      const data = await window.dataLoader.fetch('./data/org/teams.json');
+      const data = await fetchData('./data/org/teams.json');
       const list = Array.isArray(data?.depts) ? data.depts : [];
       teams = list.map(item => ({id: item.id, name: item.name || item.id}));
       const nameMap = {};

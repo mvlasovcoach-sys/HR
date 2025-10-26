@@ -1,4 +1,36 @@
 (function(){
+  const loaderGlobals = window.loaderGlobals || {};
+  const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+  const loadJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      };
+  function versionedUrl(path, options = {}){
+    const url = new URL(path, document.baseURI);
+    const {range, team, params} = options || {};
+    if (range && typeof range === 'object') {
+      Object.entries(range).forEach(([key, value]) => {
+        if (value != null) url.searchParams.set(key, value);
+      });
+    }
+    if (team != null) {
+      url.searchParams.set('team', team);
+    }
+    if (params && typeof params === 'object') {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value != null) url.searchParams.set(key, value);
+      });
+    }
+    return applyVersion(url.toString());
+  }
+
+  function fetchData(path, options){
+    return loadJson(versionedUrl(path, options));
+  }
   console.info('Summary init');
   const TILE_COUNT = 4;
   const KPI_PRIMARY_ID = 'summary-kpi-primary';
@@ -188,7 +220,6 @@
       const next = mode === 'night' ? 'night' : 'live';
       if (prev === next) return;
       localStorage.setItem('hr:scenario', next);
-      window.dataLoader?.clear?.();
       dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
     } catch (err) {
       console.warn('scenario set failed', err);
@@ -343,8 +374,8 @@
     try{
       const key = getRangeKey(range);
       const [metrics, trend] = await Promise.all([
-        window.dataLoader.fetch(`./data/org/metrics_${key}.json`, {range}),
-        window.dataLoader.fetch('./data/org/metrics_7d.json')
+        fetchData(`./data/org/metrics_${key}.json`, {range}),
+        fetchData('./data/org/metrics_7d.json')
       ]);
       updateRangeMetadata(metrics);
       renderKpis(metrics, trend);
