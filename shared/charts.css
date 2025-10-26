@@ -57,7 +57,6 @@
 .brand-v1 .chart-axis-label {
   fill: var(--brand-color-text-subtle);
   font-size: var(--brand-font-size-xs);
-  font-family: var(--brand-font-sans);
 }
 
 .brand-v1 .chart-tooltip {
