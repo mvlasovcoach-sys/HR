@@ -40,7 +40,7 @@
   border-radius: var(--brand-radius-lg);
   background: linear-gradient(90deg, color-mix(in oklch, var(--brand-color-text-subtle) 12%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 4%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 12%, transparent));
   background-size: 200% 100%;
-  animation: shimmer 1.6s ease infinite;
+  animation: brand-v1-shimmer 1.6s ease infinite;
 }
 
 .brand-v1 .skeleton__line {
@@ -48,7 +48,7 @@
   border-radius: var(--brand-radius-pill);
   background: linear-gradient(90deg, color-mix(in oklch, var(--brand-color-text-subtle) 16%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 6%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 16%, transparent));
   background-size: 200% 100%;
-  animation: shimmer 1.6s ease infinite;
+  animation: brand-v1-shimmer 1.6s ease infinite;
 }
 
 .brand-v1 .skeleton__line--wide {
@@ -64,7 +64,7 @@
   border-radius: var(--brand-radius-lg);
   background: linear-gradient(90deg, color-mix(in oklch, var(--brand-color-text-subtle) 14%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 4%, transparent), color-mix(in oklch, var(--brand-color-text-subtle) 14%, transparent));
   background-size: 200% 100%;
-  animation: shimmer 1.8s ease infinite;
+  animation: brand-v1-shimmer 1.8s ease infinite;
 }
 
 .brand-v1 .note--info {
@@ -107,7 +107,7 @@
   gap: var(--brand-space-sm);
 }
 
-.brand-v1 @keyframes shimmer {
+@keyframes brand-v1-shimmer {
   0% {
     background-position: 200% 0;
   }

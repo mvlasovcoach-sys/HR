@@ -1,18 +1,18 @@
-.brand-pill{
+.brand-v1 .brand-pill{
   border:1px solid rgba(0,239,208,.35);
   border-radius:999px;
   padding:6px 12px;
   transition:border-color .18s ease;
 }
-.brand-pill.is-active{
+.brand-v1 .brand-pill.is-active{
   box-shadow:inset 0 -2px 0 #00EFD0,0 0 0 1px rgba(0,239,208,.55);
 }
-.brand-btn--primary{
+.brand-v1 .brand-btn--primary{
   background:#00EFD0;
   color:#0B1116;
   border-radius:12px;
   padding:10px 14px;
 }
-.brand-btn--primary:hover{
+.brand-v1 .brand-btn--primary:hover{
   background:#00CABB;
 }
