@@ -16,6 +16,7 @@
 
 <!-- (опционально) акцентные таблетки/кнопки — один файл на все -->
 <link rel="stylesheet" href="./shared/brand.pills.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -43,22 +44,21 @@
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--analytics">
     <div id="app-topbar" class="card card--topbar">
-      <div class="titlebar">
-        <div class="left">
-          <h1 class="page-title" data-i18n="header.analytics">Analytics</h1>
-          <button class="info-dot" type="button" data-about-open
-            data-help="analytics"
-            aria-label="About Analytics"
-            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+      <div class="page-header">
+        <div class="titlebar">
+          <div class="left">
+            <h1 class="page-title" data-i18n="header.analytics">Analytics</h1>
+            <button class="info-dot" type="button" data-about-open
+              data-help="analytics"
+              aria-label="About Analytics"
+              data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+          </div>
         </div>
-        <div class="right">
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
-          </div>
-          <div class="topbar-right">
-            <div id="lang-switch" class="lang-switch"></div>
-          </div>
+
+        <div class="header-controls" role="group" aria-label="Filters">
+          <div id="team-filter" class="toolbar__filter"></div>
+          <div id="date-controls" class="toolbar__filter"></div>
+          <div id="lang-switch" class="lang-switch"></div>
         </div>
       </div>
     </div>
