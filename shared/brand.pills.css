@@ -1,13 +1,44 @@
 @import url("./brand.tokens.css?v=2025-10-26");
 
-.range-pills{display:flex;gap:12px;flex-wrap:wrap}
-.range-pill{background:transparent;border:1px solid rgba(0,239,208,.35);color:#AAC0CB;border-radius:999px;padding:8px 14px;line-height:1;transition:.18s border-color,.18s box-shadow,.18s color;}
-.range-pill:hover{color:#E7F1F5;border-color:rgba(0,239,208,.55)}
-.range-pill[aria-pressed="true"],.range-pill.is-active{color:#E7F1F5;box-shadow:inset 0 -2px 0 #00EFD0,0 0 0 1px rgba(0,239,208,.55);}
+.range-pills{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 
-.brand-pill{background:transparent;border:1px solid rgba(0,239,208,.35);color:#AAC0CB;border-radius:999px;padding:8px 14px;line-height:1;transition:.18s border-color,.18s box-shadow,.18s color;}
-.brand-pill:hover{color:#E7F1F5;border-color:rgba(0,239,208,.55)}
-.brand-pill.is-active,.brand-pill[aria-pressed="true"]{color:#E7F1F5;box-shadow:inset 0 -2px 0 #00EFD0,0 0 0 1px rgba(0,239,208,.55);}
+.range-pill,
+.brand-pill{
+  background:transparent;
+  border:1px solid var(--brand-mint-a35);
+  color:var(--text-1);
+  border-radius:var(--radius-pill);
+  padding:8px 14px;
+  line-height:1;
+  font-weight:600;
+  letter-spacing:.01em;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:border-color .18s ease,box-shadow .18s ease,color .18s ease,background .18s ease;
+}
 
-.brand-btn--primary{background:var(--brand-mint-500);color:#0B1116;border-radius:12px;padding:10px 14px}
-.brand-btn--primary:hover{background:var(--brand-mint-600)}
+.range-pill:hover,
+.brand-pill:hover{color:var(--text-0);border-color:var(--brand-mint-a55)}
+
+.range-pill:focus-visible,
+.brand-pill:focus-visible{outline:2px solid var(--brand-mint-500);outline-offset:2px}
+
+.range-pill[aria-pressed="true"],
+.range-pill.is-active,
+.range-pill.active,
+.brand-pill[aria-pressed="true"],
+.brand-pill.is-active,
+.brand-pill.active{
+  color:var(--text-0);
+  box-shadow:inset 0 -2px 0 var(--brand-mint-500),0 0 0 1px var(--brand-mint-a55);
+}
+
+.dc .range-pill{padding:8px 16px}
+.lang-switch{display:flex;gap:12px;align-items:center}
+.lang-switch .range-pill{min-width:48px;text-transform:uppercase}
+
+.scenario-controls .range-pill{min-width:0}
+
+.range-pill[disabled]{opacity:.5;cursor:not-allowed}

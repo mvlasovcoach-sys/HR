@@ -1,0 +1,26 @@
+@import url("./brand.tokens.css?v=2025-10-26");
+
+.brand-btn--primary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:var(--brand-mint-500);
+  color:var(--ink-900);
+  border-radius:var(--radius-12);
+  padding:10px 14px;
+  border:none;
+  font-weight:600;
+  line-height:1.1;
+  text-decoration:none;
+  box-shadow:var(--elev-1);
+  transition:transform .06s ease,background .18s ease,box-shadow .18s ease;
+}
+
+.brand-btn--primary:hover{background:var(--brand-mint-600)}
+.brand-btn--primary:active{transform:translateY(1px)}
+.brand-btn--primary:disabled,
+.brand-btn--primary[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.brand-btn--primary:focus-visible{outline:2px solid var(--brand-mint-500);outline-offset:2px}
+
+.brand-btn--primary .btn__icon{font-size:1.1em}

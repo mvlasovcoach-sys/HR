@@ -81,8 +81,8 @@ body{
 .scenario-controls .btn.is-active,.scenario-controls .btn[aria-pressed="true"]{box-shadow:0 0 0 1px var(--cyan-700);background:rgba(33,226,194,.18);color:#fff;}
 
 .lang-switch{display:flex;gap:8px}
-.lang-switch button{padding:.35rem .7rem;border-radius:var(--radius-12);border:1px solid var(--border);background:rgba(14,30,39,.6);color:var(--txt);font-weight:600;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
-.lang-switch button.active{background:rgba(33,226,194,.18);border-color:var(--cyan-700);color:#fff}
+.lang-switch button{padding:0;border:none;background:transparent;color:inherit;font-weight:600;cursor:pointer;transition:none}
+.lang-switch button.active{background:transparent;border-color:transparent;color:inherit}
 
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 

@@ -1,0 +1,17 @@
+@import url("./brand.tokens.css?v=2025-10-26");
+
+.date-input{
+  height:40px;
+  padding:0 12px 0 14px;
+  color:var(--text-0);
+  background:transparent;
+  border:1px solid var(--brand-mint-a35);
+  border-radius:var(--radius-12);
+  font-weight:500;
+}
+
+.date-input::placeholder{color:var(--text-1);opacity:.75}
+
+.date-input:focus{outline:2px solid var(--brand-mint-500);outline-offset:2px}
+
+.date-input:disabled{opacity:.55;cursor:not-allowed}

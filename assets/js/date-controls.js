@@ -94,13 +94,13 @@
     const start = document.createElement('input');
     start.type = 'date';
     start.id = 'dc-start';
-    start.className = 'dc__input';
+    start.className = 'dc__input date-input';
     wrapper.appendChild(start);
 
     const end = document.createElement('input');
     end.type = 'date';
     end.id = 'dc-end';
-    end.className = 'dc__input';
+    end.className = 'dc__input date-input';
     wrapper.appendChild(end);
 
     [start, end].forEach(input => {
@@ -133,7 +133,10 @@
       const range = readRange();
       const preset = range && range.preset ? normalizePreset(range.preset) : null;
       presetButtons.forEach(button => {
-        button.classList.toggle('is-active', preset && button.dataset.preset === preset);
+        const isActive = Boolean(preset && button.dataset.preset === preset);
+        button.classList.toggle('is-active', isActive);
+        button.classList.remove('active');
+        button.setAttribute('aria-pressed', String(isActive));
       });
       if (range && range.start) start.value = range.start; else start.value = '';
       if (range && range.end) end.value = range.end; else end.value = '';
@@ -200,7 +203,8 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.preset = key;
-    button.className = 'dc__preset';
+    button.className = 'dc__preset range-pill';
+    button.setAttribute('aria-pressed', 'false');
     button.textContent = translateRange(key, key.toUpperCase());
     wrapper.appendChild(button);
     return button;
