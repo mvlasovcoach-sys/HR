@@ -1,4 +1,4 @@
-:root.brand-v1 {
+.brand-v1 {
   color-scheme: dark;
 
   --brand-font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

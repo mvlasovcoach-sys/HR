@@ -13,7 +13,8 @@ const IGNORED_DIRS = new Set([
   'assets/fonts',
   'tests/visual/__screenshots__'
 ]);
-const IGNORED_PATHS = ['assets/css', 'node_modules'];
+const IGNORED_PATH_PREFIXES = ['assets/css'];
+const IGNORED_PATH_SEGMENTS = new Set(['node_modules']);
 const IGNORED_FILES = new Set([
   path.join('shared', 'tokens.css')
 ]);
@@ -26,7 +27,10 @@ let violations = [];
 
 function shouldSkip(relPath) {
   const normalized = relPath.replace(/\\/g, '/');
-  return IGNORED_PATHS.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`));
+  if (IGNORED_PATH_PREFIXES.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+    return true;
+  }
+  return normalized.split('/').some(segment => IGNORED_PATH_SEGMENTS.has(segment));
 }
 
 function walk(dir){

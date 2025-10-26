@@ -7,6 +7,13 @@ on:
       - '**/*.html'
       - 'scripts/**'
       - '!assets/css/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'shared/**'
+      - '**/*.html'
+      - 'scripts/**'
+      - '!assets/css/**'
 
 jobs:
   lint-and-test:
