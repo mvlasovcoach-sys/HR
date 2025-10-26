@@ -431,8 +431,28 @@
 
       if (badgeValue !== null) {
         const badge = document.createElement('span');
-        badge.className = `tile__badge pill ${deltaValue >= 0 ? 'pill--strong' : 'pill--critical'}`;
-        badge.textContent = `${deltaValue >= 0 ? '▲' : '▼'} ${badgeLabel}`.trimEnd();
+        const trend = sparkTrend(deltaValue);
+        let toneClass = 'delta--same';
+        let badgeText = (window.I18N?.t?.('delta.noChange') || 'No change').toUpperCase();
+        if (trend === 'up') {
+          toneClass = 'delta--up';
+          badgeText = `▲ ${badgeLabel}`.trim();
+        } else if (trend === 'down') {
+          toneClass = 'delta--down';
+          badgeText = `▼ ${badgeLabel}`.trim();
+        }
+        badge.className = `tile__badge delta-chip ${toneClass}`;
+        badge.textContent = badgeText;
+        const ariaLabelParts = [];
+        const trendLabel = sparkTrendLabel(trend);
+        if (trendLabel) ariaLabelParts.push(trendLabel);
+        if (badgeLabel) {
+          const unitText = definition.unit === '/100' ? ' /100' : definition.unit;
+          ariaLabelParts.push(`${badgeLabel}${unitText}`.trim());
+        }
+        if (ariaLabelParts.length) {
+          badge.setAttribute('aria-label', ariaLabelParts.join(' '));
+        }
         head.appendChild(badge);
       }
 

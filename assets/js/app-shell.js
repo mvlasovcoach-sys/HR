@@ -26,9 +26,9 @@
     if (!host) return;
 
     host.innerHTML = `
-      <button class="pill" data-lang="en" id="btn-lang-en" type="button">EN</button>
-      <button class="pill" data-lang="nl" id="btn-lang-nl" type="button">NL</button>
-      <button class="pill" data-lang="ru" id="btn-lang-ru" type="button">RU</button>
+      <button class="pill range-pill lang-pill" data-lang="en" id="btn-lang-en" type="button">EN</button>
+      <button class="pill range-pill lang-pill" data-lang="nl" id="btn-lang-nl" type="button">NL</button>
+      <button class="pill range-pill lang-pill" data-lang="ru" id="btn-lang-ru" type="button">RU</button>
     `;
     host.setAttribute('role', 'group');
 
@@ -40,8 +40,10 @@
 
     const updateActive = (lang)=>{
       host.querySelectorAll('button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-        btn.setAttribute('aria-pressed', String(btn.dataset.lang === lang));
+        const isActive = btn.dataset.lang === lang;
+        btn.classList.toggle('is-active', isActive);
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', String(isActive));
       });
     };
 

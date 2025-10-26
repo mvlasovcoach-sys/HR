@@ -1,5 +1,45 @@
 :root{
+  /* Accent: mint */
   --brand-mint-500:#00EFD0;
   --brand-mint-600:#00CABB;
-  --brand-mint-a35:rgba(0,239,208,.35);
+  --brand-mint-500-rgb:0,239,208;
+  --brand-mint-a12:rgba(var(--brand-mint-500-rgb),.12);
+  --brand-mint-a18:rgba(var(--brand-mint-500-rgb),.18);
+  --brand-mint-a35:rgba(var(--brand-mint-500-rgb),.35);
+  --brand-mint-a55:rgba(var(--brand-mint-500-rgb),.55);
+
+  /* Status tones */
+  --brand-good:#1DB954;
+  --brand-good-rgb:29,185,84;
+  --brand-good-a18:rgba(var(--brand-good-rgb),.18);
+  --brand-good-a35:rgba(var(--brand-good-rgb),.35);
+  --brand-bad:#F23D5C;
+  --brand-bad-rgb:242,61,92;
+  --brand-bad-a18:rgba(var(--brand-bad-rgb),.18);
+  --brand-bad-a35:rgba(var(--brand-bad-rgb),.35);
+  --brand-info:#58A6FF;
+  --brand-info-rgb:88,166,255;
+  --brand-info-a18:rgba(var(--brand-info-rgb),.18);
+  --brand-info-a35:rgba(var(--brand-info-rgb),.35);
+
+  /* Text & lines */
+  --text-0:#E7F1F5;
+  --text-0-rgb:231,241,245;
+  --text-1:#AAC0CB;
+  --text-1-rgb:170,192,203;
+  --ink-900:#0B1116;
+  --line-a20:rgba(var(--text-0-rgb),.20);
+
+  /* Surfaces & shadows */
+  --surface-popover:rgba(7,19,28,.94);
+  --surface-chip:rgba(var(--text-0-rgb),.10);
+  --shadow-soft:0 18px 46px rgba(5,19,27,.42);
+  --shadow-soft-strong:0 24px 56px rgba(5,19,27,.52);
+  --spark-glow:drop-shadow(0 3px 8px rgba(var(--brand-mint-500-rgb),.35));
+
+  /* Radii & elevation */
+  --radius-pill:999px;
+  --radius-12:12px;
+  --radius-16:16px;
+  --elev-1:0 1px 2px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.04);
 }

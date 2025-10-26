@@ -5,9 +5,9 @@
 .team-filter__select{background:rgba(11,31,41,.5);border:1px solid var(--stroke);color:var(--txt);border-radius:10px;padding:8px 12px;min-width:160px}
 .team-filter__select:focus-visible{outline:2px solid var(--cyan);box-shadow:none}
 .dc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.dc button{padding:8px 12px;border:1px solid var(--stroke);background:rgba(11,31,41,.5);color:var(--txt);border-radius:10px;cursor:pointer;transition:box-shadow .2s,background .2s}
-.dc button.is-active{box-shadow:0 0 12px rgba(39,224,255,.2) inset;background:rgba(11,31,41,.7)}
-.dc input[type="date"]{background:rgba(11,31,41,.5);border:1px solid var(--stroke);color:var(--txt);padding:8px 10px;border-radius:10px;min-width:160px}
+.dc button{padding:0;border:none;background:transparent;color:inherit;cursor:pointer;transition:none}
+.dc button.is-active{box-shadow:none;background:transparent}
+.dc input[type="date"]{background:transparent;border:none;color:var(--txt);padding:0;min-width:160px}
 .dc__sep{width:8px;height:1px}
 .dc__compare{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.9rem}
 .dc__compare-input{width:16px;height:16px}

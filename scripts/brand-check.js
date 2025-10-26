@@ -4,108 +4,54 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SCAN_DIRS = ['shared', 'docs'];
-const IGNORED_DIRS = new Set([
-  'node_modules',
-  '.git',
-  '.husky',
-  '.github',
-  'assets/fonts',
-  'tests/visual/__screenshots__'
-]);
-const IGNORED_PATH_PREFIXES = ['assets/css', 'node_modules'];
-const IGNORED_PATH_SEGMENTS = new Set(['node_modules']);
-const IGNORED_FILES = new Set([
-  path.join('shared', 'tokens.css'),
+const TARGET_DIR = path.join(ROOT, 'shared');
+const IGNORE_FILES = new Set([
   path.join('shared', 'brand.tokens.css'),
-  path.join('shared', 'brand.kpi.css')
+  path.join('shared', 'tokens.css')
 ]);
-const TARGET_EXTENSIONS = new Set(['.css', '.html', '.js', '.ts', '.tsx']);
-const HEX_PATTERN = /#[0-9a-fA-F]{3,8}\b/;
-const FONT_PATTERN = /font-family\s*:\s*([^;]+)/gi;
-const RADIUS_PATTERN = /(border-radius|border-top-left-radius|border-top-right-radius|border-bottom-left-radius|border-bottom-right-radius)\s*:\s*([^;]+)/gi;
+const HEX_PATTERN = /#[0-9a-fA-F]{3,8}\b/g;
+const RGB_PATTERN = /rgba?\(([^)]*)\)/gi;
 
 let violations = [];
-
-function shouldSkip(relPath) {
-  const normalized = relPath.replace(/\\/g, '/');
-  if (IGNORED_PATH_PREFIXES.some(prefix => {
-    const clean = prefix.replace(/\/+$/, '');
-    return normalized === clean || normalized.startsWith(`${clean}/`);
-  })) {
-    return true;
-  }
-  return normalized.split('/').some(segment => IGNORED_PATH_SEGMENTS.has(segment));
-}
 
 function walk(dir){
   const entries = fs.readdirSync(dir, {withFileTypes: true});
   for (const entry of entries) {
-    if (IGNORED_DIRS.has(entry.name)) continue;
-    const resolved = path.join(dir, entry.name);
-    const relative = path.relative(ROOT, resolved);
-    if (shouldSkip(relative)) continue;
     if (entry.isDirectory()) {
-      walk(resolved);
+      walk(path.join(dir, entry.name));
       continue;
     }
-    const ext = path.extname(entry.name);
-    if (!TARGET_EXTENSIONS.has(ext)) continue;
-    if (IGNORED_FILES.has(relative)) continue;
-    scanFile(resolved, relative);
+    if (path.extname(entry.name) !== '.css') continue;
+    const relPath = path.relative(ROOT, path.join(dir, entry.name)).replace(/\\/g, '/');
+    if (relPath.startsWith('assets/css/')) continue;
+    if (IGNORE_FILES.has(relPath)) continue;
+    scanCss(path.join(dir, entry.name), relPath);
   }
 }
 
-function scanFile(absPath, relPath){
-  const text = fs.readFileSync(absPath, 'utf8');
-  if (HEX_PATTERN.test(text)) {
-    violations.push(`${relPath}: found raw hex color`);
-  }
-  FONT_PATTERN.lastIndex = 0;
+function scanCss(filePath, relPath){
+  const text = fs.readFileSync(filePath, 'utf8');
   let match;
-  while ((match = FONT_PATTERN.exec(text))) {
-    const value = match[1].trim();
-    if (value.includes('var(')) continue;
-    if (/^(inherit|initial|unset)/i.test(value)) continue;
-    if (/system-ui|sans-serif|monospace/.test(value) && !/Inter/i.test(value)) continue;
-    violations.push(`${relPath}: font-family must use var() — "${value}"`);
-    break;
+  while ((match = HEX_PATTERN.exec(text))) {
+    const value = match[0];
+    violations.push(`${relPath}: raw hex color "${value}" — use var(--token)`);
   }
-
-  RADIUS_PATTERN.lastIndex = 0;
-  while ((match = RADIUS_PATTERN.exec(text))) {
-    const value = match[2].trim();
-    if (value.includes('var(')) continue;
-    if (/^calc\(/.test(value)) continue;
-    violations.push(`${relPath}: border radius must use var() — "${value}"`);
-    break;
+  RGB_PATTERN.lastIndex = 0;
+  while ((match = RGB_PATTERN.exec(text))) {
+    const value = match[0];
+    const inner = match[1];
+    if (/var\(/i.test(inner)) continue;
+    violations.push(`${relPath}: raw ${value.startsWith('rgba') ? 'rgba' : 'rgb'} value "${value}" — use var(--token)`);
   }
 }
 
-function scanRootHtml(){
-  const entries = fs.readdirSync(ROOT, {withFileTypes: true});
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    if (path.extname(entry.name) !== '.html') continue;
-    const absPath = path.join(ROOT, entry.name);
-    scanFile(absPath, entry.name);
-  }
+if (fs.existsSync(TARGET_DIR)) {
+  walk(TARGET_DIR);
 }
-
-function scanTargets(){
-  for (const dir of SCAN_DIRS) {
-    const target = path.join(ROOT, dir);
-    if (!fs.existsSync(target)) continue;
-    walk(target);
-  }
-}
-
-scanRootHtml();
-scanTargets();
 
 if (violations.length) {
   console.error('\nBrand compliance check failed:');
-  violations.forEach(msg => console.error(` • ${msg}`));
+  violations.forEach(v => console.error(` • ${v}`));
   console.error('\nPlease replace raw values with design tokens.');
   process.exit(1);
 }

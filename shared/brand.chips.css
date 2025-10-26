@@ -1,0 +1,23 @@
+@import url("./brand.tokens.css?v=2025-10-26");
+
+.delta-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:var(--radius-pill);
+  font-size:12px;
+  line-height:16px;
+  font-weight:600;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--text-0);
+  background:var(--surface-chip);
+  border:1px solid var(--line-a20);
+}
+
+.delta-chip svg{width:14px;height:14px}
+
+.delta--up{background:var(--brand-good-a18);border:1px solid var(--brand-good-a35);color:var(--text-0)}
+.delta--down{background:var(--brand-bad-a18);border:1px solid var(--brand-bad-a35);color:var(--text-0)}
+.delta--same{background:var(--surface-chip);border:1px solid var(--line-a20);color:var(--text-1)}

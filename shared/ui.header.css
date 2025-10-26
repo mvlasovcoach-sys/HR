@@ -1,3 +1,5 @@
+@import url("./brand.tokens.css?v=2025-10-26");
+
 /* Контейнер шапки страницы: заголовок, затем контролы */
 .page-header{
   display:flex;
@@ -30,12 +32,23 @@
 
 /* Иконка i */
 .info-dot{
-  width:28px;height:28px;border-radius:999px;display:grid;place-items:center;
-  border:1px solid rgba(0,239,208,.35);
-  background:transparent;color:#E7F1F5;
+  width:28px;
+  height:28px;
+  border-radius:var(--radius-pill);
+  display:grid;
+  place-items:center;
+  border:1px solid var(--brand-mint-a35);
+  background:transparent;
+  color:var(--text-0);
+  font-weight:700;
+  transition:border-color .18s ease,box-shadow .18s ease,color .18s ease;
 }
-.info-dot:hover{ box-shadow:0 0 0 1px rgba(0,239,208,.55) inset }
-.info-dot:focus-visible{ outline:2px solid #00EFD0; outline-offset:2px }
+
+.info-dot:hover{color:var(--text-0);border-color:var(--brand-mint-a55)}
+
+.info-dot:focus-visible{outline:2px solid var(--brand-mint-500);outline-offset:2px}
+
+.info-dot[aria-expanded="true"]{box-shadow:inset 0 -2px 0 var(--brand-mint-500),0 0 0 1px var(--brand-mint-a55)}
 
 /* Вторая строка: все контролы (tabs, даты, compare, языки) */
 .header-controls{
@@ -46,21 +59,39 @@
   gap:12px;
 }
 
-/* Мелкие правки, чтобы таблетки не «прыгали» в строке */
-.header-controls .range-pills{ display:flex; gap:12px; flex-wrap:wrap }
-.header-controls .range-pill{
-  background:transparent;
-  border:1px solid rgba(0,239,208,.35);
-  color:#AAC0CB;
-  border-radius:999px;
-  padding:8px 14px;
+.header-controls .range-pills{display:flex;gap:12px;flex-wrap:wrap}
+
+/* Help popover */
+.help-popover{
+  position:absolute;
+  min-width:240px;
+  max-width:min(320px,calc(100vw - 32px));
+  background:var(--surface-popover);
+  color:var(--text-0);
+  border:1px solid var(--brand-mint-a35);
+  border-radius:var(--radius-16);
+  box-shadow:var(--shadow-soft);
+  padding:16px;
+  z-index:90;
 }
-.header-controls .range-pill[aria-pressed="true"], .header-controls .range-pill.is-active{
-  color:#E7F1F5;
-  box-shadow: inset 0 -2px 0 #00EFD0, 0 0 0 1px rgba(0,239,208,.55);
+
+.help-popover__title{
+  margin:0 0 8px;
+  font-size:14px;
+  line-height:20px;
+  font-weight:700;
+  letter-spacing:.01em;
+  color:var(--text-0);
 }
+
+.help-popover__body{margin:0;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.5;color:var(--text-1)}
+
+.help-popover__body p{margin:0;color:var(--text-0)}
+.help-popover__body ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;color:var(--text-0)}
+
+.help-popover__close{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;gap:6px}
 
 /* Адаптив: на узких экранах растянуть контролы на всю ширину */
 @media (max-width: 900px){
-  .header-controls{ gap:10px }
+  .header-controls{gap:10px}
 }
