@@ -1,12 +1,5 @@
-:root {
-  --brand-mint-500: #00EFD0;
-  --brand-mint-600: #00CABB;
-  --brand-mint-alpha-35: rgba(0, 239, 208, .35);
-  --brand-mint-alpha-55: rgba(0, 239, 208, .55);
-  --brand-ink-900: #0B1116;
-  --brand-radius-pill: 999px;
-  --brand-radius-button: 12px;
-  --font-family-base: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --text-0: #E7F1F5;
-  --text-1: #AAC0CB;
+:root{
+  --brand-mint-500:#00EFD0;
+  --brand-mint-600:#00CABB;
+  --brand-mint-a35:rgba(0,239,208,.35);
 }
