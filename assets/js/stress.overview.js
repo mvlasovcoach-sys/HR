@@ -544,7 +544,8 @@ async function ensureIndex() {
 
 async function resolveDataForRange(range, iso, index) {
   if (range === 'day') {
-    const direct = await loadDayData(iso);
+    const canLoadDirect = hasIndexedDate(index, iso);
+    const direct = canLoadDirect ? await loadDayData(iso) : null;
     if (direct) {
       showInfo();
       return presentDay(direct, range);
@@ -926,6 +927,12 @@ async function aggregateYear(iso, index) {
 function normalisedDates(index) {
   if (!index || !Array.isArray(index.dates)) return [];
   return index.dates.slice();
+}
+
+function hasIndexedDate(index, iso) {
+  if (!iso) return false;
+  const target = iso.slice(0, 10);
+  return normalisedDates(index).some(date => date === target);
 }
 
 function bootstrap() {
