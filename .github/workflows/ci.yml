@@ -27,7 +27,6 @@ jobs:
         run: |
           npm ci
           npm run brand-check
-        continue-on-error: true
       - name: Stylelint
         run: npm run lint:css
       - name: HTMLHint

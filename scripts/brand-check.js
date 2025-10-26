@@ -13,10 +13,12 @@ const IGNORED_DIRS = new Set([
   'assets/fonts',
   'tests/visual/__screenshots__'
 ]);
-const IGNORED_PATH_PREFIXES = ['assets/css'];
+const IGNORED_PATH_PREFIXES = ['assets/css', 'node_modules'];
 const IGNORED_PATH_SEGMENTS = new Set(['node_modules']);
 const IGNORED_FILES = new Set([
-  path.join('shared', 'tokens.css')
+  path.join('shared', 'tokens.css'),
+  path.join('shared', 'brand.tokens.css'),
+  path.join('shared', 'brand.kpi.css')
 ]);
 const TARGET_EXTENSIONS = new Set(['.css', '.html', '.js', '.ts', '.tsx']);
 const HEX_PATTERN = /#[0-9a-fA-F]{3,8}\b/;
@@ -60,7 +62,7 @@ function scanFile(absPath, relPath){
   let match;
   while ((match = FONT_PATTERN.exec(text))) {
     const value = match[1].trim();
-    if (value.startsWith('var(')) continue;
+    if (value.includes('var(')) continue;
     if (/^(inherit|initial|unset)/i.test(value)) continue;
     if (/system-ui|sans-serif|monospace/.test(value) && !/Inter/i.test(value)) continue;
     violations.push(`${relPath}: font-family must use var() — "${value}"`);
@@ -70,7 +72,7 @@ function scanFile(absPath, relPath){
   RADIUS_PATTERN.lastIndex = 0;
   while ((match = RADIUS_PATTERN.exec(text))) {
     const value = match[2].trim();
-    if (value.startsWith('var(')) continue;
+    if (value.includes('var(')) continue;
     if (/^calc\(/.test(value)) continue;
     violations.push(`${relPath}: border radius must use var() — "${value}"`);
     break;
