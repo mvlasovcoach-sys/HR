@@ -1,0 +1,9 @@
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.titlebar .left{display:flex;align-items:center;gap:12px}
+.titlebar .right{display:flex;align-items:center;gap:16px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.info-dot{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;
+  border:1px solid rgba(0,239,208,.35);color:#E7F1F5;background:transparent;
+  font:inherit;line-height:1;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,color .18s ease}
+.info-dot:hover{box-shadow:0 0 0 1px rgba(0,239,208,.55) inset}
+.info-dot:focus-visible{outline:2px solid #00EFD0;outline-offset:2px}
+.info-dot:disabled{opacity:.6;cursor:not-allowed}

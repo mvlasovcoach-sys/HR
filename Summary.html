@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="./shared/brand.tokens.css">
 <link rel="stylesheet" href="./shared/brand.pills.css">
 <link rel="stylesheet" href="./shared/brand.kpi.css">
+<link rel="stylesheet" href="./shared/ui.titlebar.css">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
@@ -40,24 +41,26 @@
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
     <div id="app-topbar" class="card card--topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.summary">Summary</h1>
-            <button id="btn-legend" class="header__icon" type="button"
-              aria-haspopup="dialog" aria-expanded="false"
-              data-i18n="ui.legend" data-i18n-attr="aria-label,title">i</button>
-          </div>
+      <div class="titlebar">
+        <div class="left">
+          <h1 class="page-title header__title" data-i18n="header.summary">Summary</h1>
+          <button id="btn-legend" class="info-dot" type="button"
+            aria-haspopup="dialog" aria-expanded="false"
+            data-help="summary"
+            data-i18n="ui.legend" data-i18n-attr="aria-label,title">i</button>
+        </div>
+        <div class="right">
           <div class="toolbar__filters">
             <div id="team-filter" class="toolbar__filter"></div>
             <div id="date-controls" class="toolbar__filter"></div>
           </div>
+          <div class="topbar-right">
+            <div id="lang-switch" class="lang-switch"></div>
+            <button class="info-dot" type="button" data-about-open
+              data-help="about"
+              data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+          </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
       </div>
     </div>
     <section class="card card--context" aria-live="polite">
@@ -78,7 +81,7 @@
       <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
     </section>
     <section class="card card--kpi" aria-live="polite">
-      <div id="summary-kpi-primary" class="kpi-grid num" aria-live="polite"></div>
+      <div id="kpi-grid" class="kpi-grid num" aria-live="polite"></div>
     </section>
     <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>

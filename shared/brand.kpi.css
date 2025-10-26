@@ -1,4 +1,4 @@
-#summary-kpi-primary {
+#kpi-grid {
   display: grid;
   gap: 24px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -6,11 +6,11 @@
   margin: 0;
 }
 
-#summary-kpi-primary.is-skeleton {
+#kpi-grid.is-skeleton {
   opacity: 0.72;
 }
 
-#summary-kpi-primary .kpi--brand {
+#kpi-grid .kpi--brand {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -26,14 +26,14 @@
   min-height: 176px;
 }
 
-#summary-kpi-primary .kpi--brand:hover,
-#summary-kpi-primary .kpi--brand:focus-visible {
+#kpi-grid .kpi--brand:hover,
+#kpi-grid .kpi--brand:focus-visible {
   transform: translateY(-4px);
   box-shadow: 0 24px 56px rgba(5, 19, 27, 0.52);
   outline: none;
 }
 
-#summary-kpi-primary .kpi--brand .tile__head {
+#kpi-grid .kpi--brand .tile__head {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -46,7 +46,7 @@
   color: var(--text-1, #AAC0CB);
 }
 
-#summary-kpi-primary .kpi--brand .tile__badge {
+#kpi-grid .kpi--brand .tile__badge {
   margin-left: auto;
   padding: 2px 10px;
   border-radius: 999px;
@@ -62,21 +62,21 @@
   gap: 4px;
 }
 
-#summary-kpi-primary .kpi--brand .tile__badge.pill--strong {
+#kpi-grid .kpi--brand .tile__badge.pill--strong {
   background: rgba(0, 239, 208, 0.24);
   color: #05131B;
 }
 
-#summary-kpi-primary .kpi--brand .tile__badge.pill--critical {
+#kpi-grid .kpi--brand .tile__badge.pill--critical {
   background: rgba(255, 111, 111, 0.24);
   color: #FFE6E6;
 }
 
-#summary-kpi-primary .kpi--brand .tile__badge.pill--neutral {
+#kpi-grid .kpi--brand .tile__badge.pill--neutral {
   background: rgba(169, 208, 255, 0.22);
 }
 
-#summary-kpi-primary .kpi--brand .tile__kpi {
+#kpi-grid .kpi--brand .tile__kpi {
   font-size: 32px;
   line-height: 40px;
   font-weight: 600;
@@ -86,7 +86,7 @@
   color: var(--text-0, #E7F1F5);
 }
 
-#summary-kpi-primary .kpi--brand .tile__kpi small {
+#kpi-grid .kpi--brand .tile__kpi small {
   font-size: 16px;
   line-height: 20px;
   font-weight: 500;
@@ -94,7 +94,7 @@
   margin-left: 0;
 }
 
-#summary-kpi-primary .kpi--brand .spark {
+#kpi-grid .kpi--brand .spark {
   position: relative;
   height: 48px;
   display: flex;
@@ -102,39 +102,39 @@
   color: var(--brand-mint-500, #00EFD0);
 }
 
-#summary-kpi-primary .kpi--brand .spark svg {
+#kpi-grid .kpi--brand .spark svg {
   width: 100%;
   height: 100%;
 }
 
-#summary-kpi-primary .kpi--brand .spark svg path {
+#kpi-grid .kpi--brand .spark svg path {
   stroke-linecap: round;
   filter: drop-shadow(0 3px 8px rgba(0, 239, 208, 0.35));
 }
 
-#summary-kpi-primary .kpi--brand.tile--skeleton {
+#kpi-grid .kpi--brand.tile--skeleton {
   background: rgba(231, 241, 245, 0.06);
   border-style: dashed;
   box-shadow: none;
   cursor: default;
 }
 
-#summary-kpi-primary .kpi--brand.tile--skeleton .skeleton {
+#kpi-grid .kpi--brand.tile--skeleton .skeleton {
   background: rgba(231, 241, 245, 0.16);
 }
 
 @media (max-width: 720px) {
-  #summary-kpi-primary {
+  #kpi-grid {
     gap: 16px;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
-  #summary-kpi-primary .kpi--brand {
+  #kpi-grid .kpi--brand {
     padding: 18px;
     min-height: 160px;
   }
 
-  #summary-kpi-primary .kpi--brand .tile__kpi {
+  #kpi-grid .kpi--brand .tile__kpi {
     font-size: 28px;
     line-height: 36px;
   }

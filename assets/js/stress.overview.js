@@ -180,6 +180,7 @@ function markActive(range) {
     el.classList.toggle('is-active', on);
     el.setAttribute('aria-selected', String(on));
     el.setAttribute('tabindex', on ? '0' : '-1');
+    el.setAttribute('aria-pressed', String(on));
   });
 }
 

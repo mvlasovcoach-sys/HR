@@ -33,9 +33,7 @@
   }
   console.info('Summary init');
   const TILE_COUNT = 4;
-  const KPI_PRIMARY_ID = 'summary-kpi-primary';
-  const SHOW_SUMMARY_SECOND_ROW = false;
-  window.SHOW_SUMMARY_SECOND_ROW = SHOW_SUMMARY_SECOND_ROW;
+  const KPI_PRIMARY_ID = 'kpi-grid';
 
   const SUMMARY = window.SUMMARY = window.SUMMARY || {};
   const RANGE = window.RANGE = window.RANGE || {};
@@ -46,6 +44,8 @@
     rangeStart: null,
     rangeEnd: null
   };
+
+  let rendering = false;
 
 
   function ensureDate(value){
@@ -99,57 +99,18 @@
   SUMMARY.setDemoState = setDemoState;
   SUMMARY.clearDemo = () => setScenario('live');
 
-  function pruneKpiFooters(scope){
-    const root = scope || document;
-    root.querySelectorAll('.kpi-card .kpi-footer, .kpi-card .kpi-meta, .kpi-footer, .kpi-meta').forEach(node => {
-      if (node && node.parentNode) {
-        node.remove();
-      }
-    });
-  }
-
-  function removeDuplicateKpiRows(){
-    const primary = document.getElementById(KPI_PRIMARY_ID);
-    if (window.SHOW_SUMMARY_SECOND_ROW) {
-      pruneKpiFooters(primary || document);
-      return;
-    }
-    const grids = Array.from(document.querySelectorAll('.kpi-grid'));
-    if (primary) {
-      grids.forEach(grid => {
-        if (grid === primary) return;
-        if (grid.closest(`#${KPI_PRIMARY_ID}`)) return;
-        grid.remove();
-      });
-    }
-
-    const host = primary || document;
-    const cards = Array.from(host.querySelectorAll('.kpi-card, .kpi-tile, .kpi.kpi--brand'));
-    if (cards.length > TILE_COUNT) {
-      cards.slice(TILE_COUNT).forEach(card => card.remove());
-    }
-
-    pruneKpiFooters(primary || document);
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
     applyScenarioFromUrl();
     bindTileNavigation();
     bindScenarioControls();
     applyRangeSelection(readRange());
 
-    removeDuplicateKpiRows();
-    if (typeof MutationObserver === 'function' && document?.body) {
-      const mo = new MutationObserver(() => removeDuplicateKpiRows());
-      mo.observe(document.body, {childList: true, subtree: true});
-    }
-
     const start = () => {
       updateLegendButtonLabel();
       updateOrgBadge();
       setPeriodAndAsOf(selectionState);
       renderSkeleton();
-      loadAndRender();
+      initPage();
     };
 
     if (window.I18N?.onReady) {
@@ -166,7 +127,7 @@
         }
         renderSkeleton();
         if (evt.key === 'hr:scenario') updateScenarioButtons();
-        loadAndRender();
+        initPage();
       }
     });
 
@@ -176,7 +137,7 @@
       updateScenarioButtons();
       setPeriodAndAsOf(selectionState);
       if (!runtime.loading) {
-        loadAndRender();
+        initPage();
       }
     };
 
@@ -226,7 +187,7 @@
     }
     updateScenarioButtons();
     renderSkeleton();
-    loadAndRender();
+    initPage();
   }
 
   function readScenario(){
@@ -340,22 +301,36 @@
   }
 
   function renderSkeleton(){
-    const grid = document.getElementById(KPI_PRIMARY_ID);
-    if (!grid) return;
-    grid.classList.add('is-skeleton');
-    grid.setAttribute('aria-busy', 'true');
-    const skeleton = [];
+    const host = document.getElementById(KPI_PRIMARY_ID);
+    if (!host) return;
+    host.classList.add('is-skeleton');
+    host.setAttribute('aria-busy', 'true');
+    const fragment = document.createDocumentFragment();
     for (let i = 0; i < TILE_COUNT; i++) {
-      skeleton.push(`<div class="tile tile--skeleton tile--compact kpi kpi--brand" aria-hidden="true">
+      const tile = document.createElement('div');
+      tile.className = 'tile tile--skeleton tile--compact kpi kpi--brand';
+      tile.setAttribute('aria-hidden', 'true');
+      tile.innerHTML = `
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
-        <div class="tile__value tile__value--skeleton"><span class="skeleton skeleton--value"></span></div>
+        <div class="tile__kpi tile__value tile__value--skeleton num"><span class="skeleton skeleton--value"></span></div>
         <div class="tile__spark tile__spark--skeleton"><span class="skeleton skeleton--spark"></span></div>
-      </div>`);
+      `;
+      fragment.appendChild(tile);
     }
-    grid.innerHTML = skeleton.join('');
+    host.replaceChildren(fragment);
   }
 
-  async function loadAndRender(){
+  async function initPage(){
+    if (rendering) return;
+    rendering = true;
+    try {
+      await render();
+    } finally {
+      rendering = false;
+    }
+  }
+
+  async function render(){
     runtime.loading = true;
     if (document?.body) {
       document.body.classList.add('is-loading');
@@ -363,27 +338,26 @@
     const range = readRange();
     RANGE.current = range;
     applyRangeSelection(range);
-    const grid = document.getElementById(KPI_PRIMARY_ID);
-    if (!grid) {
+    const host = document.getElementById(KPI_PRIMARY_ID);
+    if (!host) {
       runtime.loading = false;
       if (document?.body) {
         document.body.classList.remove('is-loading');
       }
       return;
     }
-    try{
+    try {
       const key = getRangeKey(range);
       const [metrics, trend] = await Promise.all([
         fetchData(`./data/org/metrics_${key}.json`, {range}),
         fetchData('./data/org/metrics_7d.json')
       ]);
       updateRangeMetadata(metrics);
-      renderKpis(metrics, trend);
-      removeDuplicateKpiRows();
-    }catch(err){
+      renderKpis(host, metrics, trend);
+    } catch (err) {
       console.error('Summary metrics failed', err);
-      grid.innerHTML = '';
-      clearLoadingState(grid);
+      host.replaceChildren();
+      clearLoadingState(host);
       runtime.rangeStart = runtime.rangeEnd = null;
       setPeriodAndAsOf(selectionState);
       toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
@@ -407,57 +381,112 @@
     node.removeAttribute('aria-busy');
   }
 
-  function renderKpis(metrics, trend){
-    const grid = document.getElementById(KPI_PRIMARY_ID);
-    if(!grid) return;
-    clearLoadingState(grid);
+  function renderKpis(host, metrics, trend){
+    if (!host) return;
+    clearLoadingState(host);
+    host.replaceChildren();
+
     const kpi = metrics?.kpi || {};
     const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
     const lang = window.I18N?.getLang?.() || 'en';
     const numberFmt = new Intl.NumberFormat(lang, {maximumFractionDigits: 0});
-    grid.innerHTML = '';
-    if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, grid)) {
+
+    if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, host)) {
       return;
     }
     if (!Number.isFinite(nValue)) {
-      grid.removeAttribute('data-guard');
+      host.removeAttribute('data-guard');
     }
 
     const sparkSeries = buildSparkSeries(trend?.heatmap);
-
     const defs = [
-      { key:'wellbeing_avg',         label:()=>window.I18N?.t('kpi.orgWellbeing') || window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',     unit:'/100', fmt:v=>Math.round(v) },
-      { key:'high_stress_pct',       label:()=>window.I18N?.t('kpi.highStress') || window.I18N?.t('metric.highStress') || 'High Stress %',   unit:'%',    fmt:v=>Math.round(v) },
-      { key:'fatigue_elevated_pct',  label:()=>window.I18N?.t('kpi.elevatedFatigue') || window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue %',  unit:'%',    fmt:v=>Math.round(v) },
-      { key:'engagement_active_pct', label:()=>window.I18N?.t('kpi.activeEngagement') || window.I18N?.t('metric.activeEngagement') || 'Active Engagement %', unit:'%',    fmt:v=>Math.round(v) }
+      { key: 'wellbeing_avg',         label: () => window.I18N?.t('kpi.orgWellbeing') || window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',        unit: '/100', fmt: v => Math.round(v) },
+      { key: 'high_stress_pct',       label: () => window.I18N?.t('kpi.highStress') || window.I18N?.t('metric.highStress') || 'High Stress %',      unit: '%',    fmt: v => Math.round(v) },
+      { key: 'fatigue_elevated_pct',  label: () => window.I18N?.t('kpi.elevatedFatigue') || window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue %', unit: '%',    fmt: v => Math.round(v) },
+      { key: 'engagement_active_pct', label: () => window.I18N?.t('kpi.activeEngagement') || window.I18N?.t('metric.activeEngagement') || 'Active Engagement %', unit: '%',    fmt: v => Math.round(v) }
     ];
 
-    grid.innerHTML = defs.map((d, index)=>{
-      const raw = Number(kpi?.[d.key]);
-      const formattedValue = Number.isFinite(raw) ? d.fmt(raw) : null;
-      const val = formattedValue != null ? numberFmt.format(formattedValue) : '—';
-      const dRaw = Number(delta?.[d.key]);
-      const del  = Number.isFinite(dRaw) ? dRaw : null;
-      const badgeValue = del !== null ? Math.abs(Math.round(del)) : null;
+    const fragment = document.createDocumentFragment();
+    defs.forEach((definition, index) => {
+      const raw = Number(kpi?.[definition.key]);
+      const formattedValue = Number.isFinite(raw) ? definition.fmt(raw) : null;
+      const valueText = formattedValue != null ? numberFmt.format(formattedValue) : '—';
+      const deltaRaw = Number(delta?.[definition.key]);
+      const deltaValue = Number.isFinite(deltaRaw) ? deltaRaw : null;
+      const badgeValue = deltaValue !== null ? Math.abs(Math.round(deltaValue)) : null;
       const badgeLabel = badgeValue !== null ? numberFmt.format(badgeValue) : '';
-      const badge = del!==null ? `<span class="tile__badge pill ${del>=0?'pill--strong':'pill--critical'}">${del>=0?'▲':'▼'} ${badgeLabel}</span>`:'';
-      const sparkInfo = buildSparkMeta(del);
+      const sparkInfo = buildSparkMeta(deltaValue);
       const sparkGraphic = sparkline(sparkSeries);
-      let sparkMarkup;
-      if (sparkInfo) {
-        const tooltip = escapeHtml(sparkInfo.tooltip);
-        const aria = escapeHtml(sparkInfo.aria);
-        sparkMarkup = `<div class="tile__spark spark" role="img" tabindex="0" aria-label="${aria}" title="${tooltip}" data-tooltip="${tooltip}">${sparkGraphic}${tooltip ? `<div class=\"spark-tooltip\">${tooltip}</div>` : ''}</div>`;
-      } else {
-        sparkMarkup = `<div class="tile__spark spark" aria-hidden="true">${sparkGraphic}</div>`;
+
+      const tile = document.createElement('div');
+      tile.className = 'tile tile--interactive tile--compact kpi kpi--brand';
+      tile.dataset.index = String(index);
+
+      const head = document.createElement('div');
+      head.className = 'tile__head';
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = definition.label();
+      head.appendChild(labelSpan);
+
+      if (badgeValue !== null) {
+        const badge = document.createElement('span');
+        badge.className = `tile__badge pill ${deltaValue >= 0 ? 'pill--strong' : 'pill--critical'}`;
+        badge.textContent = `${deltaValue >= 0 ? '▲' : '▼'} ${badgeLabel}`.trimEnd();
+        head.appendChild(badge);
       }
-      return `<div class="tile tile--interactive tile--compact kpi kpi--brand" data-index="${index}">
-        <div class="tile__head">${d.label()} ${badge}</div>
-        <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>
-        ${sparkMarkup}
-      </div>`;
-    }).join('');
+
+      tile.appendChild(head);
+
+      const value = document.createElement('div');
+      value.className = 'tile__kpi tile__value num';
+      value.appendChild(document.createTextNode(valueText));
+      const unit = document.createElement('small');
+      unit.textContent = definition.unit;
+      value.appendChild(unit);
+      tile.appendChild(value);
+
+      const spark = document.createElement('div');
+      spark.className = 'tile__spark spark';
+      if (sparkInfo) {
+        if (sparkInfo.aria) {
+          spark.setAttribute('aria-label', sparkInfo.aria);
+        }
+        if (sparkInfo.tooltip) {
+          spark.title = sparkInfo.tooltip;
+          spark.dataset.tooltip = sparkInfo.tooltip;
+        }
+        spark.setAttribute('role', 'img');
+        spark.tabIndex = 0;
+      } else {
+        spark.setAttribute('aria-hidden', 'true');
+      }
+
+      const graphicNode = createNodeFromMarkup(sparkGraphic);
+      if (graphicNode) {
+        spark.appendChild(graphicNode);
+      }
+      if (sparkInfo?.tooltip) {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'spark-tooltip';
+        tooltip.textContent = sparkInfo.tooltip;
+        spark.appendChild(tooltip);
+      }
+
+      tile.appendChild(spark);
+      fragment.appendChild(tile);
+    });
+
+    host.appendChild(fragment);
+  }
+
+  function createNodeFromMarkup(markup){
+    if (typeof markup !== 'string') return null;
+    const trimmed = markup.trim();
+    if (!trimmed) return null;
+    const template = document.createElement('template');
+    template.innerHTML = trimmed;
+    return template.content.firstElementChild;
   }
 
   function buildSparkSeries(heatmap){
@@ -521,16 +550,6 @@
     const tooltip = window.I18N?.t('spark.delta', {delta: deltaText}) || `${deltaText} vs last period`;
     const aria = `${trendLabel}. ${tooltip}`.trim();
     return {trendLabel, deltaText, tooltip, aria};
-  }
-
-  function escapeHtml(value){
-    return String(value ?? '').replace(/[&<>"']/g, char => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[char] || char);
   }
 
   function sparkline(values){
