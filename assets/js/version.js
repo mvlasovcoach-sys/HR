@@ -1,11 +1,22 @@
 (async function(){
+  const loaderGlobals = window.loaderGlobals || {};
+  const fetchJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`version fetch failed: ${response.status}`);
+        return response.json();
+      };
+  const withVersion = typeof loaderGlobals.withV === 'function'
+    ? loaderGlobals.withV
+    : value => value;
+
   let version = '';
   try {
-    const response = await fetch(`./data/version.json?ts=${Date.now()}`);
-    if (!response.ok) {
-      throw new Error('version fetch failed');
-    }
-    const payload = await response.json();
+    const url = new URL('./data/version.json', document.baseURI);
+    url.searchParams.set('ts', Date.now().toString());
+    const payload = await fetchJson(withVersion(url.toString()));
     version = payload?.v || '';
   } catch (err) {
     version = '';

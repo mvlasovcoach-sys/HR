@@ -1,14 +1,3 @@
-html, body {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Единая математика для чисел (KPI/оси/таблицы/лейблы) */
-.kpi, .metric, .num, .chart, .table, .axis, .tick {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-}
-
-/* Заголовки страниц */
-.page-title { font-size: 28px; line-height: 36px; font-weight: 800; letter-spacing: -0.01em; }
+html,body{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif!important;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+.kpi,.metric,.num,.chart,.table,.axis,.tick{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+.page-title{font-size:28px;line-height:36px;font-weight:800;letter-spacing:-0.01em;margin:0;}

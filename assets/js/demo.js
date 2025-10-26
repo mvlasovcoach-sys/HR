@@ -2,6 +2,19 @@
   const heroEl = document.getElementById('demo-hero');
   if (!heroEl) return;
 
+  const loaderGlobals = window.loaderGlobals || {};
+  const fetchJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      };
+  const withVersion = typeof loaderGlobals.withV === 'function'
+    ? loaderGlobals.withV
+    : value => value;
+
   const state = { data: null, version: null, headcount: 0 };
   const DEMO_CHARTS = {};
   const utils = window.DEMO_UTILS || {};
@@ -141,9 +154,15 @@
   async function loadData(){
     const version = await resolveVersion();
     state.version = version;
-    const response = await fetch(`./data/site/demo.json?v=${encodeURIComponent(version || '')}`, {cache: 'no-store'});
-    if (!response.ok) throw new Error(`demo data fetch failed: ${response.status}`);
-    const data = await response.json();
+    const dataUrl = new URL('./data/site/demo.json', document.baseURI);
+    if (version) {
+      dataUrl.searchParams.set('app', version);
+    }
+    const data = await fetchJson(withVersion(dataUrl.toString()));
+    if (!data) {
+      renderNoData();
+      return;
+    }
     state.data = data;
     render(data);
     if (els.exportBtn) {
@@ -153,6 +172,60 @@
       els.exportBtn.setAttribute('aria-label', baseLabel);
       els.exportBtn.setAttribute('title', baseLabel);
     }
+  }
+
+  function renderNoData(){
+    const message = getText('status.noData', 'No data available');
+    state.data = null;
+    state.headcount = 0;
+    heroEl.classList.remove('is-loading');
+    heroEl.removeAttribute('aria-busy');
+    heroEl.classList.remove('is-fallback');
+    heroEl.removeAttribute('role');
+    heroEl.removeAttribute('aria-label');
+    heroEl.innerHTML = `<p class="demo-empty" role="status" aria-live="polite">${escapeHtml(message)}</p>`;
+    Object.values(els.cards).forEach(card => {
+      if (!card) return;
+      card.classList.remove('skeleton');
+      card.removeAttribute('aria-busy');
+      card.innerHTML = `<p class="demo-empty">${escapeHtml(message)}</p>`;
+    });
+    [els.genderOverall, els.ageOverall, els.byDept].forEach(chart => {
+      if (!chart) return;
+      chart.classList.remove('is-loading');
+      chart.removeAttribute('aria-busy');
+      chart.innerHTML = '';
+    });
+    if (els.orgTable) {
+      els.orgTable.removeAttribute('aria-busy');
+      els.orgTable.innerHTML = `<p class="demo-empty">${escapeHtml(message)}</p>`;
+    }
+    if (els.shiftGrid) {
+      els.shiftGrid.removeAttribute('aria-busy');
+      els.shiftGrid.innerHTML = `<p class="demo-empty">${escapeHtml(message)}</p>`;
+    }
+    if (els.badge) {
+      els.badge.textContent = '';
+      els.badge.removeAttribute('aria-label');
+    }
+    if (els.exportBtn) {
+      els.exportBtn.disabled = true;
+      els.exportBtn.setAttribute('aria-disabled', 'true');
+      const unavailable = getText('demo.exportUnavailable', 'Export not available.');
+      els.exportBtn.setAttribute('title', unavailable);
+      els.exportBtn.setAttribute('aria-label', unavailable);
+    }
+    Object.keys(DEMO_CHARTS).forEach(key => {
+      const chart = DEMO_CHARTS[key];
+      if (chart && typeof chart.destroy === 'function') {
+        try {
+          chart.destroy();
+        } catch (err) {
+          console.warn('demo: chart destroy failed', err);
+        }
+      }
+      DEMO_CHARTS[key] = null;
+    });
   }
 
   function applySkeletons(){

@@ -1,5 +1,15 @@
-export const BUILD_V='2025-10-25-02';
-export const withV=u=>`${u}${u.includes('?')?'&':'?'}v=${BUILD_V}`;
+export const BUILD_V='2025-10-26-01';
+export const withV=u=>{
+  if(u==null)return u;
+  try{
+    const url=u instanceof URL?new URL(u.toString()):new URL(String(u),typeof document!=='undefined'?document.baseURI:undefined);
+    if(!url.searchParams.has('v')){url.searchParams.set('v',BUILD_V);}return url.toString();
+  }catch(err){
+    const value=String(u);
+    if(!value)return value;
+    return `${value}${value.includes('?')?'&':'?'}v=${BUILD_V}`;
+  }
+};
 export async function fetchJson(u){const r=await fetch(u,{cache:'no-store'});if(r.status===404)return null;if(!r.ok)throw new Error(`HTTP ${r.status} for ${u}`);return r.json();}
 
 const indexCache = new Map();

@@ -2,6 +2,19 @@
   const STORAGE_KEY = 'hr:theme';
   const DEFAULT_THEME = './data/theme.json';
 
+  const loaderGlobals = window.loaderGlobals || {};
+  const fetchJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const resp = await fetch(url, {cache: 'no-store'});
+        if (resp.status === 404) return null;
+        if (!resp.ok) throw new Error(`theme fetch failed: ${resp.status}`);
+        return resp.json();
+      };
+  const withVersion = typeof loaderGlobals.withV === 'function'
+    ? loaderGlobals.withV
+    : value => value;
+
   let currentTheme = null;
   let versionValue = null;
   let versionWait = null;
@@ -28,6 +41,9 @@
       }
     } catch (e) {
       console.warn('theme: failed to load theme file, using default', e);
+      currentTheme = await fallbackTheme();
+    }
+    if (!currentTheme) {
       currentTheme = await fallbackTheme();
     }
     applyTheme(currentTheme);
@@ -97,11 +113,12 @@
     const version = await waitForVersion();
     const url = new URL(path, document.baseURI);
     if (version) {
-      url.searchParams.set('v', version);
+      url.searchParams.set('app', version);
     }
-    const resp = await fetch(url.toString(), {cache: 'no-store'});
-    if (!resp.ok) throw new Error('theme fetch failed');
-    const data = await resp.json();
+    const data = await fetchJson(withVersion(url.toString()));
+    if (!data) {
+      return null;
+    }
     return data;
   }
 
@@ -110,10 +127,10 @@
       const version = await waitForVersion();
       const url = new URL(DEFAULT_THEME, document.baseURI);
       if (version) {
-        url.searchParams.set('v', version);
+        url.searchParams.set('app', version);
       }
-      const resp = await fetch(url.toString(), {cache: 'no-store'});
-      if (resp.ok) return await resp.json();
+      const data = await fetchJson(withVersion(url.toString()));
+      if (data) return data;
     } catch (e) {
       console.warn('theme: fallback fetch failed', e);
     }

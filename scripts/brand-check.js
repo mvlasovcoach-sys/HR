@@ -29,7 +29,10 @@ let violations = [];
 
 function shouldSkip(relPath) {
   const normalized = relPath.replace(/\\/g, '/');
-  if (IGNORED_PATH_PREFIXES.some(prefix => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+  if (IGNORED_PATH_PREFIXES.some(prefix => {
+    const clean = prefix.replace(/\/+$/, '');
+    return normalized === clean || normalized.startsWith(`${clean}/`);
+  })) {
     return true;
   }
   return normalized.split('/').some(segment => IGNORED_PATH_SEGMENTS.has(segment));

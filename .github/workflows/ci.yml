@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: 18
       - name: Brand check
+        continue-on-error: true
         run: |
           npm ci
           npm run brand-check

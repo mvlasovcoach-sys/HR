@@ -1,35 +1,25 @@
 (function(){
   const loaderGlobals = window.loaderGlobals || {};
-  const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || '2025-10-25-02';
-  const resolveBase = typeof loaderGlobals.base === 'function'
-    ? loaderGlobals.base
-    : path => {
-        const origin = window.location?.href || document.baseURI || '';
-        const href = new URL(path || '.', origin).toString();
-        return href.endsWith('/') ? href : `${href.replace(/\/?$/, '/')}`;
-      };
-  const DEVICES_BASE = resolveBase('data/devices/');
-
-  const versionHelper = typeof loaderGlobals.withV === 'function'
+  const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || '2025-10-26-01';
+  const withVersion = typeof loaderGlobals.withV === 'function'
     ? loaderGlobals.withV
-    : typeof loaderGlobals.urlWithV === 'function'
-      ? loaderGlobals.urlWithV
-      : input => {
-          if (!input) return input;
-          try {
-            const url = input instanceof URL
-              ? new URL(input.toString())
-              : new URL(String(input), window.location?.href || document.baseURI || '');
-            if (DEFAULT_BUILD_V && !url.searchParams.has('v')) {
-              url.searchParams.set('v', DEFAULT_BUILD_V);
-            }
-            return url.toString();
-          } catch (err) {
-            return input;
+    : input => {
+        if (input == null) return input;
+        try {
+          const url = input instanceof URL
+            ? new URL(input.toString())
+            : new URL(String(input), window.location?.href || document.baseURI || '');
+          if (DEFAULT_BUILD_V && !url.searchParams.has('v')) {
+            url.searchParams.set('v', DEFAULT_BUILD_V);
           }
-        };
-
-  const fetchHelper = typeof loaderGlobals.fetchJson === 'function'
+          return url.toString();
+        } catch (err) {
+          const value = String(input);
+          if (!value || !DEFAULT_BUILD_V) return value;
+          return value.includes('?') ? `${value}&v=${DEFAULT_BUILD_V}` : `${value}?v=${DEFAULT_BUILD_V}`;
+        }
+      };
+  const fetchJson = typeof loaderGlobals.fetchJson === 'function'
     ? loaderGlobals.fetchJson
     : async url => {
         const response = await fetch(url, {cache: 'no-store'});
@@ -39,8 +29,14 @@
         }
         return response.json();
       };
-
-  const versioned = url => versionHelper ? versionHelper(url) : url;
+  const resolveBase = typeof loaderGlobals.base === 'function'
+    ? loaderGlobals.base
+    : path => {
+        const origin = window.location?.href || document.baseURI || '';
+        const href = new URL(path || '.', origin).toString();
+        return href.endsWith('/') ? href : `${href.replace(/\/?$/, '/')}`;
+      };
+  const DEVICES_BASE = resolveBase('data/devices/');
   const EXPORT_DISABLED_TITLE = 'Load data to export';
 
   const STORAGE_KEYS = {
@@ -226,7 +222,8 @@
 
       if (!data) {
         lastData = null;
-        renderEmpty('No data available');
+        const noData = window.I18N?.t?.('status.noData') || 'No data available';
+        renderEmpty(noData);
         return;
       }
 
@@ -363,13 +360,13 @@
   }
 
   async function loadFleet(preset){
-    const indexUrl = versioned(`${DEVICES_BASE}index.json`);
-    const index = await fetchHelper(indexUrl);
+    const indexUrl = withVersion(`${DEVICES_BASE}index.json`);
+    const index = await fetchJson(indexUrl);
     if (!index) return null;
     const targetFile = resolvePresetFile(index, preset);
     if (!targetFile) return null;
-    const dayUrl = versioned(`${DEVICES_BASE}${targetFile}`);
-    const payload = await fetchHelper(dayUrl);
+    const dayUrl = withVersion(`${DEVICES_BASE}${targetFile}`);
+    const payload = await fetchJson(dayUrl);
     if (!payload) return null;
     return extractPresetData(payload, preset);
   }
