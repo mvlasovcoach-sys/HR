@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
+<link rel="stylesheet" href="./shared/brand.pills.css">
 <script type="module" src="./assets/js/data-loader.js?v=2025.10.25-02"></script>
 <script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -93,10 +94,10 @@
         <h2 class="card__title" data-i18n="stress.title">Emotional wellbeing</h2>
         <nav class="tabs" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
           <div class="tabs__list" role="tablist">
-            <button role="tab" data-range="day"   class="tabs__trigger is-active"  data-i18n="range.day" aria-selected="true" tabindex="0">Day</button>
-            <button role="tab" data-range="week"  class="tabs__trigger"            data-i18n="range.week" aria-selected="false" tabindex="-1">Week</button>
-            <button role="tab" data-range="month" class="tabs__trigger"            data-i18n="range.month" aria-selected="false" tabindex="-1">Month</button>
-            <button role="tab" data-range="year"  class="tabs__trigger"            data-i18n="range.year" aria-selected="false" tabindex="-1">Year</button>
+            <button role="tab" data-range="day"   class="tabs__trigger brand-pill is-active"  data-i18n="range.day" aria-selected="true" tabindex="0">Day</button>
+            <button role="tab" data-range="week"  class="tabs__trigger brand-pill"            data-i18n="range.week" aria-selected="false" tabindex="-1">Week</button>
+            <button role="tab" data-range="month" class="tabs__trigger brand-pill"            data-i18n="range.month" aria-selected="false" tabindex="-1">Month</button>
+            <button role="tab" data-range="year"  class="tabs__trigger brand-pill"            data-i18n="range.year" aria-selected="false" tabindex="-1">Year</button>
           </div>
         </nav>
         <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
@@ -109,7 +110,7 @@
           <div class="so-range__label" data-i18n="stress.range">Range</div>
         </div>
         <div class="so-last">
-          <div class="so-last__value"><span id="so-last">—</span> <span id="so-state" class="pill pill--state">—</span></div>
+          <div class="so-last__value"><span id="so-last">—</span> <span id="so-state" class="pill pill--state brand-pill">—</span></div>
           <div class="so-last__label" data-i18n="stress.updated">Last updated</div>
           <div class="so-last__time" id="so-updated">—:—</div>
           <div class="so-sample" id="stress-sample">n=—</div>
@@ -127,12 +128,12 @@
 
       <div class="so-switch">
         <div class="seg" role="group" data-i18n="stress.metricGroup" data-i18n-attr="aria-label" aria-label="Metric">
-          <button class="seg__btn is-active" data-metric="emotion"  data-i18n="stress.emotion">Emotion</button>
-          <button class="seg__btn"           data-metric="stress"   data-i18n="stress.stress">Stress</button>
+          <button class="seg__btn brand-pill is-active" data-metric="emotion"  data-i18n="stress.emotion">Emotion</button>
+          <button class="seg__btn brand-pill"           data-metric="stress"   data-i18n="stress.stress">Stress</button>
         </div>
         <div class="so-actions">
-          <button class="btn btn--ghost" data-i18n="stress.test">Stress test</button>
-          <button class="btn btn--ghost" data-i18n="stress.calibrate">Calibrate</button>
+          <button class="btn btn--ghost brand-btn--primary" data-i18n="stress.test">Stress test</button>
+          <button class="btn btn--ghost brand-btn--primary" data-i18n="stress.calibrate">Calibrate</button>
         </div>
       </div>
 
