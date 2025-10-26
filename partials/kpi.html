@@ -1,0 +1,23 @@
+<template id="tpl-kpi">
+  <article class="kpi--brand" role="group" aria-labelledby="kpi-title">
+    <header class="kpi-head">
+      <div id="kpi-title" class="kpi-title"></div>
+      <span class="delta same" aria-live="polite">
+        <svg aria-hidden="true" viewBox="0 0 10 10"><path/></svg>
+        <span class="delta-text">No change</span>
+      </span>
+    </header>
+    <div class="kpi-value">
+      <span class="kpi-number num">--</span>
+      <span class="kpi-unit"></span>
+    </div>
+    <svg class="spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true">
+      <path class="ci"></path>
+      <path class="line"></path>
+    </svg>
+    <footer class="kpi-footer">
+      <span class="updated">Updated</span>
+      <span class="pts">0 pts</span>
+    </footer>
+  </article>
+</template>

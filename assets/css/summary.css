@@ -1,11 +1,15 @@
 .kpi-grid{display:grid;gap:var(--section-gap);grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+.kpi-top-grid{display:grid;gap:var(--section-gap);grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+.kpi-top-grid .kpi-empty{display:flex;align-items:center;justify-content:center;min-height:128px;border-radius:16px;background:rgba(9,17,22,.3);border:1px solid rgba(255,255,255,.06);color:var(--txt-muted);font-size:.95rem;text-align:center;padding:16px;}
 
 @media (min-width:1024px){
   .kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .kpi-top-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
 
 @media (min-width:1440px){
   .kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .kpi-top-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
 }
 
 .kpi-tile{min-height:var(--kpi-h);padding:var(--card-pad);padding-bottom:var(--card-pad);border-radius:var(--radius);box-shadow:var(--shadow,0 12px 32px rgba(0,0,0,.28));border:1px solid var(--border);background:var(--surface);position:relative;display:flex;flex-direction:column;gap:12px}
