@@ -5,6 +5,40 @@ function initPage(){
     const updatedEl = document.getElementById('engagement-updated');
     const panel = document.getElementById('engagement-panel');
 
+    const loaderGlobals = window.loaderGlobals || {};
+    const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+    const loadJson = typeof loaderGlobals.fetchJson === 'function'
+      ? loaderGlobals.fetchJson
+      : async url => {
+          const response = await fetch(url, {cache: 'no-store'});
+          if (response.status === 404) return null;
+          if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+          return response.json();
+        };
+
+    function versionedUrl(path, options = {}){
+      const url = new URL(path, document.baseURI);
+      const {range, team, params} = options || {};
+      if (range && typeof range === 'object') {
+        Object.entries(range).forEach(([key, value]) => {
+          if (value != null) url.searchParams.set(key, value);
+        });
+      }
+      if (team != null) {
+        url.searchParams.set('team', team);
+      }
+      if (params && typeof params === 'object') {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value != null) url.searchParams.set(key, value);
+        });
+      }
+      return applyVersion(url.toString());
+    }
+
+    function fetchData(path, options){
+      return loadJson(versionedUrl(path, options));
+    }
+
     const KPI_KEYS = [
       {key: 'onboarding_pct', label: 'kpi.onboarding', targetKey: 'onboarding_pct', target: 80, unit: '%', decimals: 0},
       {key: 'weekly_active_pct', label: 'kpi.weeklyActive', targetKey: 'weekly_active_pct', target: 75, unit: '%', decimals: 0},
@@ -72,7 +106,7 @@ function initPage(){
 
     async function loadNps(){
       try {
-        npsData = await window.dataLoader.fetch('./data/org/nps.json');
+        npsData = await fetchData('./data/org/nps.json');
       } catch (e) {
         console.error('Failed to load NPS data', e);
         npsData = null;
@@ -81,7 +115,7 @@ function initPage(){
 
     async function loadEvents(){
       try {
-        const data = await window.dataLoader.fetch('./data/org/events.json');
+        const data = await fetchData('./data/org/events.json');
         events = Array.isArray(data) ? data : Array.isArray(data?.events) ? data.events : [];
       } catch (e) {
         console.error('Failed to load events', e);
@@ -161,7 +195,7 @@ function initPage(){
     async function loadEngagement(preset, range, team){
       try {
         const path = `./data/org/engagement_${preset}.json`;
-        return await window.dataLoader.fetch(path, {range, team});
+        return await fetchData(path, {range, team});
       } catch (e) {
         console.error('Failed to load engagement data', e);
         return null;

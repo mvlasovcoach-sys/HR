@@ -27,6 +27,40 @@ function setExpandLabel(button, expanded){
 }
 
 function initPage(){
+    const loaderGlobals = window.loaderGlobals || {};
+    const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+    const loadJson = typeof loaderGlobals.fetchJson === 'function'
+      ? loaderGlobals.fetchJson
+      : async url => {
+          const response = await fetch(url, {cache: 'no-store'});
+          if (response.status === 404) return null;
+          if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+          return response.json();
+        };
+
+    function versionedUrl(path, options = {}){
+      const url = new URL(path, document.baseURI);
+      const {range, team, params} = options || {};
+      if (range && typeof range === 'object') {
+        Object.entries(range).forEach(([key, value]) => {
+          if (value != null) url.searchParams.set(key, value);
+        });
+      }
+      if (team != null) {
+        url.searchParams.set('team', team);
+      }
+      if (params && typeof params === 'object') {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value != null) url.searchParams.set(key, value);
+        });
+      }
+      return applyVersion(url.toString());
+    }
+
+    function fetchData(path, options){
+      return loadJson(versionedUrl(path, options));
+    }
+
     const chartEl = document.getElementById('wlb-chart');
     if (!chartEl) return;
     const legendEl = document.getElementById('wellbeing-legend');
@@ -330,7 +364,7 @@ function initPage(){
     async function loadMetrics(preset, range, team){
       try {
         const path = `./data/org/metrics_${preset}.json`;
-        return await window.dataLoader.fetch(path, {range, team});
+        return await fetchData(path, {range, team});
       } catch (e) {
         console.error('Analytics metrics failed', e);
         return null;

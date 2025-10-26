@@ -7,6 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initCorporatePage(){
+  const loaderGlobals = window.loaderGlobals || {};
+  const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+  const loadJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      };
   const DATA_ROOT = './data/org';
 
   const els = {
@@ -1105,7 +1115,7 @@ function initCorporatePage(){
   }
 
   async function fetchJson(path){
-    return await window.dataLoader.fetch(path);
+    return await loadJson(applyVersion(path));
   }
 
   function updateEventBadges(events){
@@ -1150,7 +1160,6 @@ function initCorporatePage(){
         return;
       }
       localStorage.setItem('hr:scenario', next);
-      window.dataLoader?.clear?.();
       dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
     } catch (err) {
       console.warn('scenario set failed', err);

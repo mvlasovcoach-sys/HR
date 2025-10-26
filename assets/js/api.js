@@ -1,4 +1,15 @@
 (function(g){
+  const loaderGlobals = g.loaderGlobals || {};
+  const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
+  const loadJson = typeof loaderGlobals.fetchJson === 'function'
+    ? loaderGlobals.fetchJson
+    : async url => {
+        const response = await fetch(url, {cache: 'no-store'});
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      };
+
   async function directFetch(path, options){
     const {range, team, params, ...rest} = options || {};
     const url = new URL(path, document.baseURI);
@@ -15,27 +26,30 @@
         if (value != null) url.searchParams.set(key, value);
       });
     }
-    const response = await fetch(url.toString(), {cache: 'no-store', ...rest});
+    const finalUrl = applyVersion(url.toString());
+    const mode = (options && options.as) || 'json';
+    if (mode === 'json') {
+      return loadJson(finalUrl);
+    }
+    const response = await fetch(finalUrl, {cache: 'no-store', ...rest});
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status}`);
     }
-    const mode = (options && options.as) || 'json';
-    return mode === 'text' ? response.text() : response.json();
+    return response.text();
   }
 
   const API = {
     async fetch(path, options){
-      if (g.dataLoader?.fetch) {
-        return g.dataLoader.fetch(path, options || {});
-      }
       return directFetch(path, options || {});
     },
     async fetchJSON(path, options){
       const opts = Object.assign({}, options, { as: 'json' });
-      return this.fetch(path, opts);
+      return directFetch(path, opts);
     },
     clearCache(){
-      g.dataLoader?.clear?.();
+      if (typeof loaderGlobals.clearCache === 'function') {
+        loaderGlobals.clearCache();
+      }
     }
   };
 
