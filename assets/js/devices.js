@@ -225,7 +225,8 @@
       if (token !== renderToken) return;
 
       if (!data) {
-        renderEmpty();
+        lastData = null;
+        renderEmpty('No data available');
         return;
       }
 
@@ -275,9 +276,9 @@
       }
     }
 
-    function renderEmpty(){
+    function renderEmpty(message){
       lastData = null;
-      const emptyText = t('status.noData') || 'No data available';
+      const emptyText = message || t('status.noData') || 'No data available';
       cardsEl.innerHTML = `<p role="status">${escapeHtml(emptyText)}</p>`;
       tableEl.innerHTML = '';
       histogramEl.innerHTML = '';
