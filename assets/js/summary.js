@@ -1,3 +1,5 @@
+import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js';
+
 (function(){
   const loaderGlobals = window.loaderGlobals || {};
   const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
@@ -33,7 +35,7 @@
   }
   console.info('Summary init');
   const TILE_COUNT = 4;
-  const KPI_PRIMARY_ID = 'kpi-grid';
+  const KPI_TOP_ID = 'kpi-top';
 
   const SUMMARY = window.SUMMARY = window.SUMMARY || {};
   const RANGE = window.RANGE = window.RANGE || {};
@@ -148,9 +150,9 @@
   });
 
   function bindTileNavigation(){
-    document.getElementById(KPI_PRIMARY_ID)?.addEventListener('click', evt => {
-      const tile = evt.target.closest('.tile');
-      if (!tile) return;
+    document.getElementById(KPI_TOP_ID)?.addEventListener('click', evt => {
+      const tile = evt.target.closest('.kpi--brand');
+      if (!tile || tile.classList.contains('skeleton')) return;
       window.location.href = './Analytics.html';
     });
   }
@@ -301,23 +303,11 @@
   }
 
   function renderSkeleton(){
-    const host = document.getElementById(KPI_PRIMARY_ID);
+    const host = document.getElementById(KPI_TOP_ID);
     if (!host) return;
     host.classList.add('is-skeleton');
     host.setAttribute('aria-busy', 'true');
-    const fragment = document.createDocumentFragment();
-    for (let i = 0; i < TILE_COUNT; i++) {
-      const tile = document.createElement('div');
-      tile.className = 'tile tile--skeleton tile--compact kpi kpi--brand';
-      tile.setAttribute('aria-hidden', 'true');
-      tile.innerHTML = `
-        <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
-        <div class="tile__kpi tile__value tile__value--skeleton num"><span class="skeleton skeleton--value"></span></div>
-        <div class="tile__spark tile__spark--skeleton"><span class="skeleton skeleton--spark"></span></div>
-      `;
-      fragment.appendChild(tile);
-    }
-    host.replaceChildren(fragment);
+    renderKpiSkeletons(host, TILE_COUNT);
   }
 
   async function initPage(){
@@ -338,7 +328,7 @@
     const range = readRange();
     RANGE.current = range;
     applyRangeSelection(range);
-    const host = document.getElementById(KPI_PRIMARY_ID);
+    const host = document.getElementById(KPI_TOP_ID);
     if (!host) {
       runtime.loading = false;
       if (document?.body) {
@@ -353,11 +343,12 @@
         fetchData('./data/org/metrics_7d.json')
       ]);
       updateRangeMetadata(metrics);
-      renderKpis(host, metrics, trend);
+      renderTopKpis(host, metrics, trend);
     } catch (err) {
       console.error('Summary metrics failed', err);
       host.replaceChildren();
       clearLoadingState(host);
+      renderKpiEmpty(host);
       runtime.rangeStart = runtime.rangeEnd = null;
       setPeriodAndAsOf(selectionState);
       toast(window.I18N?.t('toast.summaryError') || window.I18N?.t('status.noData') || 'Unable to load data');
@@ -381,17 +372,11 @@
     node.removeAttribute('aria-busy');
   }
 
-  function renderKpis(host, metrics, trend){
+  function renderTopKpis(host, metrics, trend){
     if (!host) return;
     clearLoadingState(host);
-    host.replaceChildren();
 
-    const kpi = metrics?.kpi || {};
-    const delta = metrics?.delta || {};
     const nValue = Number(metrics?.n);
-    const lang = window.I18N?.getLang?.() || 'en';
-    const numberFmt = new Intl.NumberFormat(lang, {maximumFractionDigits: 0});
-
     if (Number.isFinite(nValue) && window.guardSmallN && window.guardSmallN(nValue, host)) {
       return;
     }
@@ -399,114 +384,136 @@
       host.removeAttribute('data-guard');
     }
 
-    const sparkSeries = buildSparkSeries(trend?.heatmap);
-    const defs = [
-      { key: 'wellbeing_avg',         label: () => window.I18N?.t('kpi.orgWellbeing') || window.I18N?.t('kpi.wellbeing') || 'Org Wellbeing',        unit: '/100', fmt: v => Math.round(v) },
-      { key: 'high_stress_pct',       label: () => window.I18N?.t('kpi.highStress') || window.I18N?.t('metric.highStress') || 'High Stress %',      unit: '%',    fmt: v => Math.round(v) },
-      { key: 'fatigue_elevated_pct',  label: () => window.I18N?.t('kpi.elevatedFatigue') || window.I18N?.t('metric.elevatedFatigue') || 'Elevated Fatigue %', unit: '%',    fmt: v => Math.round(v) },
-      { key: 'engagement_active_pct', label: () => window.I18N?.t('kpi.activeEngagement') || window.I18N?.t('metric.activeEngagement') || 'Active Engagement %', unit: '%',    fmt: v => Math.round(v) }
-    ];
+    if (!metrics) {
+      renderKpiEmpty(host);
+      return;
+    }
 
-    const fragment = document.createDocumentFragment();
-    defs.forEach((definition, index) => {
-      const raw = Number(kpi?.[definition.key]);
-      const formattedValue = Number.isFinite(raw) ? definition.fmt(raw) : null;
-      const valueText = formattedValue != null ? numberFmt.format(formattedValue) : '—';
-      const deltaRaw = Number(delta?.[definition.key]);
-      const deltaValue = Number.isFinite(deltaRaw) ? deltaRaw : null;
-      const badgeValue = deltaValue !== null ? Math.abs(Math.round(deltaValue)) : null;
-      const badgeLabel = badgeValue !== null ? numberFmt.format(badgeValue) : '';
-      const sparkInfo = buildSparkMeta(deltaValue);
-      const sparkGraphic = sparkline(sparkSeries);
+    const items = buildTopKpiItems(metrics, trend);
+    if (!items.length) {
+      renderKpiEmpty(host);
+      return;
+    }
 
-      const tile = document.createElement('div');
-      tile.className = 'tile tile--interactive tile--compact kpi kpi--brand';
-      tile.dataset.index = String(index);
-
-      const head = document.createElement('div');
-      head.className = 'tile__head';
-      const labelSpan = document.createElement('span');
-      labelSpan.textContent = definition.label();
-      head.appendChild(labelSpan);
-
-      if (badgeValue !== null) {
-        const badge = document.createElement('span');
-        const trend = sparkTrend(deltaValue);
-        let toneClass = 'delta--same';
-        let badgeText = (window.I18N?.t?.('delta.noChange') || 'No change').toUpperCase();
-        if (trend === 'up') {
-          toneClass = 'delta--up';
-          badgeText = `▲ ${badgeLabel}`.trim();
-        } else if (trend === 'down') {
-          toneClass = 'delta--down';
-          badgeText = `▼ ${badgeLabel}`.trim();
-        }
-        badge.className = `tile__badge delta-chip ${toneClass}`;
-        badge.textContent = badgeText;
-        const ariaLabelParts = [];
-        const trendLabel = sparkTrendLabel(trend);
-        if (trendLabel) ariaLabelParts.push(trendLabel);
-        if (badgeLabel) {
-          const unitText = definition.unit === '/100' ? ' /100' : definition.unit;
-          ariaLabelParts.push(`${badgeLabel}${unitText}`.trim());
-        }
-        if (ariaLabelParts.length) {
-          badge.setAttribute('aria-label', ariaLabelParts.join(' '));
-        }
-        head.appendChild(badge);
-      }
-
-      tile.appendChild(head);
-
-      const value = document.createElement('div');
-      value.className = 'tile__kpi tile__value num';
-      value.appendChild(document.createTextNode(valueText));
-      const unit = document.createElement('small');
-      unit.textContent = definition.unit;
-      value.appendChild(unit);
-      tile.appendChild(value);
-
-      const spark = document.createElement('div');
-      spark.className = 'tile__spark spark';
-      if (sparkInfo) {
-        if (sparkInfo.aria) {
-          spark.setAttribute('aria-label', sparkInfo.aria);
-        }
-        if (sparkInfo.tooltip) {
-          spark.title = sparkInfo.tooltip;
-          spark.dataset.tooltip = sparkInfo.tooltip;
-        }
-        spark.setAttribute('role', 'img');
-        spark.tabIndex = 0;
-      } else {
-        spark.setAttribute('aria-hidden', 'true');
-      }
-
-      const graphicNode = createNodeFromMarkup(sparkGraphic);
-      if (graphicNode) {
-        spark.appendChild(graphicNode);
-      }
-      if (sparkInfo?.tooltip) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'spark-tooltip';
-        tooltip.textContent = sparkInfo.tooltip;
-        spark.appendChild(tooltip);
-      }
-
-      tile.appendChild(spark);
-      fragment.appendChild(tile);
+    host.replaceChildren();
+    items.forEach((item, index) => {
+      mountKpi(host, {...item, index});
     });
-
-    host.appendChild(fragment);
   }
 
-  function createNodeFromMarkup(markup){
-    if (typeof markup !== 'string') return null;
-    const trimmed = markup.trim();
-    if (!trimmed) return null;
-    const template = document.createElement('template');
-    template.innerHTML = trimmed;
-    return template.content.firstElementChild;
+  function buildTopKpiItems(metrics, trend){
+    const kpi = metrics?.kpi || {};
+    const updated = resolveUpdatedLabel(metrics, trend);
+    const defs = [
+      {key: 'wellbeing', metric: 'wellbeing_avg', unit: '/100', labels: ['kpi.orgWellbeing', 'kpi.wellbeing'], fallback: 'Org Wellbeing'},
+      {key: 'stress', metric: 'high_stress_pct', unit: '%', labels: ['kpi.highStress', 'metric.highStress'], fallback: 'High Stress %'},
+      {key: 'fatigue', metric: 'fatigue_elevated_pct', unit: '%', labels: ['kpi.elevatedFatigue', 'metric.elevatedFatigue'], fallback: 'Elevated Fatigue %'},
+      {key: 'engagement', metric: 'engagement_active_pct', unit: '%', labels: ['kpi.activeEngagement', 'metric.activeEngagement'], fallback: 'Active Engagement %'}
+    ];
+
+    return defs.map(def => {
+      const value = Number(kpi?.[def.metric]);
+      const delta = resolveDelta(metrics, def.metric);
+      const series = resolveSeries(metrics, trend, def.metric, value, delta);
+      const ci = resolveConfidence(metrics, trend, def.metric);
+      return {
+        key: def.key,
+        title: resolveLabel(def.labels, def.fallback),
+        unit: def.unit,
+        value,
+        delta,
+        series,
+        ci,
+        updated
+      };
+    });
+  }
+
+  function resolveLabel(keys, fallback){
+    const list = Array.isArray(keys) ? keys : [keys];
+    for (const key of list) {
+      const label = window.I18N?.t?.(key);
+      if (label && label !== key) return label;
+    }
+    return fallback;
+  }
+
+  function resolveDelta(metrics, key){
+    const direct = Number(metrics?.delta?.[key]);
+    if (Number.isFinite(direct)) return direct;
+    const current = Number(metrics?.kpi?.[key]);
+    const previous = Number(metrics?.previous?.[key]);
+    if (Number.isFinite(current) && Number.isFinite(previous)) {
+      return current - previous;
+    }
+    return 0;
+  }
+
+  function resolveSeries(metrics, trend, key, value, delta){
+    const candidates = [
+      metrics?.series?.[key],
+      metrics?.kpi_trend?.[key],
+      trend?.series?.[key],
+      trend?.kpi_trend?.[key]
+    ];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate) && candidate.some(point => Number.isFinite(Number(point)))) {
+        return candidate;
+      }
+    }
+    if (key === 'wellbeing_avg') {
+      const avg = buildSparkSeries(trend?.heatmap);
+      if (avg.length) return avg;
+    }
+    return buildFallbackSeries(value, delta);
+  }
+
+  function resolveConfidence(metrics, trend, key){
+    const candidates = [
+      metrics?.ci?.[key],
+      metrics?.confidence?.[key],
+      trend?.ci?.[key],
+      trend?.confidence?.[key]
+    ];
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate) && candidate.length) {
+        return candidate;
+      }
+    }
+    return [];
+  }
+
+  function buildFallbackSeries(value, delta){
+    const current = Number(value);
+    if (!Number.isFinite(current)) return [];
+    const change = Number(delta);
+    if (!Number.isFinite(change) || Math.abs(change) < 1e-9) {
+      return [current];
+    }
+    const previous = current - change;
+    return [previous, current];
+  }
+
+  function resolveUpdatedLabel(metrics, trend){
+    const candidates = [
+      metrics?.updated,
+      trend?.updated,
+      last(metrics?.timeline),
+      last(trend?.timeline),
+      last(metrics?.heatmap?.dates),
+      last(trend?.heatmap?.dates)
+    ];
+    for (const candidate of candidates) {
+      const date = ensureDate(candidate);
+      if (date) {
+        return fmt(date);
+      }
+    }
+    return '—';
+  }
+
+  function last(arr){
+    return Array.isArray(arr) && arr.length ? arr[arr.length - 1] : null;
   }
 
   function buildSparkSeries(heatmap){
@@ -526,66 +533,6 @@
       });
     });
     return series.map((sum, index) => counts[index] ? sum / counts[index] : null);
-  }
-
-  function sparkTrend(delta){
-    if (!Number.isFinite(delta) || Math.abs(delta) < 0.1) return 'stable';
-    return delta > 0 ? 'up' : 'down';
-  }
-
-  function sparkTrendLabel(key){
-    switch (key) {
-      case 'up':
-        return window.I18N?.t('spark.rising') || 'Rising';
-      case 'down':
-        return window.I18N?.t('spark.falling') || 'Falling';
-      default:
-        return window.I18N?.t('spark.stable') || 'Stable';
-    }
-  }
-
-  function formatSparkDelta(delta){
-    if (!Number.isFinite(delta)) return '';
-    const lang = getLang();
-    const abs = Math.abs(delta);
-    const decimals = abs >= 10 ? 0 : 1;
-    const baseOptions = {maximumFractionDigits: decimals, minimumFractionDigits: decimals};
-    try {
-      if (Math.abs(delta) < 0.05) {
-        return new Intl.NumberFormat(lang, baseOptions).format(0);
-      }
-      return new Intl.NumberFormat(lang, {...baseOptions, signDisplay: 'always'}).format(delta);
-    } catch (err) {
-      if (Math.abs(delta) < 0.05) return abs.toFixed(decimals);
-      const sign = delta >= 0 ? '+' : '−';
-      return `${sign}${abs.toFixed(decimals)}`;
-    }
-  }
-
-  function buildSparkMeta(delta){
-    if (!Number.isFinite(delta)) return null;
-    const trend = sparkTrend(delta);
-    const trendLabel = sparkTrendLabel(trend);
-    const deltaText = formatSparkDelta(delta);
-    const tooltip = window.I18N?.t('spark.delta', {delta: deltaText}) || `${deltaText} vs last period`;
-    const aria = `${trendLabel}. ${tooltip}`.trim();
-    return {trendLabel, deltaText, tooltip, aria};
-  }
-
-  function sparkline(values){
-    const points = Array.isArray(values) ? values.filter(v => Number.isFinite(v)) : [];
-    if (!points.length) return '';
-    const width = 64;
-    const height = 24;
-    const min = Math.min(...points);
-    const max = Math.max(...points);
-    const span = max - min || 1;
-    const path = points.map((val, idx) => {
-      const x = (idx / (points.length - 1 || 1)) * width;
-      const y = height - ((val - min) / span) * height;
-      return `${idx === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
-    }).join(' ');
-    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
   }
 
   function toast(message){

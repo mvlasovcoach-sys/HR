@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="./shared/brand.buttons.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.chips.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.inputs.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/brand.kpi.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/brand.skeleton.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -32,7 +34,7 @@
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/summary.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/summary.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/summary.legend.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/help-popover.js?v=2025.10.26-01"></script>
 <script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
@@ -43,6 +45,29 @@
 <script defer src="./assets/js/hr-board.neon.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
+  <template id="tpl-kpi">
+    <article class="kpi--brand" role="group" aria-labelledby="kpi-title">
+      <header class="kpi-head">
+        <div id="kpi-title" class="kpi-title"></div>
+        <span class="delta same" aria-live="polite">
+          <svg aria-hidden="true" viewBox="0 0 10 10"><path/></svg>
+          <span class="delta-text">No change</span>
+        </span>
+      </header>
+      <div class="kpi-value">
+        <span class="kpi-number num">--</span>
+        <span class="kpi-unit"></span>
+      </div>
+      <svg class="spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true">
+        <path class="ci"></path>
+        <path class="line"></path>
+      </svg>
+      <footer class="kpi-footer">
+        <span class="updated">Updated</span>
+        <span class="pts">0 pts</span>
+      </footer>
+    </article>
+  </template>
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
     <div id="app-topbar" class="card card--topbar">
@@ -83,7 +108,7 @@
       <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
     </section>
     <section class="card card--kpi" aria-live="polite">
-      <div id="kpi-grid" class="kpi-grid num" aria-live="polite"></div>
+      <section id="kpi-top" class="kpi-top-grid" aria-live="polite"></section>
     </section>
     <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
