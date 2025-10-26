@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./shared/brand.tokens.css">
-<link rel="stylesheet" href="./shared/fonts.css">
-<link rel="stylesheet" href="./shared/brand.pills.css">
 
 <!-- рабочая тема -->
 <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
+<link rel="stylesheet" href="./shared/fonts.css">
+<link rel="stylesheet" href="./shared/brand.tokens.css">
+<link rel="stylesheet" href="./shared/brand.pills.css">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -64,7 +64,7 @@
           <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
         </h2>
         <div class="trk-controls">
-          <span id="trk-delta" class="delta-badge" aria-live="polite"></span>
+          <span id="trk-delta" class="delta-badge num" aria-live="polite"></span>
           <label class="switch">
             <input id="maToggle" type="checkbox">
             <span data-i18n="label.movingAverage">MA(3)</span>
@@ -76,9 +76,9 @@
       </div>
       <div class="card__body chart-card__body">
         <div class="chart-legend" id="wellbeing-legend"></div>
-        <div id="wlb-chart" class="analytics-chart hero-chart chart-host" role="img" aria-live="polite" data-mount="renderAnalyticsPage"></div>
+        <div id="wlb-chart" class="analytics-chart hero-chart chart-host num" role="img" aria-live="polite" data-mount="renderAnalyticsPage"></div>
       </div>
-      <div class="mini-kpis" id="analytics-mini-kpis" aria-live="polite"></div>
+      <div class="mini-kpis num" id="analytics-mini-kpis" aria-live="polite"></div>
       <div class="card__footer note note--meta" id="trk-meta"></div>
     </section>
     <section class="card analytics-breakdown">
@@ -86,7 +86,7 @@
         <div class="card__subtitle" data-i18n="section.breakdowns">Risk Breakdown</div>
       </header>
       <div class="card__body">
-        <div class="breakdown-grid" id="analytics-breakdown" aria-live="polite"></div>
+        <div class="breakdown-grid num" id="analytics-breakdown" aria-live="polite"></div>
       </div>
     </section>
     <section class="card card--stress panel--stress" data-stats="true" data-source-id="demo-synth-2025">
@@ -111,18 +111,18 @@
 
       <div class="so-meta">
         <div class="so-range">
-          <div class="so-range__value"><span id="so-range">—</span></div>
+          <div class="so-range__value"><span id="so-range" class="num">—</span></div>
           <div class="so-range__label" data-i18n="stress.range">Range</div>
         </div>
         <div class="so-last">
-          <div class="so-last__value"><span id="so-last">—</span> <span id="so-state" class="pill pill--state brand-pill">—</span></div>
+          <div class="so-last__value"><span id="so-last" class="num">—</span> <span id="so-state" class="pill pill--state brand-pill">—</span></div>
           <div class="so-last__label" data-i18n="stress.updated">Last updated</div>
-          <div class="so-last__time" id="so-updated">—:—</div>
-          <div class="so-sample" id="stress-sample">n=—</div>
+          <div class="so-last__time num" id="so-updated">—:—</div>
+          <div class="so-sample num" id="stress-sample">n=—</div>
         </div>
       </div>
 
-      <div class="chart-host chart-host--bars" id="so-chart" tabindex="0" data-i18n="stress.chartAria" data-i18n-attr="aria-label" aria-label="Emotional wellbeing distribution chart"></div>
+      <div class="chart-host chart-host--bars num" id="so-chart" tabindex="0" data-i18n="stress.chartAria" data-i18n-attr="aria-label" aria-label="Emotional wellbeing distribution chart"></div>
 
       <div class="so-legend legend legend--inline">
         <span><i class="dot dot--low"></i><span data-i18n="stress.low">Low</span></span>
