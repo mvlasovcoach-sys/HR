@@ -124,7 +124,7 @@
     }
 
     const host = primary || document;
-    const cards = Array.from(host.querySelectorAll('.kpi-card, .kpi-tile'));
+    const cards = Array.from(host.querySelectorAll('.kpi-card, .kpi-tile, .kpi.kpi--brand'));
     if (cards.length > TILE_COUNT) {
       cards.slice(TILE_COUNT).forEach(card => card.remove());
     }
@@ -346,7 +346,7 @@
     grid.setAttribute('aria-busy', 'true');
     const skeleton = [];
     for (let i = 0; i < TILE_COUNT; i++) {
-      skeleton.push(`<div class="tile tile--skeleton tile--compact kpi-tile" aria-hidden="true">
+      skeleton.push(`<div class="tile tile--skeleton tile--compact kpi kpi--brand" aria-hidden="true">
         <div class="tile__head"><span class="skeleton skeleton--text"></span></div>
         <div class="tile__value tile__value--skeleton"><span class="skeleton skeleton--value"></span></div>
         <div class="tile__spark tile__spark--skeleton"><span class="skeleton skeleton--spark"></span></div>
@@ -452,7 +452,7 @@
       } else {
         sparkMarkup = `<div class="tile__spark spark" aria-hidden="true">${sparkGraphic}</div>`;
       }
-      return `<div class="tile tile--interactive tile--compact kpi kpi-tile" data-index="${index}">
+      return `<div class="tile tile--interactive tile--compact kpi kpi--brand" data-index="${index}">
         <div class="tile__head">${d.label()} ${badge}</div>
         <div class="tile__kpi tile__value">${val}<small>${d.unit}</small></div>
         ${sparkMarkup}
