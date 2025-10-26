@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="./shared/brand.tokens.css">
 <link rel="stylesheet" href="./shared/fonts.css">
 <link rel="stylesheet" href="./shared/brand.pills.css">
+<link rel="stylesheet" href="./shared/brand.kpi.css">
 
 <!-- рабочая тема -->
 <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
@@ -75,6 +76,9 @@
         <button class="btn btn--ghost brand-pill" type="button" data-scenario="live" data-i18n="demo.live">Return to Live</button>
       </div>
       <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
+    </section>
+    <section class="card card--kpi" aria-live="polite">
+      <div id="summary-kpi-primary" class="kpi-grid" aria-live="polite"></div>
     </section>
     <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
