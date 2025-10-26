@@ -16,6 +16,7 @@
 
 <!-- (опционально) акцентные таблетки/кнопки — один файл на все -->
 <link rel="stylesheet" href="./shared/brand.pills.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
@@ -42,26 +43,22 @@
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
     <div id="app-topbar" class="card card--topbar">
-      <div class="titlebar">
-        <div class="left">
-          <h1 class="page-title" data-i18n="header.summary">Summary</h1>
-          <button id="btn-legend" class="info-dot" type="button"
-            aria-haspopup="dialog" aria-expanded="false"
-            data-help="summary"
-            aria-label="Legend"
-            data-i18n="ui.legend" data-i18n-attr="aria-label,title">i</button>
+      <div class="page-header">
+        <div class="titlebar">
+          <div class="left">
+            <h1 class="page-title" data-i18n="header.summary">Summary</h1>
+            <button id="btn-legend" class="info-dot" type="button"
+              aria-haspopup="dialog" aria-expanded="false"
+              data-help="summary"
+              aria-label="Legend"
+              data-i18n="ui.legend" data-i18n-attr="aria-label,title">i</button>
+          </div>
         </div>
-        <div class="right">
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
-          </div>
-          <div class="topbar-right">
-            <div id="lang-switch" class="lang-switch"></div>
-            <button class="info-dot" type="button" data-about-open
-              data-help="about" aria-label="About"
-              data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
-          </div>
+
+        <div class="header-controls" role="group" aria-label="Filters">
+          <div id="team-filter" class="toolbar__filter"></div>
+          <div id="date-controls" class="toolbar__filter"></div>
+          <div id="lang-switch" class="lang-switch"></div>
         </div>
       </div>
     </div>
