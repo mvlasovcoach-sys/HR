@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="./shared/brand.chips.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.inputs.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
+<link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
@@ -41,7 +42,7 @@
 <script defer src="./assets/js/sources.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/source-badge.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/stress.overview.js?v=2025.10.25-01"></script>
-<script defer src="./assets/js/help-popover.js?v=2025.10.26-01"></script>
+<script type="module" src="./assets/js/ui/modal.js?v=2025-10-26"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
@@ -51,11 +52,11 @@
         <div class="titlebar">
           <div class="left">
             <h1 class="page-title" data-i18n="header.analytics">Analytics</h1>
-            <button class="info-dot" type="button"
+            <button id="info-btn" class="i-pill" type="button"
               aria-haspopup="dialog" aria-expanded="false"
-              data-help="analytics"
               aria-label="About Analytics"
-              data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+              data-i18n="ui.about" data-i18n-attr="aria-label"
+              onclick="openModal('legend-modal')">i</button>
           </div>
         </div>
 
@@ -153,10 +154,14 @@
       <div class="so-low" id="so-low" role="status" aria-live="polite" hidden>Low sample size</div>
     </section>
   </main>
-  <template id="help-analytics">
-    <div class="help-popover__content">
-      <h2 class="help-popover__title" data-i18n="help.analytics.title">Analytics overview</h2>
-      <div class="help-popover__body">
+  <div id="legend-modal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <section class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="legend-title" aria-describedby="legend-body">
+      <header class="modal__header">
+        <h3 id="legend-title" data-i18n="help.analytics.title">Analytics overview</h3>
+        <button type="button" class="modal__close" data-close onclick="closeModal('legend-modal')" data-i18n="ui.close" data-i18n-attr="aria-label" aria-label="Close">✕</button>
+      </header>
+      <div class="modal__body" id="legend-body">
         <p data-i18n="help.analytics.lead">Track wellbeing trends, stress distribution and sentiment drivers.</p>
         <ul>
           <li data-i18n="help.analytics.range">Use the range pills to switch presets or pick custom dates.</li>
@@ -164,9 +169,8 @@
           <li data-i18n="help.analytics.actions">Primary buttons trigger drills like stress test or calibration.</li>
         </ul>
       </div>
-      <button class="brand-pill range-pill help-popover__close" type="button" data-help-close data-i18n="ui.close">Close</button>
-    </div>
-  </template>
+    </section>
+  </div>
 </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
