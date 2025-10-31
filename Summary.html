@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="./shared/brand.kpi.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.skeleton.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
+<link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 <script type="module" src="./assets/js/data-loader.js"></script>
 <script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
@@ -35,8 +36,8 @@
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/summary.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/ui/modal.js?v=2025-10-26"></script>
 <script defer src="./assets/js/summary.legend.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/help-popover.js?v=2025.10.26-01"></script>
 <script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
@@ -75,11 +76,11 @@
         <div class="titlebar">
           <div class="left">
             <h1 class="page-title" data-i18n="header.summary">Summary</h1>
-            <button id="btn-legend" class="info-dot" type="button"
+            <button id="info-btn" class="i-pill" type="button"
               aria-haspopup="dialog" aria-expanded="false"
-              data-help="summary"
               aria-label="Legend"
-              data-i18n="ui.legend" data-i18n-attr="aria-label,title">i</button>
+              data-i18n="ui.legend" data-i18n-attr="aria-label"
+              onclick="openModal('legend-modal')">i</button>
           </div>
         </div>
 
@@ -112,20 +113,16 @@
     </section>
     <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
-  <template id="help-summary">
-    <div class="help-popover__content">
-      <h2 class="help-popover__title" data-i18n="help.summary.title">Summary legend</h2>
-      <div class="help-popover__body">
-        <p data-i18n="help.summary.lead">Understand how KPIs are calculated for the selected range.</p>
-        <ul>
-          <li data-i18n="help.summary.delta">Delta chips compare against the previous saved range.</li>
-          <li data-i18n="help.summary.spark">Sparklines show a moving average trend—hover for tooltips.</li>
-          <li data-i18n="help.summary.scenario">Scenario pills switch between live data and the night-shift simulation.</li>
-        </ul>
+  <div id="legend-modal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <section class="modal__panel legend-modal summary-legend" role="dialog" aria-modal="true" aria-labelledby="legend-title" aria-describedby="legend-body">
+      <div class="legend-header">
+        <h3 id="legend-title">Legend</h3>
+        <button class="legend-close" type="button" data-close onclick="closeModal('legend-modal')" aria-label="Close">×</button>
       </div>
-      <button class="brand-pill range-pill help-popover__close" type="button" data-help-close data-i18n="ui.close">Close</button>
-    </div>
-  </template>
+      <div class="legend-body" id="legend-body"></div>
+    </section>
+  </div>
 </div>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('summary');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

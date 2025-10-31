@@ -31,7 +31,8 @@
 }
 
 /* Иконка i */
-.info-dot{
+.info-dot,
+.i-pill{
   width:28px;
   height:28px;
   border-radius:var(--radius-pill);
@@ -44,11 +45,14 @@
   transition:border-color .18s ease,box-shadow .18s ease,color .18s ease;
 }
 
-.info-dot:hover{color:var(--text-0);border-color:var(--brand-mint-a55)}
+.info-dot:hover,
+.i-pill:hover{color:var(--text-0);border-color:var(--brand-mint-a55)}
 
-.info-dot:focus-visible{outline:2px solid var(--brand-mint-500);outline-offset:2px}
+.info-dot:focus-visible,
+.i-pill:focus-visible{outline:2px solid var(--brand-mint-500);outline-offset:2px}
 
-.info-dot[aria-expanded="true"]{box-shadow:inset 0 -2px 0 var(--brand-mint-500),0 0 0 1px var(--brand-mint-a55)}
+.info-dot[aria-expanded="true"],
+.i-pill[aria-expanded="true"]{box-shadow:inset 0 -2px 0 var(--brand-mint-500),0 0 0 1px var(--brand-mint-a55)}
 
 /* Вторая строка: все контролы (tabs, даты, compare, языки) */
 .header-controls{
