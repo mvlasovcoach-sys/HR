@@ -571,7 +571,7 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
   }
 
   function updateLegendButtonLabel(){
-    const btn = document.getElementById('btn-legend');
+    const btn = document.getElementById('legend-trigger') || document.getElementById('btn-legend');
     if (!btn) return;
     const label = window.I18N?.t('legend.title') || 'Legend';
     btn.setAttribute('title', label);
