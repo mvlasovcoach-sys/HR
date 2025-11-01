@@ -12,7 +12,19 @@
     "test:unit": "vitest run --coverage",
     "test": "playwright test"
   },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
   "devDependencies": {
+    "@storybook/react": "^8.3.3",
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.1",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
     "@playwright/test": "^1.48.0",
     "@vitest/coverage-v8": "^2.1.1",
     "htmlhint": "^1.1.4",
