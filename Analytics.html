@@ -174,6 +174,106 @@
 </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const introKey = 'analytics_tour_dismissed_v2';
+
+      const initAnalyticsIntro = () => {
+        const modalId = 'legend-modal';
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const forceTour = params.get('tour') === '1';
+
+        let dismissed = false;
+        try {
+          dismissed = localStorage.getItem(introKey) === '1';
+        } catch (err) {
+          dismissed = false;
+        }
+
+        if (dismissed && !forceTour) return;
+
+        const closeBtn = modal.querySelector('[data-close]');
+        const backdrop = modal.querySelector('.modal__backdrop');
+        let isOpen = false;
+        let previousOverflow = '';
+
+        const persistDismissed = () => {
+          try {
+            localStorage.setItem(introKey, '1');
+          } catch (err) {
+            /* noop */
+          }
+        };
+
+        const unlockScroll = () => {
+          document.body.style.overflow = previousOverflow || '';
+        };
+
+        const handleKeydown = event => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          event.stopPropagation();
+          dismiss();
+        };
+
+        const open = () => {
+          if (isOpen) return;
+          isOpen = true;
+          previousOverflow = document.body.style.overflow;
+          document.body.style.overflow = 'hidden';
+          if (typeof window.openModal === 'function') {
+            window.openModal(modalId);
+          } else {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+          }
+          document.addEventListener('keydown', handleKeydown, true);
+        };
+
+        const dismiss = () => {
+          if (!isOpen) return;
+          persistDismissed();
+          isOpen = false;
+          document.removeEventListener('keydown', handleKeydown, true);
+          unlockScroll();
+          if (typeof window.closeModal === 'function') {
+            window.closeModal(modalId);
+          } else {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+          }
+        };
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dismiss();
+          });
+        }
+
+        modal.addEventListener('click', event => {
+          if (event.target !== modal) return;
+          event.preventDefault();
+          event.stopPropagation();
+          dismiss();
+        });
+
+        if (backdrop) {
+          backdrop.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dismiss();
+          });
+        }
+
+        open();
+      };
+
+      initAnalyticsIntro();
+
       const t = (key, fallback) => window.I18N?.t?.(key) || fallback;
       const periodLabel = () => {
         const raw = (() => {
