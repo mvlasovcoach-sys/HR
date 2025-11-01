@@ -45,7 +45,7 @@
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/hr-board.neon.js?v=2025.10.19-05"></script>
 </head><body>
-<div class="page">
+  <div id="app" class="page">
   <template id="tpl-kpi">
     <article class="kpi--brand" role="group" aria-labelledby="kpi-title">
       <header class="kpi-head">
@@ -76,11 +76,10 @@
         <div class="titlebar">
           <div class="left">
             <h1 class="page-title" data-i18n="header.summary">Summary</h1>
-            <button id="info-btn" class="i-pill" type="button"
+            <button id="legend-trigger" class="i-pill" type="button"
               aria-haspopup="dialog" aria-expanded="false"
               aria-label="Legend"
-              data-i18n="ui.legend" data-i18n-attr="aria-label"
-              onclick="openModal('legend-modal')">i</button>
+              data-i18n="ui.legend" data-i18n-attr="aria-label">i</button>
           </div>
         </div>
 
@@ -113,12 +112,13 @@
     </section>
     <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
+  </div>
   <div id="legend-modal" class="modal" aria-hidden="true">
     <div class="modal__backdrop"></div>
     <section class="modal__panel legend-modal summary-legend" role="dialog" aria-modal="true" aria-labelledby="legend-title" aria-describedby="legend-body" tabindex="-1">
       <div class="legend-header">
         <h3 id="legend-title">Legend</h3>
-        <button class="legend-close" type="button" data-close onclick="closeModal('legend-modal')" aria-label="Close">×</button>
+        <button id="legend-close" class="legend-close" type="button" aria-label="Close">×</button>
       </div>
       <div class="legend-body" id="legend-body"></div>
     </section>

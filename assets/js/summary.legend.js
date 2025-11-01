@@ -1,15 +1,20 @@
 (function(){
   document.addEventListener('DOMContentLoaded', () => {
-    const trigger = document.getElementById('info-btn');
-    const modal = document.getElementById('legend-modal');
-    if (!trigger || !modal) return;
+    const legendTrigger = document.getElementById('legend-trigger')
+      || document.getElementById('info-btn')
+      || document.getElementById('btn-legend');
+    const legendModal = document.getElementById('legend-modal');
+    if (!legendTrigger || !legendModal) return;
 
-    const body = modal.querySelector('.legend-body');
-    const titleEl = modal.querySelector('#legend-title');
-    const closeBtn = modal.querySelector('[data-close]');
+    const legendPanel = legendModal.querySelector('.modal__panel');
+    const legendBody = legendModal.querySelector('.legend-body');
+    const titleEl = legendModal.querySelector('#legend-title');
+    const closeBtn = document.getElementById('legend-close') || legendModal.querySelector('.legend-close');
+    const pageRoot = document.getElementById('app') || document.querySelector('.page') || document.body;
+    let lastFocus = null;
 
-    trigger.setAttribute('aria-haspopup', 'dialog');
-    trigger.setAttribute('aria-expanded', 'false');
+    legendTrigger.setAttribute('aria-haspopup', 'dialog');
+    legendTrigger.setAttribute('aria-expanded', 'false');
 
     function t(key, fallback){
       return window.I18N?.t?.(key) ?? fallback;
@@ -93,16 +98,104 @@
     function renderLegend(){
       if (titleEl) titleEl.textContent = t('legend.title', 'Legend');
       if (closeBtn) closeBtn.setAttribute('aria-label', t('legend.close', 'Close'));
-      if (body) {
-        body.innerHTML = buildBody();
-        insertDisclaimers(body);
+      if (legendBody) {
+        legendBody.innerHTML = buildBody();
+        insertDisclaimers(legendBody);
       }
     }
 
-    trigger.addEventListener('click', event => {
-      event.preventDefault();
+    function openLegend(){
+      lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       renderLegend();
-      openModal('legend-modal');
+      legendModal.classList.add('is-open');
+      legendModal.removeAttribute('aria-hidden');
+      legendTrigger.setAttribute('aria-expanded', 'true');
+      if (pageRoot && !pageRoot.contains(legendModal)) {
+        pageRoot.setAttribute('inert', '');
+      }
+      if (document.body){
+        document.body.dataset.prevOverflow = document.body.style.overflow || '';
+        document.body.style.overflow = 'hidden';
+      }
+      requestAnimationFrame(() => {
+        if (legendPanel) legendPanel.focus();
+      });
+      document.addEventListener('keydown', onLegendKey);
+    }
+
+    function closeLegend(){
+      legendModal.classList.remove('is-open');
+      legendModal.setAttribute('aria-hidden', 'true');
+      legendTrigger.setAttribute('aria-expanded', 'false');
+      if (pageRoot) {
+        pageRoot.removeAttribute('inert');
+      }
+      document.removeEventListener('keydown', onLegendKey);
+      if (document.body){
+        const prev = document.body.dataset.prevOverflow ?? '';
+        document.body.style.overflow = prev;
+        delete document.body.dataset.prevOverflow;
+      }
+      const focusTarget = (lastFocus instanceof HTMLElement ? lastFocus : legendTrigger);
+      try {
+        focusTarget?.focus();
+      } catch (err) {
+        // ignore focus errors
+      }
+      lastFocus = null;
+    }
+
+    function onLegendKey(event){
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        return closeLegend();
+      }
+      if (event.key === 'Tab') {
+        trapFocus(event, legendModal);
+      }
+    }
+
+    function trapFocus(event, root){
+      if (!root) return;
+      const selector = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+      const nodes = Array.from(root.querySelectorAll(selector))
+        .filter(node => {
+          if (node.disabled || node.getAttribute('aria-hidden') === 'true') return false;
+          const rects = node.getClientRects();
+          return rects.length > 0;
+        });
+      if (!nodes.length) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey) {
+        if (active === first || !root.contains(active)) {
+          last.focus();
+          event.preventDefault();
+        }
+      } else if (active === last) {
+        first.focus();
+        event.preventDefault();
+      }
+    }
+
+    legendTrigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      openLegend();
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeLegend();
+      });
+    }
+
+    legendModal.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target === legendModal || target?.classList.contains('modal__backdrop')) {
+        closeLegend();
+      }
     });
 
     document.addEventListener('i18n:change', () => {
@@ -110,5 +203,9 @@
     });
 
     renderLegend();
+
+    if (new URLSearchParams(window.location.search).get('legend') === '1') {
+      openLegend();
+    }
   });
 })();

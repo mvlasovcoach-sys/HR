@@ -20,6 +20,7 @@
 #page-progress,.summary-progress{display:none}
 .is-loading #page-progress,.is-loading .summary-progress{display:block}
 
+#legend-modal[aria-hidden="true"]{display:none;pointer-events:none}
 #legend-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding-top:72px}
 .legend-modal{width:min(560px,calc(100% - 40px));border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 18px 54px rgba(0,0,0,.6);color:#e8f6f9;padding:16px 18px}
 .summary-legend{background:rgba(8,22,28,.96);backdrop-filter:blur(6px)}
