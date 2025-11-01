@@ -35,7 +35,7 @@
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/summary.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/pages/summary.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/ui/modal.js?v=2025-10-26"></script>
 <script defer src="./assets/js/summary.legend.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
@@ -99,22 +99,21 @@
       <span id="org-badge" class="pill brand-pill range-pill" hidden></span>
       <div id="demo-banner" class="banner banner--demo" hidden>
         <span data-i18n="summary.demoActive">Demo scenario active — simulated night-shift data</span>
-        <a id="btn-return-live" href="#" class="brand-btn--primary" data-i18n="summary.return">Return to live</a>
+        <a id="btnReturnLiveBanner" href="#" class="brand-btn--primary" data-i18n="summary.return">Return to live</a>
       </div>
       <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label">
-        <button class="brand-pill range-pill" type="button" data-scenario="night" data-i18n="demo.night">Night-Shift Scenario</button>
-        <button class="brand-pill range-pill" type="button" data-scenario="live" data-i18n="demo.live">Return to Live</button>
+        <button id="btnNight" class="brand-pill range-pill" type="button" data-i18n="demo.night">Night-Shift Scenario</button>
+        <button id="btnReturnLive" class="brand-pill range-pill" type="button" data-i18n="demo.live">Return to Live</button>
       </div>
       <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
     </section>
-    <section id="demo-data-preview" class="card card--context" hidden aria-live="polite">
-      <h2 class="section-title">Night-shift samples (beta)</h2>
-      <pre id="demo-data-json" class="demo-json"></pre>
+    <section class="card card--summary" aria-live="polite">
+      <div id="summary-root">
+        <div id="kpi-row"></div>
+        <div id="trends" class="grid lg:grid-cols-3 gap-6"></div>
+        <div id="at-risk"></div>
+      </div>
     </section>
-    <section class="card card--kpi" aria-live="polite">
-      <section id="kpi-top" class="kpi-top-grid" aria-live="polite"></section>
-    </section>
-    <section id="hr-board" class="card chart-card" aria-live="polite" data-mount="renderHrBoard"></section>
   </main>
   </div>
   <div id="legend-modal" class="modal" aria-hidden="true">
