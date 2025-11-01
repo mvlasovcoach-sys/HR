@@ -112,6 +112,7 @@
   "ui.exportCSV": "Exporteer CSV",
   "ui.loadScenario": "Nachtdienstscenario laden",
   "ui.returnLive": "Terug naar live-weergave",
+  "ui.reload": "Opnieuw laden",
   "delta.noChange": "Geen wijziging",
   "help.summary.title": "Toelichting overzicht",
   "help.summary.lead": "Begrijp hoe KPI's worden berekend voor het geselecteerde bereik.",
@@ -171,7 +172,8 @@
     "calibrate": "Kalibreren",
     "chartAria": "Grafiek emotioneel welzijn",
     "lowSample": "Kleine steekproef (n={n})",
-    "metricGroup": "Meting"
+    "metricGroup": "Meting",
+    "empty": "Geen stressgegevens voor dit bereik. Probeer andere datums of scenario."
   },
   "stats": {
     "lowSample": "Kleine steekproef — interpreteer met voorzichtigheid"
@@ -209,6 +211,7 @@
   "caption.team": "{team}",
   "caption.range": "{range}",
   "caption.scenarioPrefix": "Nachtdienstscenario · ",
+  "caption.demoPrefix": "Demo-scenario · ",
   "caption.teamAll": "Alle teams",
   "delta.up": "Verbeterd",
   "delta.down": "Verslechterd",
@@ -303,6 +306,8 @@
   "heatmap.empty": "Geen heatmapgegevens",
   "toast.summaryError": "Overzichtsgegevens konden niet worden geladen",
   "toast.exportStarted": "Export gestart",
+  "toast.scenarioFallback": "Scenariodata niet beschikbaar — overgeschakeld naar demo",
+  "toast.scenarioUnavailable": "Scenariodata ontbreekt. Vernieuw de pagina.",
   "activity.date": "Datum",
   "activity.team": "Team",
   "activity.hydration": "Hydratatie-logs",

@@ -112,6 +112,7 @@
   "ui.exportCSV": "Export CSV",
   "ui.loadScenario": "Load Night-Shift Scenario",
   "ui.returnLive": "Return to Live View",
+  "ui.reload": "Reload",
   "delta.noChange": "No change",
   "help.summary.title": "Summary legend",
   "help.summary.lead": "Understand how KPIs are calculated for the selected range.",
@@ -171,7 +172,8 @@
     "calibrate": "Calibrate",
     "chartAria": "Emotional wellbeing distribution chart",
     "lowSample": "Low sample size (n={n})",
-    "metricGroup": "Metric"
+    "metricGroup": "Metric",
+    "empty": "No stress data for this range. Try switching dates or scenario."
   },
   "stats": {
     "lowSample": "Low sample size — interpret with caution"
@@ -209,6 +211,7 @@
   "caption.team": "{team}",
   "caption.range": "{range}",
   "caption.scenarioPrefix": "Night-Shift Scenario · ",
+  "caption.demoPrefix": "Demo Scenario · ",
   "caption.teamAll": "All Teams",
   "delta.up": "Improved",
   "delta.down": "Declined",
@@ -310,6 +313,8 @@
   "heatmap.empty": "No heatmap data",
   "toast.summaryError": "Unable to load summary data",
   "toast.exportStarted": "Export started",
+  "toast.scenarioFallback": "Scenario data unavailable — switched to demo",
+  "toast.scenarioUnavailable": "Scenario data unavailable. Please reload.",
   "label.generatedAt": "Generated {date}",
   "aria.about": "About",
   "aria.scenario": "Scenario toggles",

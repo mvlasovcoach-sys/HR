@@ -1,0 +1,14 @@
+{
+  "key": "live",
+  "label": "Live production data",
+  "metrics": {
+    "default": "./data/org/metrics_7d.json",
+    "7d": "./data/org/metrics_7d.json",
+    "month": "./data/org/metrics_month.json",
+    "year": "./data/org/metrics_year.json"
+  },
+  "stress": {
+    "index": "./data/stress/raw/index.json",
+    "base": "./data/stress/raw"
+  }
+}

@@ -1,5 +1,24 @@
 import { loadIndex, loadDay } from './data-loader.js';
 
+const loaderGlobals = typeof globalThis !== 'undefined' ? (globalThis.loaderGlobals || {}) : {};
+const canonicalScenario = typeof loaderGlobals.canonicalScenarioKey === 'function'
+  ? loaderGlobals.canonicalScenarioKey
+  : value => {
+      const key = String(value || '').toLowerCase().trim();
+      if (key === 'night' || key === 'night-shift' || key === 'night_shift' || key === 'nightshift') return 'night';
+      if (key === 'demo' || key === 'sandbox' || key === 'preview') return 'demo';
+      return 'live';
+    };
+
+function currentScenarioKey(){
+  try {
+    const raw = localStorage.getItem('hr:scenario');
+    return canonicalScenario(raw);
+  } catch (err) {
+    return 'live';
+  }
+}
+
 const THRESHOLDS = {
   low: [0, 39],
   normal: [40, 59],
@@ -12,7 +31,8 @@ const state = {
   date: todayISO(),
   index: null,
   data: null,
-  actualDate: null
+  actualDate: null,
+  scenario: currentScenarioKey()
 };
 
 const dayCache = new Map();
@@ -106,6 +126,14 @@ export function initStressTabs() {
   setRange(state.range, { pushUrl: false }).catch(err => {
     console.error('[Analytics] Failed to initialise stress tabs', err);
   });
+
+  window.addEventListener('storage', event => {
+    if (!event || event.key !== 'hr:scenario') return;
+    state.index = null;
+    setRange(state.range, { pushUrl: false }).catch(err => {
+      console.error('[Analytics] Failed to refresh stress data after scenario change', err);
+    });
+  });
 }
 
 function handleTabKeys(tabs) {
@@ -140,17 +168,33 @@ function focusNext(items, currentIndex, direction) {
 async function setRange(range, { pushUrl = true } = {}) {
   if (!range) return;
   state.range = range;
+  state.scenario = currentScenarioKey();
   markActive(range);
   showSkeleton();
 
   try {
-    if (!state.index) {
+    if (!state.index || state.index.scenario !== state.scenario) {
       state.index = await ensureIndex();
     }
+    const emptyLabel = translate('stress.empty', 'No stress data for this range. Try switching dates or scenario.');
     const data = await resolveDataForRange(range, state.date, state.index);
     if (!data) {
-      showEmpty('No stress data for the selected period.');
+      showEmpty(emptyLabel);
       state.data = null;
+      return;
+    }
+
+    const sampleTotal = totalSamples(data);
+    const hasSamples = Number.isFinite(sampleTotal) && sampleTotal > 0;
+    const bucketsPopulated = Array.isArray(data.buckets)
+      ? data.buckets.some(bucket => {
+          const value = Number(bucket.sampleN ?? bucket.n ?? 0);
+          return Number.isFinite(value) && value > 0;
+        })
+      : false;
+    if (!hasSamples || !bucketsPopulated) {
+      state.data = null;
+      showEmpty(emptyLabel);
       return;
     }
 
@@ -170,7 +214,7 @@ async function setRange(range, { pushUrl = true } = {}) {
     }
   } catch (err) {
     console.error('[Analytics] Failed to load stress data', err);
-    showEmpty('No stress data for the selected period.');
+    showEmpty(translate('stress.empty', 'No stress data for this range. Try switching dates or scenario.'));
   }
 }
 
@@ -529,7 +573,8 @@ function axisLabels(range) {
 }
 
 async function ensureIndex() {
-  const index = await loadIndex();
+  const scenarioKey = currentScenarioKey();
+  const index = await loadIndex({ scenario: scenarioKey });
   const list = Array.isArray(index?.dates)
     ? index.dates
     : Array.isArray(index?.days)
@@ -539,18 +584,24 @@ async function ensureIndex() {
     .map(value => (typeof value === 'string' ? value.slice(0, 10) : null))
     .filter(Boolean)
     .sort();
-  return { dates };
+  return { dates, scenario: scenarioKey };
 }
 
 async function resolveDataForRange(range, iso, index) {
+  const scenarioKey = currentScenarioKey();
+  let activeIndex = index;
+  if (!activeIndex || activeIndex.scenario !== scenarioKey) {
+    activeIndex = await ensureIndex();
+  }
+
   if (range === 'day') {
-    const canLoadDirect = hasIndexedDate(index, iso);
+    const canLoadDirect = hasIndexedDate(activeIndex, iso);
     const direct = canLoadDirect ? await loadDayData(iso) : null;
     if (direct) {
       showInfo();
       return presentDay(direct, range);
     }
-    const fallback = await loadNearestPast(iso, index);
+    const fallback = await loadNearestPast(iso, activeIndex);
     if (fallback) {
       showInfo(`Showing ${fallback.date} (nearest available)`);
       return presentDay(fallback.data, range, fallback.date);
@@ -558,16 +609,16 @@ async function resolveDataForRange(range, iso, index) {
     return null;
   }
 
-  const key = `${range}|${iso}`;
+  const key = `${scenarioKey}|${range}|${iso}`;
   if (aggregateCache.has(key)) return aggregateCache.get(key);
 
   let view = null;
   if (range === 'week') {
-    view = await aggregateWeek(iso, index);
+    view = await aggregateWeek(iso, activeIndex);
   } else if (range === 'month') {
-    view = await aggregateMonth(iso, index);
+    view = await aggregateMonth(iso, activeIndex);
   } else if (range === 'year') {
-    view = await aggregateYear(iso, index);
+    view = await aggregateYear(iso, activeIndex);
   }
 
   if (view) {
@@ -578,9 +629,10 @@ async function resolveDataForRange(range, iso, index) {
 
 async function loadDayData(iso) {
   if (!iso) return null;
-  const key = iso;
+  const scenarioKey = currentScenarioKey();
+  const key = `${scenarioKey}|${iso}`;
   if (dayCache.has(key)) return dayCache.get(key);
-  const payload = await loadDay(iso);
+  const payload = await loadDay(iso, { scenario: scenarioKey });
   if (!payload) return null;
   const parsed = Array.isArray(payload)
     ? parseDayFromEvents(payload, iso)

@@ -38,6 +38,22 @@ function initPage(){
           return response.json();
         };
 
+    const canonicalScenario = typeof loaderGlobals.canonicalScenarioKey === 'function'
+      ? loaderGlobals.canonicalScenarioKey
+      : value => {
+          const key = String(value || '').toLowerCase().trim();
+          if (key === 'night' || key === 'night-shift' || key === 'night_shift' || key === 'nightshift') return 'night';
+          if (key === 'demo' || key === 'sandbox' || key === 'preview') return 'demo';
+          return 'live';
+        };
+
+    const loadScenarioManifestFn = typeof loaderGlobals.loadScenarioManifest === 'function'
+      ? loaderGlobals.loadScenarioManifest
+      : async key => ({
+          key: canonicalScenario(key),
+          meta: {requested: canonicalScenario(key), resolved: canonicalScenario(key), fallback: false}
+        });
+
     function versionedUrl(path, options = {}){
       const url = new URL(path, document.baseURI);
       const {range, team, params} = options || {};
@@ -72,6 +88,7 @@ function initPage(){
     const trackerPanel = document.getElementById('analytics-tracker-panel');
     const trackerMeta = document.getElementById('trk-meta');
     const breakdownPanel = document.querySelector('.analytics-breakdown');
+    const toastEl = document.getElementById('analytics-toast');
 
     const BREAKDOWN_KEYS = [
       {key: 'high_stress_pct', label: 'kpi.highStress', fallback: 'High stress', inverse: true, unit: '%'},
@@ -82,11 +99,14 @@ function initPage(){
     const LOW_SAMPLE_THRESHOLD = 20;
     const miniKpiRegistry = new Map();
     let hoverHandlerAttached = false;
+    let toastTimer = null;
 
     const MA_KEY = 'hr:analytics:ma';
     let useMA = readStoredMA();
     let currentChartState = null;
     let compareEnabled = readCompare();
+    let scenarioState = { manifest: null, requested: null, resolved: canonicalScenario('live') };
+    let resolvedScenarioKey = canonicalScenario('live');
     if (typeof ResizeObserver === 'function') {
       const resizeObserver = new ResizeObserver(() => {
         if (currentChartState) {
@@ -114,6 +134,10 @@ function initPage(){
     window.addEventListener('storage', evt => {
       if (!evt) return;
       if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
+        if (evt.key === 'hr:scenario') {
+          scenarioState = { manifest: null, requested: null, resolved: canonicalScenario('live') };
+          resolvedScenarioKey = canonicalScenario('live');
+        }
         render();
       }
       if (evt.key === MA_KEY && maToggle) {
@@ -146,6 +170,28 @@ function initPage(){
       if (typeof alt === 'string') return alt;
       return key.replace(/^label\.|^range\./, '');
     }
+
+    function showToast(message){
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.hidden = false;
+      toastEl.classList.add('is-visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => hideToast(), 5000);
+    }
+
+    function hideToast(){
+      if (!toastEl) return;
+      toastEl.classList.remove('is-visible');
+      toastEl.hidden = true;
+    }
+
+    window.addEventListener('scenario:fallback', event => {
+      const detail = event?.detail || {};
+      if (!detail || !detail.from) return;
+      const message = t('toast.scenarioFallback', 'Scenario data unavailable — switched to demo');
+      showToast(message);
+    });
 
     const getLang = () => window.I18N?.getLang?.() || 'en';
 
@@ -305,6 +351,24 @@ function initPage(){
       }
     }
 
+    async function ensureScenario(forceKey){
+      const requested = canonicalScenario(forceKey || readScenario());
+      if (scenarioState.manifest && scenarioState.requested === requested && !forceKey) {
+        return scenarioState;
+      }
+      try {
+        const manifest = await loadScenarioManifestFn(requested);
+        const resolved = canonicalScenario(manifest?.meta?.resolved || manifest?.key || requested);
+        scenarioState = { manifest, requested, resolved };
+        resolvedScenarioKey = resolved;
+        return scenarioState;
+      } catch (err) {
+        scenarioState = { manifest: null, requested, resolved: requested };
+        resolvedScenarioKey = requested;
+        throw err;
+      }
+    }
+
     async function render(){
       const range = readRange();
       const team = readTeam();
@@ -312,33 +376,17 @@ function initPage(){
       compareEnabled = readCompare();
       setLoading(true);
       let metrics = null;
+      const insight = buildCaption(range, team);
       try {
-        metrics = await loadMetrics(preset, range, team);
+        const scenario = await ensureScenario();
+        metrics = await loadMetrics(preset, range, team, scenario.manifest);
+        if (!metrics) {
+          renderNoData(insight);
+          return;
+        }
         const insufficient = Number(metrics?.n) > 0 && Number(metrics.n) < 5;
         toggleInsufficient(insufficient);
         applyLowSampleState(metrics, team);
-        const insight = buildCaption(range, team);
-        if (!metrics) {
-          currentChartState = null;
-          renderWellbeingChart(null);
-          if (legendEl) legendEl.innerHTML = `<span>${t('status.noData', 'No data')}</span>`;
-          if (breakdownEl) breakdownEl.innerHTML = '';
-          if (miniGrid) miniGrid.innerHTML = '';
-          miniKpiRegistry.clear();
-          if (deltaBadgeEl) {
-            deltaBadgeEl.textContent = '';
-            deltaBadgeEl.className = 'delta-badge';
-            deltaBadgeEl.removeAttribute('aria-label');
-          }
-          if (trackerMeta) trackerMeta.innerHTML = '';
-          if (trackerPanel) {
-            delete trackerPanel.dataset.sourcePeriod;
-            delete trackerPanel.dataset.sourceThreshold;
-          }
-          updateCaption(insight);
-          window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail: {index: null}}));
-          return;
-        }
 
         renderTracker(metrics, team, {compare: compareEnabled, preset});
         renderBreakdown(metrics, team);
@@ -356,18 +404,62 @@ function initPage(){
             period: periodLabel(range)
           });
         }
+      } catch (err) {
+        console.error('Analytics render failed', err);
+        renderNoData(insight, { message: t('toast.scenarioUnavailable', 'Scenario data unavailable. Please reload.'), reload: true });
+        return;
       } finally {
         setLoading(false);
       }
     }
 
-    async function loadMetrics(preset, range, team){
+    async function loadMetrics(preset, range, team, manifest){
       try {
-        const path = `./data/org/metrics_${preset}.json`;
+        const map = manifest?.metrics || {};
+        const canonical = canonicalPreset(preset);
+        const path = map[canonical] || map.default || `./data/org/metrics_${canonical}.json`;
         return await fetchData(path, {range, team});
       } catch (e) {
         console.error('Analytics metrics failed', e);
         return null;
+      }
+    }
+
+    function renderNoData(insight, options = {}){
+      const message = options.message || t('status.noData', 'No data');
+      currentChartState = null;
+      renderWellbeingChart(null);
+      if (legendEl) legendEl.innerHTML = `<span>${escapeHtml(message)}</span>`;
+      if (breakdownEl) breakdownEl.innerHTML = '';
+      if (miniGrid) miniGrid.innerHTML = '';
+      miniKpiRegistry.clear();
+      if (deltaBadgeEl) {
+        deltaBadgeEl.textContent = '';
+        deltaBadgeEl.className = 'delta-badge';
+        deltaBadgeEl.removeAttribute('aria-label');
+      }
+      if (trackerMeta) trackerMeta.innerHTML = '';
+      if (trackerPanel) {
+        delete trackerPanel.dataset.sourcePeriod;
+        delete trackerPanel.dataset.sourceThreshold;
+      }
+      updateCaption(insight);
+      window.dispatchEvent(new CustomEvent('analytics:hoverIndex', {detail: {index: null}}));
+
+      if (options.reload && chartEl) {
+        chartEl.innerHTML = '';
+        const container = document.createElement('div');
+        container.className = 'empty-state';
+        const paragraph = document.createElement('p');
+        paragraph.textContent = message;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'brand-btn--primary';
+        button.textContent = t('ui.reload', 'Reload');
+        button.addEventListener('click', () => window.location.reload());
+        container.appendChild(paragraph);
+        container.appendChild(button);
+        chartEl.appendChild(container);
       }
     }
 
@@ -1327,14 +1419,18 @@ function initPage(){
 
     function readScenario(){
       try {
-        return localStorage.getItem('hr:scenario') || 'live';
+        const raw = localStorage.getItem('hr:scenario');
+        return canonicalScenario(raw);
       } catch (err) {
         return 'live';
       }
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? t('caption.scenarioPrefix', 'Night • ') : '';
+      const key = resolvedScenarioKey || readScenario();
+      if (key === 'night') return t('caption.scenarioPrefix', 'Night • ');
+      if (key === 'demo') return t('caption.demoPrefix', 'Demo • ');
+      return '';
     }
   }
 

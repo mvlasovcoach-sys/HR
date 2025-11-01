@@ -68,6 +68,7 @@
       </div>
     </div>
     <div id="global-caption"></div>
+    <div id="analytics-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
     <section class="card chart-card analytics-tracker" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
       <div class="card__header">
         <h2 class="card__title">
@@ -273,6 +274,43 @@
       };
 
       initAnalyticsIntro();
+
+      const canonicalScenarioFn = (() => {
+        const fn = window.loaderGlobals?.canonicalScenarioKey;
+        if (typeof fn === 'function') return fn;
+        return value => {
+          const key = String(value || '').toLowerCase().trim();
+          if (key === 'night' || key === 'night-shift' || key === 'night_shift' || key === 'nightshift') return 'night';
+          if (key === 'demo' || key === 'sandbox' || key === 'preview') return 'demo';
+          return 'live';
+        };
+      })();
+
+      const knownScenarioKeys = new Set([
+        'live', 'production', 'prod', 'default', 'main',
+        'night', 'night-shift', 'night_shift', 'nightshift',
+        'demo', 'sandbox', 'preview'
+      ]);
+
+      const applyScenarioFromQuery = () => {
+        let queryValue = null;
+        try {
+          queryValue = new URLSearchParams(window.location.search).get('scenario');
+        } catch (err) {
+          queryValue = null;
+        }
+        if (!queryValue) return;
+        const raw = String(queryValue || '').toLowerCase().trim();
+        if (!knownScenarioKeys.has(raw)) return;
+        const canonical = canonicalScenarioFn(raw);
+        try {
+          localStorage.setItem('hr:scenario', canonical);
+        } catch (err) {
+          /* ignore storage issues */
+        }
+      };
+
+      applyScenarioFromQuery();
 
       const t = (key, fallback) => window.I18N?.t?.(key) || fallback;
       const periodLabel = () => {
