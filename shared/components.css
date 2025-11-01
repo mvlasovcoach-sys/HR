@@ -1000,3 +1000,19 @@
 /* гарантируем порядок: модалка > дровер > пилюли */
 .drawer{ z-index:900; }
 .brand-pill, .filters { position:relative; z-index:100; }
+
+#demo-data-preview {
+  margin-top: 1.5rem;
+}
+
+#demo-data-preview .demo-json {
+  background: var(--brand-surface-strong, #0f172a);
+  color: var(--brand-text-inverse, #f8fafc);
+  border-radius: var(--brand-radius-lg, 12px);
+  padding: 1.25rem;
+  max-height: 18rem;
+  overflow: auto;
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}

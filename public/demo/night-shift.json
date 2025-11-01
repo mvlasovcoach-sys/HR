@@ -1,0 +1,2452 @@
+[
+  {
+    "person_id": "emp_101",
+    "ts": "2024-09-30T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 42,
+      "rhr": 57,
+      "sleep_hours": 6.7,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 24,
+      "fatigue": 31,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-09-30T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 44,
+      "rhr": 58,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 27,
+      "fatigue": 32,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-09-30T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 39,
+      "rhr": 62,
+      "sleep_hours": 5.4,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 59,
+      "burnout": 24,
+      "fatigue": 40,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-09-30T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 60,
+      "sleep_hours": 4.9,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 65,
+      "burnout": 29,
+      "fatigue": 47,
+      "wellbeing": 55
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-09-30T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 54,
+      "rhr": 57,
+      "sleep_hours": 8.6,
+      "shift": "off",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 32,
+      "burnout": 25,
+      "fatigue": 31,
+      "wellbeing": 71
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-09-30T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 51,
+      "rhr": 56,
+      "sleep_hours": 8.3,
+      "shift": "off",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 36,
+      "burnout": 28,
+      "fatigue": 33,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-01T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 57,
+      "sleep_hours": 7.2,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 24,
+      "fatigue": 31,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-01T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 61,
+      "sleep_hours": 4.8,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 63,
+      "burnout": 29,
+      "fatigue": 45,
+      "wellbeing": 56
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-01T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 61,
+      "sleep_hours": 4.9,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 62,
+      "burnout": 26,
+      "fatigue": 47,
+      "wellbeing": 57
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-01T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 51,
+      "rhr": 55,
+      "sleep_hours": 8,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 37,
+      "burnout": 29,
+      "fatigue": 39,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-01T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 55,
+      "rhr": 58,
+      "sleep_hours": 8.2,
+      "shift": "off",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 32,
+      "burnout": 24,
+      "fatigue": 31,
+      "wellbeing": 72
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-01T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 57,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 28,
+      "fatigue": 33,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-02T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 62,
+      "sleep_hours": 4.8,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 61,
+      "burnout": 26,
+      "fatigue": 44,
+      "wellbeing": 58
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-02T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 63,
+      "sleep_hours": 4.8,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 66,
+      "burnout": 30,
+      "fatigue": 52,
+      "wellbeing": 53
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-02T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 53,
+      "rhr": 55,
+      "sleep_hours": 8.6,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 30,
+      "burnout": 26,
+      "fatigue": 38,
+      "wellbeing": 69
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-02T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 55,
+      "rhr": 58,
+      "sleep_hours": 8.5,
+      "shift": "off",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 35,
+      "burnout": 28,
+      "fatigue": 37,
+      "wellbeing": 67
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-02T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 59,
+      "sleep_hours": 7.1,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 25,
+      "fatigue": 31,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-02T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 56,
+      "sleep_hours": 6.8,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 29,
+      "fatigue": 34,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-03T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 63,
+      "sleep_hours": 4.9,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 64,
+      "burnout": 27,
+      "fatigue": 50,
+      "wellbeing": 55
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-03T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 55,
+      "rhr": 58,
+      "sleep_hours": 8.2,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 33,
+      "burnout": 30,
+      "fatigue": 44,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-03T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 52,
+      "rhr": 55,
+      "sleep_hours": 8.1,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 30,
+      "burnout": 26,
+      "fatigue": 37,
+      "wellbeing": 70
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-03T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 57,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 28,
+      "fatigue": 36,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-03T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 58,
+      "sleep_hours": 7.2,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 25,
+      "fatigue": 31,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-03T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 44,
+      "rhr": 58,
+      "sleep_hours": 7.5,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 29,
+      "fatigue": 33,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-04T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 54,
+      "rhr": 57,
+      "sleep_hours": 8.3,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 31,
+      "burnout": 27,
+      "fatigue": 42,
+      "wellbeing": 67
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-04T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 49,
+      "rhr": 55,
+      "sleep_hours": 8.4,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 35,
+      "burnout": 30,
+      "fatigue": 42,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-04T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 59,
+      "sleep_hours": 7,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 26,
+      "fatigue": 37,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-04T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 47,
+      "rhr": 57,
+      "sleep_hours": 7.5,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 28,
+      "fatigue": 35,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-04T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 57,
+      "sleep_hours": 7,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 25,
+      "fatigue": 31,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-04T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 40,
+      "rhr": 62,
+      "sleep_hours": 5,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 64,
+      "burnout": 30,
+      "fatigue": 45,
+      "wellbeing": 55
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-05T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 53,
+      "rhr": 56,
+      "sleep_hours": 8.8,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 32,
+      "burnout": 28,
+      "fatigue": 39,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-05T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 59,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 31,
+      "fatigue": 41,
+      "wellbeing": 62
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-05T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 47,
+      "rhr": 59,
+      "sleep_hours": 7.5,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 27,
+      "fatigue": 36,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-05T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 59,
+      "sleep_hours": 7.1,
+      "shift": "day",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 28,
+      "fatigue": 35,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-05T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 39,
+      "rhr": 62,
+      "sleep_hours": 5.2,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 62,
+      "burnout": 26,
+      "fatigue": 43,
+      "wellbeing": 58
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-05T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 39,
+      "rhr": 64,
+      "sleep_hours": 5.3,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 67,
+      "burnout": 32,
+      "fatigue": 51,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-06T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 42,
+      "rhr": 59,
+      "sleep_hours": 7.1,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 28,
+      "fatigue": 39,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-06T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 57,
+      "sleep_hours": 6.9,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 31,
+      "fatigue": 42,
+      "wellbeing": 62
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-06T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 47,
+      "rhr": 56,
+      "sleep_hours": 7.5,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 27,
+      "fatigue": 35,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-06T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 61,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 65,
+      "burnout": 30,
+      "fatigue": 46,
+      "wellbeing": 55
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-06T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 40,
+      "rhr": 63,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 65,
+      "burnout": 28,
+      "fatigue": 48,
+      "wellbeing": 55
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-06T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 55,
+      "rhr": 55,
+      "sleep_hours": 8.1,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 34,
+      "burnout": 32,
+      "fatigue": 43,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-07T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 42,
+      "rhr": 58,
+      "sleep_hours": 6.8,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 28,
+      "fatigue": 40,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-07T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 42,
+      "rhr": 58,
+      "sleep_hours": 7.2,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 31,
+      "fatigue": 41,
+      "wellbeing": 62
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-07T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 37,
+      "rhr": 61,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 59,
+      "burnout": 28,
+      "fatigue": 46,
+      "wellbeing": 57
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-07T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 35,
+      "rhr": 60,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 68,
+      "burnout": 31,
+      "fatigue": 51,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-07T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 50,
+      "rhr": 57,
+      "sleep_hours": 8.3,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 34,
+      "burnout": 28,
+      "fatigue": 39,
+      "wellbeing": 67
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-07T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 50,
+      "rhr": 56,
+      "sleep_hours": 8.5,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 36,
+      "burnout": 32,
+      "fatigue": 41,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-08T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 44,
+      "rhr": 57,
+      "sleep_hours": 7,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 28,
+      "fatigue": 40,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-08T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 39,
+      "rhr": 63,
+      "sleep_hours": 5.1,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 63,
+      "burnout": 32,
+      "fatigue": 53,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-08T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 61,
+      "sleep_hours": 4.9,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 62,
+      "burnout": 30,
+      "fatigue": 52,
+      "wellbeing": 54
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-08T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 52,
+      "rhr": 58,
+      "sleep_hours": 8.4,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 36,
+      "burnout": 31,
+      "fatigue": 43,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-08T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 49,
+      "rhr": 57,
+      "sleep_hours": 8.4,
+      "shift": "off",
+      "subjective_energy": 5
+    },
+    "scores": {
+      "stress": 34,
+      "burnout": 27,
+      "fatigue": 37,
+      "wellbeing": 68
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-08T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 44,
+      "rhr": 57,
+      "sleep_hours": 6.8,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 32,
+      "fatigue": 41,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-09T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 60,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 61,
+      "burnout": 30,
+      "fatigue": 51,
+      "wellbeing": 54
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-09T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 63,
+      "sleep_hours": 5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 66,
+      "burnout": 34,
+      "fatigue": 60,
+      "wellbeing": 49
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-09T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 55,
+      "rhr": 56,
+      "sleep_hours": 8.8,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 29,
+      "burnout": 30,
+      "fatigue": 44,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-09T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 50,
+      "rhr": 57,
+      "sleep_hours": 8.2,
+      "shift": "off",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 37,
+      "burnout": 32,
+      "fatigue": 41,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-09T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 57,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 27,
+      "fatigue": 37,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-09T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 59,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 32,
+      "fatigue": 41,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-10T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 61,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 64,
+      "burnout": 31,
+      "fatigue": 56,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-10T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 51,
+      "rhr": 56,
+      "sleep_hours": 8.4,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 35,
+      "burnout": 34,
+      "fatigue": 52,
+      "wellbeing": 60
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-10T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 49,
+      "rhr": 55,
+      "sleep_hours": 8.8,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 31,
+      "burnout": 30,
+      "fatigue": 41,
+      "wellbeing": 66
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-10T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 47,
+      "rhr": 57,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 32,
+      "fatigue": 40,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-10T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 47,
+      "rhr": 57,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 28,
+      "fatigue": 36,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-10T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 58,
+      "sleep_hours": 7.2,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 46,
+      "burnout": 33,
+      "fatigue": 40,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-11T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 51,
+      "rhr": 55,
+      "sleep_hours": 8,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 33,
+      "burnout": 31,
+      "fatigue": 48,
+      "wellbeing": 63
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-11T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 49,
+      "rhr": 55,
+      "sleep_hours": 8.1,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 35,
+      "burnout": 34,
+      "fatigue": 50,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-11T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 59,
+      "sleep_hours": 7.2,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 30,
+      "fatigue": 40,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-11T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 57,
+      "sleep_hours": 7.4,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 32,
+      "fatigue": 39,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-11T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 56,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 44,
+      "burnout": 28,
+      "fatigue": 36,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-11T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 40,
+      "rhr": 62,
+      "sleep_hours": 5.3,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 64,
+      "burnout": 34,
+      "fatigue": 52,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit"
+      ],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "circadian_disruption",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-12T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 53,
+      "rhr": 54,
+      "sleep_hours": 8.6,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 32,
+      "burnout": 31,
+      "fatigue": 45,
+      "wellbeing": 65
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-12T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 57,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 34,
+      "fatigue": 49,
+      "wellbeing": 58
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-12T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 60,
+      "sleep_hours": 7,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 30,
+      "fatigue": 40,
+      "wellbeing": 64
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-12T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 43,
+      "rhr": 59,
+      "sleep_hours": 7.3,
+      "shift": "day",
+      "subjective_energy": 4
+    },
+    "scores": {
+      "stress": 47,
+      "burnout": 32,
+      "fatigue": 39,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [],
+      "fatigue": [],
+      "wellbeing": []
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-12T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 35,
+      "rhr": 64,
+      "sleep_hours": 5.5,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 62,
+      "burnout": 29,
+      "fatigue": 46,
+      "wellbeing": 56
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-12T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 38,
+      "rhr": 61,
+      "sleep_hours": 5.1,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 67,
+      "burnout": 35,
+      "fatigue": 58,
+      "wellbeing": 49
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_101",
+    "ts": "2024-10-13T16:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 42,
+      "rhr": 57,
+      "sleep_hours": 6.8,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 43,
+      "burnout": 32,
+      "fatigue": 46,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_102",
+    "ts": "2024-10-13T17:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 45,
+      "rhr": 57,
+      "sleep_hours": 7,
+      "shift": "day",
+      "subjective_energy": 2
+    },
+    "scores": {
+      "stress": 45,
+      "burnout": 35,
+      "fatigue": 54,
+      "wellbeing": 56
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "low_energy"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "low_energy",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_103",
+    "ts": "2024-10-13T18:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 46,
+      "rhr": 58,
+      "sleep_hours": 7.1,
+      "shift": "day",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 41,
+      "burnout": 31,
+      "fatigue": 40,
+      "wellbeing": 63
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_104",
+    "ts": "2024-10-13T19:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 36,
+      "rhr": 61,
+      "sleep_hours": 5.2,
+      "shift": "night",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 65,
+      "burnout": 34,
+      "fatigue": 51,
+      "wellbeing": 52
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_105",
+    "ts": "2024-10-13T20:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 37,
+      "rhr": 63,
+      "sleep_hours": 4.9,
+      "shift": "night",
+      "subjective_energy": 2
+    },
+    "scores": {
+      "stress": 65,
+      "burnout": 31,
+      "fatigue": 58,
+      "wellbeing": 51
+    },
+    "explain": {
+      "stress": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low"
+      ],
+      "burnout": [
+        "extended_nights",
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit",
+        "circadian_disruption",
+        "low_energy"
+      ],
+      "wellbeing": [
+        "night_shift",
+        "sleep_deficit",
+        "hrv_low",
+        "circadian_disruption",
+        "low_energy",
+        "extended_nights",
+        "recovery_gap"
+      ]
+    }
+  },
+  {
+    "person_id": "emp_106",
+    "ts": "2024-10-13T21:00:00.000Z",
+    "signals": {
+      "hrv_rmssd": 54,
+      "rhr": 56,
+      "sleep_hours": 8.7,
+      "shift": "off",
+      "subjective_energy": 3
+    },
+    "scores": {
+      "stress": 34,
+      "burnout": 36,
+      "fatigue": 49,
+      "wellbeing": 61
+    },
+    "explain": {
+      "stress": [],
+      "burnout": [
+        "recovery_gap"
+      ],
+      "fatigue": [
+        "sleep_deficit"
+      ],
+      "wellbeing": [
+        "sleep_deficit",
+        "recovery_gap"
+      ]
+    }
+  }
+]
