@@ -16,6 +16,22 @@
     return template.replace(/\{(\w+)\}/g, (_, key) => (vars && key in vars) ? vars[key] : `{${key}}`);
   }
 
+  function flattenDictionary(source){
+    const target = {};
+    const walk = (node, prefix) => {
+      if (node && typeof node === 'object' && !Array.isArray(node)) {
+        Object.entries(node).forEach(([key, value]) => {
+          const next = prefix ? `${prefix}.${key}` : key;
+          walk(value, next);
+        });
+      } else if (prefix) {
+        target[prefix] = node;
+      }
+    };
+    walk(source, '');
+    return target;
+  }
+
   function translateElement(el){
     const key = el.getAttribute('data-i18n');
     if (!key) return;
@@ -75,7 +91,8 @@
       if (!response.ok) {
         throw new Error(`i18n: failed ${target}`);
       }
-      dict = await response.json();
+      const payload = await response.json();
+      dict = flattenDictionary(payload);
       currentLang = target;
     } catch (err) {
       if (target !== 'en') {

@@ -1,0 +1,14 @@
+{
+  "key": "night",
+  "label": "Night-shift scenario",
+  "metrics": {
+    "default": "./data/scenario/night_shift/metrics_7d.json",
+    "7d": "./data/scenario/night_shift/metrics_7d.json",
+    "month": "./data/scenario/night_shift/metrics_month.json",
+    "year": "./data/scenario/night_shift/metrics_year.json"
+  },
+  "stress": {
+    "index": "./data/stress/raw/index.json",
+    "base": "./data/stress/raw"
+  }
+}

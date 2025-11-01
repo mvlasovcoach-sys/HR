@@ -112,6 +112,7 @@
   "ui.exportCSV": "Экспорт CSV",
   "ui.loadScenario": "Включить ночной сценарий",
   "ui.returnLive": "Вернуться к текущим данным",
+  "ui.reload": "Перезагрузить",
   "delta.noChange": "Без изменений",
   "help.summary.title": "Справка по сводке",
   "help.summary.lead": "Поймите, как рассчитываются KPI для выбранного периода.",
@@ -171,7 +172,8 @@
     "calibrate": "Калибровка",
     "chartAria": "График эмоционального благополучия",
     "lowSample": "Малый объем выборки (n={n})",
-    "metricGroup": "Метрика"
+    "metricGroup": "Метрика",
+    "empty": "Нет данных стресса за этот период. Попробуйте сменить даты или сценарий."
   },
   "stats": {
     "lowSample": "Малая выборка — интерпретируйте с осторожностью"
@@ -209,6 +211,7 @@
   "caption.team": "{team}",
   "caption.range": "{range}",
   "caption.scenarioPrefix": "Сценарий ночной смены · ",
+  "caption.demoPrefix": "Демо-сценарий · ",
   "caption.teamAll": "Все команды",
   "delta.up": "Улучшение",
   "delta.down": "Снижение",
@@ -310,6 +313,8 @@
   "heatmap.empty": "No heatmap data",
   "toast.summaryError": "Не удалось загрузить данные сводки",
   "toast.exportStarted": "Экспорт запущен",
+  "toast.scenarioFallback": "Данные сценария недоступны — переключено на демо",
+  "toast.scenarioUnavailable": "Данные сценария недоступны. Перезагрузите страницу.",
   "label.generatedAt": "Generated {date}",
   "aria.about": "О платформе",
   "aria.scenario": "Переключатели сценариев",
