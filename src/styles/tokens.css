@@ -1,0 +1,124 @@
+:root {
+  --surface-page: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-muted: #f1f5f9;
+  --surface-emphasis: #0f172a;
+  --border-muted: rgba(15, 23, 42, 0.1);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-subtle: #64748b;
+  --accent: #2563eb;
+  --accent-soft: rgba(37, 99, 235, 0.15);
+  --sparkline-stroke: var(--accent);
+  --sparkline-fill: rgba(37, 99, 235, 0.08);
+  --ok: #16a34a;
+  --warn: #facc15;
+  --alert: #f87171;
+  --on-ok: #064e3b;
+  --on-warn: #713f12;
+  --on-alert: #7f1d1d;
+  --muted-chip: rgba(15, 23, 42, 0.06);
+  --skeleton-base: #e2e8f0;
+  --skeleton-highlight: #f8fafc;
+  --axis-stroke: rgba(148, 163, 184, 0.6);
+  --grid-stroke: rgba(148, 163, 184, 0.2);
+}
+
+.bg-status-ok {
+  background-color: color-mix(in srgb, var(--ok) 18%, transparent);
+}
+
+.bg-status-warn {
+  background-color: color-mix(in srgb, var(--warn) 22%, transparent);
+}
+
+.bg-status-alert {
+  background-color: color-mix(in srgb, var(--alert) 24%, transparent);
+}
+
+.bg-chip-muted {
+  background-color: var(--muted-chip);
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--skeleton-base);
+}
+
+.skeleton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 50%;
+  height: 100%;
+  background-color: var(--skeleton-highlight);
+  opacity: 0.6;
+  animation: shimmer 1.6s infinite;
+}
+
+.text-status-ok {
+  color: var(--on-ok);
+}
+
+.text-status-warn {
+  color: var(--on-warn);
+}
+
+.text-status-alert {
+  color: var(--on-alert);
+}
+
+.bg-card {
+  background-color: var(--surface-card);
+}
+
+.bg-muted {
+  background-color: var(--surface-muted);
+}
+
+.hover\:bg-muted:hover {
+  background-color: var(--surface-muted);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-subtle);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.border-muted {
+  border-color: var(--border-muted);
+}
+
+.fill-accent-soft {
+  fill: var(--accent-soft);
+}
+
+.fill-ok-soft {
+  fill: color-mix(in srgb, var(--ok) 12%, transparent);
+}
+
+.fill-warn-soft {
+  fill: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.fill-alert-soft {
+  fill: color-mix(in srgb, var(--alert) 12%, transparent);
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
