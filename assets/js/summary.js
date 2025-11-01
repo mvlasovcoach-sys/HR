@@ -1,4 +1,7 @@
 import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js';
+import { appStore } from './modules/store/appState.js';
+import { STRINGS as METRIC_HINT_STRINGS } from './modules/i18n/strings.js';
+import { mapToStatus } from './modules/lib/status.js';
 
 (function(){
   const loaderGlobals = window.loaderGlobals || {};
@@ -46,6 +49,18 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
     rangeStart: null,
     rangeEnd: null
   };
+
+  const store = appStore;
+  const DATA_PREVIEW_CARD_ID = 'demo-data-preview';
+  const DATA_PREVIEW_JSON_ID = 'demo-data-json';
+  let lastScenarioMode = null;
+
+  SUMMARY.metricHints = METRIC_HINT_STRINGS;
+  window.METRIC_HINTS = METRIC_HINT_STRINGS;
+  SUMMARY.dataStore = store;
+  SUMMARY.loadSamples = mode => store.loadSamples(mode);
+
+  store.subscribe(updateDataPreview);
 
   let rendering = false;
 
@@ -113,6 +128,8 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
       setPeriodAndAsOf(selectionState);
       renderSkeleton();
       initPage();
+      ensureStoreMode();
+      refreshSamples({force: true});
     };
 
     if (window.I18N?.onReady) {
@@ -130,6 +147,9 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
         renderSkeleton();
         if (evt.key === 'hr:scenario') updateScenarioButtons();
         initPage();
+        if (evt.key === 'hr:scenario') {
+          refreshSamples({force: true});
+        }
       }
     });
 
@@ -175,6 +195,7 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
       });
     }
     updateScenarioButtons();
+    refreshSamples();
   }
 
   function setScenario(mode){
@@ -190,6 +211,7 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
     updateScenarioButtons();
     renderSkeleton();
     initPage();
+    refreshSamples({force: true});
   }
 
   function readScenario(){
@@ -211,6 +233,7 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
     });
     updateScenarioParam(scenario === 'night');
     setDemoState(scenario === 'night');
+    ensureStoreMode();
   }
 
   function setDemoState(active){
@@ -249,6 +272,73 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
     } catch (err) {
       // ignore malformed URLs
     }
+    ensureStoreMode();
+  }
+
+  function ensureStoreMode(){
+    const scenario = readScenario();
+    const mode = scenarioToModeKey(scenario);
+    store.setMode(mode);
+    lastScenarioMode = mode;
+    return mode;
+  }
+
+  function scenarioToModeKey(value){
+    return value === 'night' ? 'DEMO' : 'LIVE';
+  }
+
+  async function refreshSamples(options = {}){
+    const {force = false} = options || {};
+    const scenario = readScenario();
+    const mode = scenarioToModeKey(scenario);
+    const state = store.getState();
+    const shouldReload = force
+      || mode !== lastScenarioMode
+      || state.mode !== mode
+      || (mode === 'DEMO' && !state.loading && !state.samples.length)
+      || state.error;
+    if (!shouldReload) {
+      updateDataPreview(state);
+      return state.samples;
+    }
+    lastScenarioMode = mode;
+    try {
+      await store.loadSamples(mode);
+    } catch (err) {
+      console.error('[Summary] sample load failed', err);
+    }
+  }
+
+  function updateDataPreview(state){
+    const card = document.getElementById(DATA_PREVIEW_CARD_ID);
+    const pre = document.getElementById(DATA_PREVIEW_JSON_ID);
+    if (!card || !pre) return;
+    if (state.mode !== 'DEMO') {
+      card.hidden = true;
+      pre.textContent = '';
+      return;
+    }
+    card.hidden = false;
+    if (state.loading) {
+      pre.textContent = 'Loading night-shift demo data…';
+      return;
+    }
+    if (state.error) {
+      pre.textContent = `Error: ${state.error}`;
+      return;
+    }
+    const preview = state.samples.slice(0, 5).map(sample => ({
+      person_id: sample.person_id,
+      ts: sample.ts,
+      scores: sample.scores,
+      status: {
+        stress: mapToStatus('stress', sample.scores.stress),
+        burnout: mapToStatus('burnout', sample.scores.burnout),
+        fatigue: mapToStatus('fatigue', sample.scores.fatigue)
+      },
+      explain: sample.explain
+    }));
+    pre.textContent = JSON.stringify(preview, null, 2);
   }
 
   function readRange(){
