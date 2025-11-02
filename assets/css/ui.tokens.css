@@ -1,5 +1,5 @@
 :root {
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bg: #08161C;
   --surface-glass-a: rgba(19, 38, 51, 0.85);
   --surface-glass-b: rgba(7, 23, 32, 0.62);
@@ -43,13 +43,13 @@
   --focus-ring: 0 0 0 3px rgba(33, 226, 194, 0.28);
 }
 
-@font-face {
+/* @font-face {
   font-family: "Inter";
   src: url("../fonts/Inter-Variable.woff2?v=2025-11-02-2") format("woff2-variations");
   font-weight: 100 900;
   font-display: swap;
   font-style: normal;
-}
+} */
 
 html,
 body {
