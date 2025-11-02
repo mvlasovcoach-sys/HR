@@ -15,10 +15,15 @@ export function exportCurrentView(){
   });
 }
 
-export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
+export function renderToolbar(options = {}) {
+  const { mount, title, mode, onModeChange, onInfo } = options;
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
   if (!host) return;
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+  const ranges = (Array.isArray(options?.controls?.ranges) && options.controls.ranges.length)
+    ? options.controls.ranges
+    : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
+  const htmlRanges = ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('');
   host.innerHTML = `
   <div class="toolbar">
     <div class="toolbar-row">
@@ -41,7 +46,7 @@ export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
     </div>
     <div class="toolbar-row">
       <div class="toolbar-left">
-        <div id="rangeSwitch" class="seg-group" data-range-slot></div>
+        <div class="seg-group" id="rangeSwitch">${htmlRanges}</div>
         <div id="modeSwitch" class="seg-group" role="tablist" aria-label="Mode">
           <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
           <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>

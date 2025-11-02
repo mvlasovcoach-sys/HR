@@ -90,7 +90,7 @@ async function initPage(){
     mode: ModeStore.mode,
     onModeChange: m => applyMode(m),
     controls: {
-      ranges: ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'],
+      ranges: ['Today','7 Days','Month to date','Quarter to date','Year to date'],
       showTeam: true,
       showDates: true,
       showCompare: true
