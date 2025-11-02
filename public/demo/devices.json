@@ -1,0 +1,4 @@
+[
+  {"device_id":"HB-001","type":"Healthbox","fw":"2.1.0","status":"online","battery":92,"last_seen":"2025-10-13T08:12:00Z"},
+  {"device_id":"HB-002","type":"Healthbox","fw":"2.1.0","status":"offline","battery":0,"last_seen":"2025-10-12T21:47:00Z"}
+]
