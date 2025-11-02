@@ -1,20 +1,10 @@
-.toolbar{display:flex;flex-direction:column;gap:12px;padding:12px 0}
-.toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar{display:flex;flex-direction:column;gap:12px}
+.toolbar-row{display:flex;align-items:center;justify-content:space-between}
 .title{display:flex;align-items:center;gap:8px}
-.title h1{margin:0}
-.title .info{width:32px;height:32px;border-radius:50%;border:1px solid var(--outline,rgba(255,255,255,.2));background:rgba(11,31,41,.6);color:inherit;font-weight:600;display:grid;place-items:center;cursor:pointer}
-.title .info:focus-visible{outline:2px solid var(--cyan,#21E2C2);outline-offset:2px}
 .lang-stack{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.lang-switch{display:flex;gap:8px;flex-wrap:wrap}
-.lang-switch button{padding:6px 12px;border-radius:999px;border:1px solid var(--outline,rgba(255,255,255,.2));background:transparent;color:inherit;cursor:pointer}
-.lang-switch button:focus-visible{outline:2px solid var(--cyan,#21E2C2);outline-offset:2px}
+.lang-switch{display:flex;gap:8px}
 .toolbar-left,.toolbar-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .seg-group{display:flex;gap:6px;flex-wrap:wrap}
-.seg{padding:6px 12px;border-radius:999px;border:1px solid var(--outline,rgba(255,255,255,.2));background:transparent;cursor:pointer}
-.seg[aria-selected="true"],.seg-active{background:var(--surface-2,rgba(255,255,255,.08));box-shadow:0 0 0 2px var(--brand,#21E2C2) inset}
-.export{padding:6px 12px;border-radius:12px;border:1px solid var(--outline,rgba(255,255,255,.2));background:transparent;cursor:pointer}
-.compare{display:flex;align-items:center;gap:6px}
-@media (max-width:720px){
-  .lang-stack{align-items:flex-start}
-  .toolbar-row{align-items:flex-start}
-}
+.seg{padding:6px 12px;border-radius:999px;border:1px solid var(--outline);background:transparent;cursor:pointer}
+.seg[aria-selected="true"]{background:var(--surface-2);box-shadow:0 0 0 2px var(--brand) inset}
+.export{padding:6px 12px;border-radius:12px;border:1px solid var(--outline)}
