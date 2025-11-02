@@ -22,17 +22,21 @@ export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
   host.innerHTML = `
   <div class="toolbar">
     <div class="toolbar-row">
-      <div class="title">
-        <h1 class="page-title">${title || ''}</h1>
-        <button class="info" type="button" aria-label="About this page">i</button>
-      </div>
-      <div class="lang-stack">
-        <div class="lang-switch" role="group" aria-label="Language">
-          <button type="button" data-lang="en">EN</button>
-          <button type="button" data-lang="nl">NL</button>
-          <button type="button" data-lang="ru">RU</button>
+      <div class="toolbar-left">
+        <div class="title">
+          <h1 class="page-title">${title || ''}</h1>
+          <button class="info" type="button" aria-label="About this page">i</button>
         </div>
-        <button id="btnExport" class="export" type="button">Export</button>
+      </div>
+      <div class="toolbar-right">
+        <div class="lang-stack">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="nl">NL</button>
+            <button type="button" data-lang="ru">RU</button>
+          </div>
+          <button id="btnExport" class="export" type="button">Export</button>
+        </div>
       </div>
     </div>
     <div class="toolbar-row">
@@ -48,8 +52,6 @@ export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
           <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
           <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
         </div>
-      </div>
-      <div class="toolbar-right">
         <div id="teamSelect"></div>
         <div id="dateStart"></div>
         <div id="dateEnd"></div>
