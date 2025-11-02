@@ -747,7 +747,7 @@
   }
 
   function scenarioPrefix(translate){
-    return readScenario() === 'night' ? (translate('caption.scenarioPrefix') || 'Night scenario · ') : '';
+    return readScenario() === 'night' ? (translate('caption.scenarioPrefix') || '') : '';
   }
 
   function readScenario(){

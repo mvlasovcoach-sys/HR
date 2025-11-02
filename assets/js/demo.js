@@ -322,7 +322,7 @@
 
   function renderOverviewCards(data, headcount, departments){
     const dayLabel = getText('demo.day', 'Day');
-    const nightLabel = getText('demo.night', 'Night');
+    const nightLabel = getText('demo.night', '');
     const offLabel = getText('demo.off', 'Off');
     const opsGroups = departments.filter(d => (d.pattern || '').toLowerCase() === '2-2-2').map(d => d.name).join(' / ');
     const supportGroups = departments.filter(d => (d.pattern || '').toLowerCase() === 'day-only').map(d => d.name).join(' / ');
@@ -767,7 +767,7 @@
       });
     }
     const dayLabel = getText('demo.day', 'Day');
-    const nightLabel = getText('demo.night', 'Night');
+    const nightLabel = getText('demo.night', '');
     const offLabel = getText('demo.off', 'Off');
     const headerCells = Array.from({length: 6}, (_, idx) => `<th scope="col">${dayLabel} ${idx + 1}</th>`).join('');
     const tableRows = rows.map(row => {

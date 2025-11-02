@@ -1218,7 +1218,7 @@ function initCorporatePage(){
   }
 
   function scenarioPrefix(){
-    return readScenario() === 'night' ? t('caption.scenarioPrefix', 'Night-Shift Scenario · ') : '';
+    return readScenario() === 'night' ? t('caption.scenarioPrefix', '') : '';
   }
 
   function updateScenarioButtons(){
