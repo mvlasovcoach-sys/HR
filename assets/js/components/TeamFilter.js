@@ -1,113 +1,305 @@
-export function renderTeamFilter({ mount, options, value = [], onChange }){
-  mount.innerHTML = `
+export function renderTeamFilter({ mount, options, value = [], onChange }) {
+  const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
+  if (!host) return;
+
+  const uid = Math.random().toString(36).slice(2, 8);
+  const listId = `tfList-${uid}`;
+  const buttonId = `tfBtn-${uid}`;
+  const panelId = `tfPanel-${uid}`;
+  const searchId = `tfSearch-${uid}`;
+  const chipsId = `tfChips-${uid}`;
+  const selectAllId = `tfAll-${uid}`;
+  const clearId = `tfNone-${uid}`;
+
+  const escapeHtml = value =>
+    String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const translate = (key, fallback) => {
+    try {
+      const fn = window.I18N?.t;
+      if (typeof fn === 'function') {
+        const result = fn.call(window.I18N, key);
+        if (typeof result === 'string' && result.trim()) {
+          return result;
+        }
+      }
+    } catch (err) {
+      /* noop */
+    }
+    return fallback;
+  };
+
+  const teamLabel = translate('label.teamFilter', 'Team');
+  const allTeamsLabel = translate('label.team.all', 'All teams');
+  const searchPlaceholder = translate('filter.searchTeams', 'Search teams…');
+  const selectAllLabel = translate('filter.selectAll', 'Select all');
+  const clearLabel = translate('filter.clear', 'Clear');
+  const removeChipLabel = name => {
+    const base = translate('filter.removeTeam', '').trim();
+    if (!base) return `Remove ${name}`;
+    if (base.includes('{name}')) return base.replace('{name}', name);
+    if (base.includes('%s')) return base.replace('%s', name);
+    return `${base} ${name}`;
+  };
+
+  const safeOptions = Array.isArray(options)
+    ? (() => {
+        const seen = new Set();
+        return options
+          .map(option => {
+            const id = String(option?.id ?? '').trim();
+            const labelText = option?.label ? String(option.label) : id;
+            return {
+              id,
+              label: labelText,
+              labelHtml: escapeHtml(labelText)
+            };
+          })
+          .filter(option => option.id && !seen.has(option.id) && seen.add(option.id));
+      })()
+    : [];
+
+  const optionIndex = new Map(safeOptions.map(option => [option.id, option.label]));
+  let selected = new Set(
+    Array.isArray(value)
+      ? value
+          .map(item => String(item ?? ''))
+          .filter(id => optionIndex.has(id))
+      : []
+  );
+  const allIds = safeOptions.map(option => option.id);
+  const totalCount = allIds.length;
+
+  const usingAllInitially = selected.size === 0 || selected.size === totalCount;
+  if (usingAllInitially) {
+    selected = new Set(allIds);
+  }
+  let usingAll = usingAllInitially;
+
+  host.innerHTML = `
   <div class="team-filter">
-    <label class="filters-label">Team</label>
+    <label class="filters-label" for="${buttonId}">${escapeHtml(teamLabel)}</label>
     <div class="tf-control" role="combobox" aria-expanded="false">
-      <button class="tf-button" id="tfBtn" type="button"></button>
-      <div class="tf-panel" id="tfPanel" hidden>
+      <button class="tf-button" id="${buttonId}" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${panelId}"></button>
+      <div class="tf-panel" id="${panelId}" hidden>
         <div class="tf-search">
-          <input id="tfSearch" type="text" placeholder="Search teams…" />
-          <button id="tfAll" type="button">Select all</button>
-          <button id="tfNone" type="button">Clear</button>
+          <input id="${searchId}" type="text" placeholder="${escapeHtml(searchPlaceholder)}" aria-label="${escapeHtml(searchPlaceholder)}" />
+          <button id="${selectAllId}" type="button">${escapeHtml(selectAllLabel)}</button>
+          <button id="${clearId}" type="button">${escapeHtml(clearLabel)}</button>
         </div>
-        <ul class="tf-list" id="tfList" role="listbox" aria-multiselectable="true"></ul>
+        <ul class="tf-list" id="${listId}" role="listbox" aria-multiselectable="true"></ul>
       </div>
     </div>
-    <div class="tf-chips" id="tfChips"></div>
+    <div class="tf-chips" id="${chipsId}"></div>
   </div>`;
-  const state = new Set(value);
-  const btn = mount.querySelector('#tfBtn');
-  const panel = mount.querySelector('#tfPanel');
-  const list = mount.querySelector('#tfList');
-  const chips = mount.querySelector('#tfChips');
-  const search = mount.querySelector('#tfSearch');
+
+  const control = host.querySelector('.tf-control');
+  const btn = host.querySelector(`#${buttonId}`);
+  const panel = host.querySelector(`#${panelId}`);
+  const list = host.querySelector(`#${listId}`);
+  const chips = host.querySelector(`#${chipsId}`);
+  const search = host.querySelector(`#${searchId}`);
+  const selectAllButton = host.querySelector(`#${selectAllId}`);
+  const clearButton = host.querySelector(`#${clearId}`);
+
+  function getSelectedCount() {
+    if (usingAll) return totalCount;
+    return selected.size;
+  }
 
   function applyLabel() {
-    const total = options.length;
-    const sel = state.size;
-    btn.textContent = sel === 0 || sel === total ? 'All teams' : `Team · ${sel}/${total}`;
+    const count = getSelectedCount();
+    if (!totalCount || count === totalCount) {
+      btn.textContent = allTeamsLabel;
+    } else {
+      btn.textContent = `${teamLabel} · ${count}/${totalCount}`;
+    }
   }
 
   function applyChips() {
-    chips.innerHTML = [...state]
+    const count = getSelectedCount();
+    if (!count || count === totalCount) {
+      chips.innerHTML = '';
+      return;
+    }
+    const ids = usingAll ? [] : Array.from(selected);
+    chips.innerHTML = ids
       .slice(0, 6)
-      .map((id) => {
-        const option = options.find((o) => o.id === id) || {};
-        return `<span class="chip">${option.label}<button data-id="${id}" class="chip-x">×</button></span>`;
+      .map(id => {
+        const label = optionIndex.get(id) ?? id;
+        const labelHtml = escapeHtml(label);
+        const ariaLabel = escapeHtml(removeChipLabel(label));
+        const dataId = escapeHtml(id);
+        return `<span class="tf-chip">${labelHtml}<button data-id="${dataId}" class="tf-chip-remove" type="button" aria-label="${ariaLabel}">×</button></span>`;
       })
       .join('');
-    if (state.size > 6) {
-      chips.insertAdjacentHTML('beforeend', `<span class="chip more">+${state.size - 6}</span>`);
+    if (ids.length > 6) {
+      chips.insertAdjacentHTML('beforeend', `<span class="tf-chip tf-chip--more">+${ids.length - 6}</span>`);
     }
-    chips.querySelectorAll('.chip-x').forEach((x) => {
-      x.onclick = () => {
-        state.delete(x.dataset.id);
-        sync();
-      };
+    chips.querySelectorAll('.tf-chip-remove').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.id;
+        if (!id) return;
+        if (usingAll) {
+          usingAll = false;
+          selected = new Set(allIds);
+        }
+        selected.delete(id);
+        if (selected.size === 0) {
+          usingAll = true;
+          selected = new Set(allIds);
+        }
+        sync({ notify: true, refreshList: false });
+      });
     });
   }
 
   function renderList(filter = '') {
     const f = filter.trim().toLowerCase();
-    list.innerHTML = options
-      .filter((o) => o.label.toLowerCase().includes(f))
-      .map(
-        (o) => `
-        <li class="tf-item">
+    const filtered = safeOptions.filter(option => option.label.toLowerCase().includes(f));
+    list.innerHTML = filtered
+      .map(option => {
+        const idValue = escapeHtml(option.id);
+        return `
+        <li class="tf-item" role="option" aria-selected="false">
           <label>
-            <input type="checkbox" value="${o.id}" ${state.has(o.id) ? 'checked' : ''}>
-            <span>${o.label}</span>
+            <input type="checkbox" value="${idValue}">
+            <span>${option.labelHtml}</span>
           </label>
-        </li>`
-      )
+        </li>`;
+      })
       .join('');
-    list.querySelectorAll('input[type=checkbox]').forEach((cb) => {
-      cb.onchange = () => {
-        if (cb.checked) {
-          state.add(cb.value);
+
+    list.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        const id = checkbox.value;
+        if (!optionIndex.has(id)) return;
+        if (checkbox.checked) {
+          if (usingAll && selected.size === allIds.length) {
+            usingAll = false;
+            selected = new Set(allIds);
+          }
+          selected.add(id);
         } else {
-          state.delete(cb.value);
+          if (usingAll) {
+            usingAll = false;
+            selected = new Set(allIds);
+          }
+          selected.delete(id);
         }
-        sync(false);
-      };
+        if (selected.size === allIds.length) {
+          usingAll = true;
+          selected = new Set(allIds);
+        } else if (selected.size === 0) {
+          usingAll = true;
+          selected = new Set(allIds);
+        }
+        sync({ notify: true, refreshList: false });
+      });
+    });
+
+    applySelections();
+  }
+
+  function applySelections() {
+    list.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      const id = checkbox.value;
+      const isChecked = usingAll ? true : selected.has(id);
+      checkbox.checked = isChecked;
+      checkbox.setAttribute('aria-selected', isChecked.toString());
+      checkbox.closest('li')?.setAttribute('aria-selected', isChecked.toString());
     });
   }
 
-  function sync(notify = true) {
-    applyLabel();
-    applyChips();
-    renderList(search.value || '');
-    if (notify) {
-      onChange?.([...state]);
+  function notifySelection() {
+    if (typeof onChange === 'function') {
+      const ids = usingAll ? [] : Array.from(selected);
+      onChange(ids);
     }
   }
 
-  btn.onclick = () => {
-    const open = panel.hasAttribute('hidden') ? false : true;
-    panel.toggleAttribute('hidden', open);
-    btn.setAttribute('aria-expanded', (!open).toString());
-    if (!open) {
-      search.value = '';
-      renderList('');
-      search.focus();
+  function sync({ notify = false, refreshList = false } = {}) {
+    applyLabel();
+    applyChips();
+    if (refreshList) {
+      renderList(search.value || '');
+    } else {
+      applySelections();
     }
-  };
+    if (notify) {
+      notifySelection();
+    }
+  }
 
-  mount.querySelector('#tfAll').onclick = () => {
-    options.forEach((o) => state.add(o.id));
-    sync();
-  };
-  mount.querySelector('#tfNone').onclick = () => {
-    state.clear();
-    sync();
-  };
-  search.oninput = () => renderList(search.value || '');
-  document.addEventListener('click', (e) => {
-    if (!mount.contains(e.target)) {
-      panel.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
+  function openPanel() {
+    if (!panel.hidden) return;
+    panel.hidden = false;
+    control?.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-expanded', 'true');
+    search.value = '';
+    renderList('');
+    search.focus();
+  }
+
+  function closePanel({ focusButton = false } = {}) {
+    if (panel.hidden) return;
+    panel.hidden = true;
+    control?.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-expanded', 'false');
+    if (focusButton) {
+      btn.focus();
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    if (panel.hidden) {
+      openPanel();
+    } else {
+      closePanel();
     }
   });
 
-  sync(false);
+  selectAllButton?.addEventListener('click', () => {
+    usingAll = true;
+    selected = new Set(allIds);
+    sync({ notify: true, refreshList: false });
+  });
+
+  clearButton?.addEventListener('click', () => {
+    usingAll = true;
+    selected = new Set(allIds);
+    sync({ notify: true, refreshList: false });
+  });
+
+  search.addEventListener('input', () => {
+    renderList(search.value || '');
+  });
+
+  search.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closePanel({ focusButton: true });
+    }
+  });
+
+  panel.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closePanel({ focusButton: true });
+    }
+  });
+
+  document.addEventListener(
+    'click',
+    event => {
+      if (!host.contains(event.target)) {
+        closePanel();
+      }
+    }
+  );
+
+  sync({ notify: false, refreshList: true });
 }
