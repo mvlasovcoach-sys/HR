@@ -10,7 +10,7 @@ export interface KpiRowProps {
   isLoading?: boolean;
 }
 
-const PLACEHOLDER_TEXT = 'No data for selected range';
+const PLACEHOLDER_TEXT = 'Live mode enabled. Connect data source to see metrics.';
 
 export default function KpiRow({ items = [], isLoading = false }: KpiRowProps) {
   if (isLoading) {
