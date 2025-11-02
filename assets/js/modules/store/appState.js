@@ -1,4 +1,4 @@
-import { loadDemoSamples, loadLiveSamples } from '../services/dataSource.js';
+import { loadDemoSamples, loadLiveSamples } from '../../services/dataSource.js';
 
 export class AppStore {
   constructor() {

@@ -1,8 +1,16 @@
 export async function loadSamples(mode){
-  if(mode==='DEMO'){ return fetchBase('/public/demo/night-shift.json'); }
-  return []; // LIVE позже
+  return mode === 'DEMO' ? loadDemoSamples() : loadLiveSamples();
 }
-async function fetchBase(rel){
+
+export async function loadDemoSamples(){
+  return fetchFromBase('/public/demo/night-shift.json');
+}
+
+export async function loadLiveSamples(){
+  return [];
+}
+
+async function fetchFromBase(rel){
   const base = window.location.pathname.replace(/\/[^/]*$/, '');
   const res = await fetch(`${base}${rel}`, { cache:'no-store' });
   return res.ok ? res.json() : [];
