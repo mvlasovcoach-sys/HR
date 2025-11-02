@@ -40,31 +40,13 @@
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.utils.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/pages/demo.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--demo page-wrap">
-    <div id="toolbar">
-      <div id="app-topbar">
-        <div class="topbar-left">
-          <div class="toolbar">
-            <div class="toolbar__title">
-              <h1 class="header__title page-title" data-i18n="demo.title">Demo</h1>
-            </div>
-            <div class="toolbar__filters">
-              <div id="team-filter" class="toolbar__filter"></div>
-              <div id="date-controls" class="toolbar__filter"></div>
-            </div>
-          </div>
-        </div>
-        <div class="topbar-right">
-          <div id="lang-switch" class="lang-switch"></div>
-          <button class="header__icon" type="button" data-about-open
-            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
-        </div>
-      </div>
-    </div>
+    <div id="toolbar"></div>
     <div id="page-content">
       <div id="global-caption"></div>
       <span id="site-badge" class="pill" aria-live="polite"></span>
@@ -142,5 +124,5 @@
     </div>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.DateControls?.mount('#rangeSwitch',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>
