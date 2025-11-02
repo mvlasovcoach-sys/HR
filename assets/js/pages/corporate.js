@@ -1,5 +1,5 @@
 import { renderToolbar } from '../components/Toolbar.js';
-import { renderTeamSelect } from '../components/TeamSelect.js';
+import { renderTeamFilter } from '../components/TeamFilter.js';
 import { ModeStore } from '../stores/modeStore.js';
 import { AppState } from '../stores/appState.js';
 
@@ -40,7 +40,7 @@ async function initPage(){
     if (validTeams.length !== currentTeams.length) {
       AppState.setTeams(validTeams);
     }
-    renderTeamSelect({
+    renderTeamFilter({
       mount: filtersMount,
       options: teamOptions,
       value: validTeams,
