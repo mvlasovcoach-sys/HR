@@ -549,6 +549,66 @@
     }, 2800);
   }
 
+  function readStoredRange(){
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem('hr:range');
+      return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function readStoredCompareFlag(){
+    if (typeof localStorage === 'undefined') return false;
+    try {
+      const raw = localStorage.getItem('hr:compare');
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return Boolean(parsed && parsed.enabled);
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function exportCurrentView(options = {}){
+    if (typeof document === 'undefined') return;
+    const button = options.button || null;
+    notifyStart(button, 'toolbar.export');
+    const base = {
+      title: document.querySelector('.page-title')?.textContent?.trim?.() || document.title || 'HR Dashboard',
+      mode: window.ModeStore?.mode || window.AppState?.mode || 'DEMO',
+      range: readStoredRange(),
+      compare: readStoredCompareFlag(),
+      generatedAt: new Date().toISOString()
+    };
+    const extra = options.extra && typeof options.extra === 'object' ? options.extra : {};
+    const payload = Object.assign({}, base, extra);
+    const filename = (() => {
+      if (typeof options.filename === 'string' && options.filename.trim()) {
+        return options.filename.trim();
+      }
+      const iso = new Date().toISOString().slice(0, 10);
+      return `export_${iso}.json`;
+    })();
+    try {
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (link.parentNode) link.parentNode.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 0);
+    } catch (err) {
+      console.error('exportCurrentView failed', err);
+    }
+  }
+
   if (typeof document !== 'undefined') {
     const refresh = () => updateExportButtons();
     if (document.readyState !== 'loading') {
@@ -564,6 +624,7 @@
     exportPilotSummary,
     sortTable,
     exportSiteBriefPDF,
+    exportCurrentView,
     notifyStart,
     updateExportButtons,
     collectSourceSummaries,

@@ -11,23 +11,6 @@ function t(key, fallback){
   return fallback;
 }
 
-function createExportButton(){
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.id = 'export-fleet';
-  btn.className = 'brand-btn--primary btn--export';
-  btn.setAttribute('data-export-key', 'ui.exportCSV');
-  btn.setAttribute('data-export-icon', '⇩');
-  btn.disabled = true;
-  btn.setAttribute('aria-disabled', 'true');
-  btn.title = t('devices.export.disabled', 'Load data to export');
-  btn.innerHTML = `
-    <span class="btn__icon" aria-hidden="true">⇩</span>
-    <span class="btn__label" data-i18n="ui.exportCSV">${t('ui.exportCSV', 'Export CSV')}</span>
-  `;
-  return btn;
-}
-
 function initDevicesToolbar(){
   const mount = document.getElementById('toolbar');
   if (!mount) return;
@@ -49,11 +32,6 @@ function initDevicesToolbar(){
   const infoBtn = document.getElementById('devices-about');
   if (infoBtn) {
     infoBtn.setAttribute('data-about-open', '');
-  }
-  const actionsHost = document.querySelector('#toolbar .toolbar-actions');
-  if (actionsHost) {
-    const exportBtn = createExportButton();
-    actionsHost.appendChild(exportBtn);
   }
   ModeStore.set(initialMode);
 }
