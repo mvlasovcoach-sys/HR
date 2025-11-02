@@ -20,10 +20,12 @@ export function renderToolbar(options = {}) {
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
   if (!host) return;
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
-  const ranges = (Array.isArray(options?.controls?.ranges) && options.controls.ranges.length)
-    ? options.controls.ranges
+  const controls = options?.controls || {};
+  const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
+    ? controls.ranges
     : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
   const htmlRanges = ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('');
+  const teamSlot = controls?.showTeam === false ? '' : '<div id="teamSelect" class="team-slot"></div>';
   host.innerHTML = `
   <div class="toolbar">
     <div class="toolbar-row">
@@ -51,7 +53,7 @@ export function renderToolbar(options = {}) {
           <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
           <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
         </div>
-        <div id="teamSelect" class="team-slot"></div>
+        ${teamSlot}
         <div id="dateStart" class="toolbar-date-slot" data-date-slot="start">
           <span class="toolbar-date-slot__label" id="dc-start-label">Start</span>
           <input id="dc-start" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-start-label">
