@@ -29,7 +29,6 @@
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
@@ -43,33 +42,17 @@
 <script defer src="./assets/js/source-badge.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/stress.overview.js?v=2025.10.25-01"></script>
 <script type="module" src="./assets/js/ui/modal.js?v=2025-10-26"></script>
+<script type="module" src="./assets/js/pages/analytics.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--analytics">
-    <div id="app-topbar" class="card card--topbar">
-      <div class="page-header">
-        <div class="titlebar">
-          <div class="left">
-            <h1 class="page-title" data-i18n="header.analytics">Analytics</h1>
-            <button id="info-btn" class="i-pill" type="button"
-              aria-haspopup="dialog" aria-expanded="false"
-              aria-label="About Analytics"
-              data-i18n="ui.about" data-i18n-attr="aria-label"
-              onclick="openModal('legend-modal')">i</button>
-          </div>
-        </div>
-
-        <div class="header-controls" role="group" aria-label="Filters">
-          <div id="team-filter" class="toolbar__filter"></div>
-          <div id="date-controls" class="toolbar__filter"></div>
-          <div id="lang-switch" class="lang-switch"></div>
-        </div>
-      </div>
-    </div>
-    <div id="global-caption"></div>
-    <div id="analytics-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
-    <section class="card chart-card analytics-tracker" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
+    <div class="page-wrap">
+      <div id="toolbar"></div>
+      <div id="page-content">
+        <div id="global-caption"></div>
+        <div id="analytics-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
+        <section class="card chart-card analytics-tracker" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
       <div class="card__header">
         <h2 class="card__title">
           <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
@@ -92,7 +75,7 @@
       <div class="mini-kpis num" id="analytics-mini-kpis" aria-live="polite"></div>
       <div class="card__footer note note--meta" id="trk-meta"></div>
     </section>
-    <section class="card analytics-breakdown">
+        <section class="card analytics-breakdown">
       <header class="card__header">
         <div class="card__subtitle" data-i18n="section.breakdowns">Risk Breakdown</div>
       </header>
@@ -100,7 +83,7 @@
         <div class="breakdown-grid num" id="analytics-breakdown" aria-live="polite"></div>
       </div>
     </section>
-    <section class="card card--stress panel--stress" data-stats="true" data-source-id="demo-synth-2025">
+        <section class="card card--stress panel--stress" data-stats="true" data-source-id="demo-synth-2025">
       <div class="so-skeleton" aria-hidden="true">
         <div class="skeleton__line skeleton__line--wide"></div>
         <div class="skeleton__line skeleton__line--mid"></div>
@@ -153,7 +136,9 @@
 
       <div class="panel__meta note note--meta" id="so-meta-line"></div>
       <div class="so-low" id="so-low" role="status" aria-live="polite" hidden>Low sample size</div>
-    </section>
+        </section>
+      </div>
+    </div>
   </main>
   <div id="legend-modal" class="modal" aria-hidden="true">
     <div class="modal__backdrop"></div>
@@ -377,10 +362,6 @@
       };
 
       renderSideNav('analytics');
-      window.DateControls?.mount('#date-controls', {
-        presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
-        compare: true
-      });
       renderCaption();
       document.addEventListener('i18n:change', renderCaption);
       window.addEventListener('storage', event => {

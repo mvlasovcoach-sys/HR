@@ -31,7 +31,6 @@
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/config.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
@@ -77,49 +76,30 @@
   </template>
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main">
-    <div id="app-topbar" class="card card--topbar">
-      <div class="page-header">
-        <div class="titlebar">
-          <div class="left">
-            <h1 class="page-title" data-i18n="header.summary">Summary</h1>
-            <button id="legend-trigger" class="i-pill" type="button"
-              aria-haspopup="dialog" aria-expanded="false"
-              aria-label="Legend"
-              data-i18n="ui.legend" data-i18n-attr="aria-label">i</button>
+    <div class="page-wrap">
+      <div id="toolbar"></div>
+      <div id="page-content">
+        <section class="card card--context" aria-live="polite">
+          <div id="global-caption"></div>
+          <div class="page-subhead">
+            <span id="period-label"></span>
+            <span id="asof-label" class="muted"></span>
           </div>
-        </div>
-
-        <div class="header-controls" role="group" aria-label="Filters">
-          <div id="team-filter" class="toolbar__filter"></div>
-          <div id="date-controls" class="toolbar__filter"></div>
-          <div id="lang-switch" class="lang-switch"></div>
-        </div>
+          <span id="org-badge" class="pill brand-pill range-pill" hidden></span>
+          <div id="scenario-banner" class="banner banner--demo" role="status" hidden>
+            <span class="banner__text"></span>
+          </div>
+          <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
+        </section>
+        <section class="card card--summary" aria-live="polite">
+          <div id="summary-root" class="space-y-6">
+            <div id="kpi-row" class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4"></div>
+            <div id="trends" class="grid gap-6 lg:grid-cols-3"></div>
+            <div id="at-risk"></div>
+          </div>
+        </section>
       </div>
     </div>
-    <section class="card card--context" aria-live="polite">
-      <div id="global-caption"></div>
-      <div class="page-subhead">
-        <span id="period-label"></span>
-        <span id="asof-label" class="muted"></span>
-      </div>
-      <span id="org-badge" class="pill brand-pill range-pill" hidden></span>
-      <div id="demo-banner" class="banner banner--demo" hidden>
-        <span data-i18n="summary.demoActive">Demo scenario active — simulated night-shift data</span>
-        <a id="btnReturnLiveBanner" href="#" class="brand-btn--primary" data-i18n="summary.return">Return to live</a>
-      </div>
-      <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label">
-        <button id="btnNight" class="brand-pill range-pill" type="button" data-i18n="demo.night">Night-Shift Scenario</button>
-        <button id="btnReturnLive" class="brand-pill range-pill" type="button" data-i18n="demo.live">Return to Live</button>
-      </div>
-      <div id="sum-toast" class="toast" aria-live="polite" role="status" hidden></div>
-    </section>
-    <section class="card card--summary" aria-live="polite">
-      <div id="summary-root" class="space-y-6">
-        <div id="kpi-row" class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4"></div>
-        <div id="trends" class="grid gap-6 lg:grid-cols-3"></div>
-        <div id="at-risk"></div>
-      </div>
-    </section>
   </main>
   </div>
   <div id="legend-modal" class="modal" aria-hidden="true">
@@ -133,5 +113,5 @@
     </section>
   </div>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('summary');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('summary');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

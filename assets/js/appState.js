@@ -1,5 +1,5 @@
 export const AppState = {
-  mode: 'LIVE',
+  mode: 'DEMO',
   samples: [],
   setMode(mode) {
     this.mode = mode === 'DEMO' ? 'DEMO' : 'LIVE';

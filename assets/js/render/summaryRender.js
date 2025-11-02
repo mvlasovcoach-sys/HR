@@ -16,7 +16,11 @@ export function renderSummary() {
   kpiEl.innerHTML = trEl.innerHTML = riskEl.innerHTML = '';
 
   if (!samples.length) {
-    riskEl.innerHTML = `<div class="empty">Live mode enabled. Connect data source to see metrics.</div>`;
+    const isLive = AppState.mode === 'LIVE';
+    const message = isLive
+      ? 'No live data yet — switch to Demo to explore sample insights.'
+      : 'No data available for this view.';
+    riskEl.innerHTML = `<div class="empty">${message}</div>`;
     return;
   }
 

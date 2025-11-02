@@ -20,6 +20,8 @@
   --risk-green:#30d158;
   --risk-amber:#ffb020;
   --risk-red:#ff453a;
+  --toolbar-gap:12px;
+  --toolbar-pad:16px;
 }
 
 body.light{
