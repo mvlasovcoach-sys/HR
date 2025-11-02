@@ -1,47 +1,22 @@
 import { renderToolbar } from '../components/Toolbar.js';
 import { ModeStore } from '../stores/modeStore.js';
 
-function t(key, fallback){
-  try {
-    const value = window.I18N?.t?.(key);
-    if (value && value !== key) return value;
-  } catch (err) {
-    /* noop */
-  }
-  return fallback;
+function applyMode(mode){
+  ModeStore.set(mode);
 }
 
-function initCorporateToolbar(){
-  const mount = document.getElementById('toolbar');
-  if (!mount) return;
-  const initialMode = ModeStore.init();
+function initPage(){
+  ModeStore.init();
   renderToolbar({
-    mount,
-    pageTitle: t('header.corporate', 'Corporate'),
-    pageTitleKey: 'header.corporate',
-    mode: initialMode,
-    infoButton: {
-      id: 'corporate-about',
-      ariaLabel: t('ui.about', 'About this page'),
-      ariaLabelKey: 'ui.about'
-    },
-    onModeChange: mode => {
-      ModeStore.set(mode);
-    }
+    mount: document.getElementById('toolbar'),
+    title: 'Corporate',
+    mode: ModeStore.mode,
+    onModeChange: applyMode
   });
-  const infoBtn = document.getElementById('corporate-about');
-  if (infoBtn) {
-    infoBtn.setAttribute('data-about-open', '');
-  }
-  ModeStore.set(initialMode);
-}
-
-function boot(){
-  initCorporateToolbar();
 }
 
 if (document.readyState !== 'loading') {
-  boot();
+  initPage();
 } else {
-  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('DOMContentLoaded', initPage);
 }

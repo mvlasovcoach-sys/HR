@@ -42,6 +42,48 @@ function initCorporatePage(){
     scenarioButtons: Array.from(document.querySelectorAll('.scenario-controls [data-scenario]'))
   };
 
+  ensureToolbarFilters();
+
+  function ensureToolbarFilters(){
+    if (!els.eventTeam) {
+      const slot = document.getElementById('teamSelect');
+      if (slot) {
+        const select = document.createElement('select');
+        select.id = 'f-team';
+        select.multiple = true;
+        select.setAttribute('aria-label', 'All teams');
+        slot.appendChild(select);
+        els.eventTeam = select;
+      }
+    }
+
+    if (!els.eventSeverity || !els.eventType) {
+      const header = els.eventsPanel?.querySelector('.panel__head');
+      if (header) {
+        let container = header.querySelector('.event-filter-inline');
+        if (!container) {
+          container = document.createElement('div');
+          container.className = 'event-filter-inline';
+          header.appendChild(container);
+        }
+        if (!els.eventSeverity) {
+          const select = document.createElement('select');
+          select.id = 'f-sev';
+          select.setAttribute('aria-label', 'All severities');
+          container.appendChild(select);
+          els.eventSeverity = select;
+        }
+        if (!els.eventType) {
+          const select = document.createElement('select');
+          select.id = 'f-type';
+          select.setAttribute('aria-label', 'All types');
+          container.appendChild(select);
+          els.eventType = select;
+        }
+      }
+    }
+  }
+
   if (!els.kpiGrid || !els.heatmapGrid || !els.eventsList || !els.activityTable) {
     return;
   }

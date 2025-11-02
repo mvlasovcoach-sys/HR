@@ -215,25 +215,26 @@
   pointer-events: none;
 }
 
-.filters {
+#events-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.event-filter-inline {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
-.filters select {
+.event-filter-inline select {
   min-width: 140px;
   background: rgba(11, 31, 41, 0.6);
   border: 1px solid rgba(39, 224, 255, 0.25);
   border-radius: var(--radius-soft);
   padding: 0.35rem 0.75rem;
   color: var(--txt);
-}
-
-#events-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
 }
 
 .event-filter-note {
