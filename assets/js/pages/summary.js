@@ -20,10 +20,10 @@ function updateBanner(mode, hasData){
   const textEl = banner.querySelector('.banner__text') || banner;
   const resolved = mode === 'LIVE' ? 'LIVE' : 'DEMO';
   const message = resolved === 'DEMO'
-    ? t('summary.banner.demo', 'Demo scenario active — simulated data')
+    ? t('summary.banner.demo', 'Demo scenario active — simulated data.')
     : hasData
-      ? t('summary.banner.liveReady', 'Live (connected)')
-      : t('summary.banner.liveEmpty', 'No live data yet');
+      ? t('summary.banner.liveReady', 'Live (connected).')
+      : t('summary.banner.liveEmpty', 'Live (connected). No live data yet.');
   banner.classList.toggle('banner--demo', resolved === 'DEMO');
   banner.classList.toggle('banner--live', resolved === 'LIVE');
   banner.dataset.mode = resolved;
