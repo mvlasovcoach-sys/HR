@@ -5,12 +5,14 @@ import { AppState } from '../appState.js';
 import { renderSummary } from '../render/summaryRender.js';
 
 async function applyMode(mode){
-  ModeStore.set(mode);
-  AppState.setMode(mode);
-  updateScenarioBanner(mode);
-  AppState.setSamples(await loadSamples(mode));
-  renderSummary(); // строит KPI/Trends/At-Risk или empty для Live
+  const next = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+  ModeStore.set(next);
+  AppState.setMode(next);
+  updateScenarioBanner(next);
+  AppState.setSamples(await loadSamples(next));
+  renderSummary();
 }
+
 async function initPage(){
   ModeStore.init();
   renderToolbar({
@@ -19,9 +21,9 @@ async function initPage(){
     mode: ModeStore.mode,
     onModeChange: applyMode
   });
-  updateScenarioBanner(ModeStore.mode);
-  await applyMode(ModeStore.mode); // DEMO по умолчанию
+  await applyMode(ModeStore.mode);
 }
+
 document.addEventListener('DOMContentLoaded', initPage);
 
 function updateScenarioBanner(mode){
@@ -34,5 +36,5 @@ function updateScenarioBanner(mode){
   banner.classList.toggle('banner--live', normalized === 'LIVE');
   textHost.textContent = normalized === 'DEMO'
     ? 'Demo scenario active — simulated data.'
-    : 'Live (connected). No live data yet.';
+    : 'Live mode enabled. Switch to Demo.';
 }
