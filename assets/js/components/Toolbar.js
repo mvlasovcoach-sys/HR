@@ -216,7 +216,7 @@ export function renderToolbar(options = {}){
   const exportIcon = document.createElement('span');
   exportIcon.className = 'toolbar-export__icon';
   exportIcon.setAttribute('aria-hidden', 'true');
-  exportIcon.textContent = '⇩';
+  exportIcon.textContent = '⤓';
   const exportText = document.createElement('span');
   exportText.className = 'toolbar-export__label';
   exportButton.appendChild(exportIcon);
@@ -489,10 +489,6 @@ export function renderToolbar(options = {}){
       updateRangeState();
     } else if (event.key === COMPARE_KEY) {
       updateCompareState();
-    } else if (event.key === 'hr:scenario') {
-      const next = event.newValue === 'night' ? 'DEMO' : event.newValue === 'live' ? 'LIVE' : ModeStore.mode;
-      ModeStore.mode = next;
-      updateModeButtons(next);
     }
   });
 
