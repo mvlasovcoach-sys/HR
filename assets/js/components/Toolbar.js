@@ -41,21 +41,24 @@ export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
     </div>
     <div class="toolbar-row">
       <div class="toolbar-left">
-        <div id="rangeSwitch" class="seg-group">
-          <button class="seg" type="button">Today</button>
-          <button class="seg" type="button">7 Days</button>
-          <button class="seg" type="button">Month to date</button>
-          <button class="seg" type="button">Quarter to date</button>
-          <button class="seg" type="button">Year to date</button>
-        </div>
+        <div id="rangeSwitch" class="seg-group" data-range-slot></div>
         <div id="modeSwitch" class="seg-group" role="tablist" aria-label="Mode">
           <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
           <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
         </div>
-        <div id="teamSelect"></div>
-        <div id="dateStart"></div>
-        <div id="dateEnd"></div>
-        <label class="compare"><input type="checkbox" id="compareChk"> Compare</label>
+        <div id="teamSelect" class="team-slot"></div>
+        <div id="dateStart" class="toolbar-date-slot" data-date-slot="start">
+          <span class="toolbar-date-slot__label" id="dc-start-label">Start</span>
+          <input id="dc-start" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-start-label">
+        </div>
+        <div id="dateEnd" class="toolbar-date-slot" data-date-slot="end">
+          <span class="toolbar-date-slot__label" id="dc-end-label">End</span>
+          <input id="dc-end" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-end-label">
+        </div>
+        <label class="compare" data-compare-slot>
+          <input type="checkbox" id="compareChk">
+          <span class="compare__label">Compare</span>
+        </label>
       </div>
     </div>
   </div>`;

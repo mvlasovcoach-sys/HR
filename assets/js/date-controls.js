@@ -70,7 +70,7 @@
   }
 
   function mount(hostSelector, options={}){
-    const host = typeof hostSelector === 'string' ? document.querySelector(hostSelector) : hostSelector;
+    const host = resolveElement(hostSelector);
     if (!host) return;
 
     const config = {
@@ -80,52 +80,58 @@
       compare: Boolean(options.compare)
     };
 
+    const startSlot = resolveElement(options.startSlot) || document.querySelector('[data-date-slot="start"]');
+    const endSlot = resolveElement(options.endSlot) || document.querySelector('[data-date-slot="end"]');
+    const compareSlot = resolveElement(options.compareSlot) || document.querySelector('[data-compare-slot]');
+
     host.innerHTML = '';
-    const wrapper = document.createElement('div');
-    wrapper.className = 'dc';
-    host.appendChild(wrapper);
+    host.classList.add('seg-group');
+    host.setAttribute('role', 'group');
 
-    const presetButtons = config.presets.map(key => createPresetButton(key, wrapper));
+    const presetButtons = config.presets.map(key => createPresetButton(key, host));
 
-    const separator = document.createElement('span');
-    separator.className = 'dc__sep';
-    wrapper.appendChild(separator);
+    const startField = ensureDateField(startSlot, 'dc-start', 'range.start', 'Start');
+    const endField = ensureDateField(endSlot, 'dc-end', 'range.end', 'End');
+    const compareToggle = ensureCompareField(compareSlot, config.compare);
 
-    const start = document.createElement('input');
-    start.type = 'date';
-    start.id = 'dc-start';
-    start.className = 'dc__input date-input';
-    wrapper.appendChild(start);
+    const handleDateChange = () => {
+      if (startField?.input?.value && endField?.input?.value) {
+        saveRange({start: startField.input.value, end: endField.input.value});
+      }
+    };
 
-    const end = document.createElement('input');
-    end.type = 'date';
-    end.id = 'dc-end';
-    end.className = 'dc__input date-input';
-    wrapper.appendChild(end);
+    if (startField?.input) {
+      startField.input.addEventListener('change', handleDateChange);
+    }
+    if (endField?.input) {
+      endField.input.addEventListener('change', handleDateChange);
+    }
 
-    [start, end].forEach(input => {
-      input.addEventListener('change', () => {
-        if (start.value && end.value) {
-          saveRange({start: start.value, end: end.value});
-        }
+    if (compareToggle?.input) {
+      compareToggle.input.addEventListener('change', () => {
+        saveCompare(Boolean(compareToggle.input.checked));
       });
-    });
-
-    let compareToggle = null;
-    if (config.compare) {
-      compareToggle = createCompareToggle(wrapper);
     }
 
     function updateLocale(){
+      const groupLabel = translate('range.group', 'Date range');
+      host.setAttribute('aria-label', groupLabel);
       presetButtons.forEach(button => {
         const key = button.dataset.preset;
         button.textContent = translateRange(key, key.toUpperCase());
       });
-      start.setAttribute('aria-label', translate('range.start', 'Start date'));
-      end.setAttribute('aria-label', translate('range.end', 'End date'));
-      if (compareToggle) {
-        const label = compareToggle.querySelector('.dc__compare-label');
-        if (label) label.textContent = translate('range.compare', 'Compare');
+      if (startField?.label) {
+        const text = translate('range.start', 'Start');
+        startField.label.textContent = text;
+        startField.input?.setAttribute('aria-label', text);
+      }
+      if (endField?.label) {
+        const text = translate('range.end', 'End');
+        endField.label.textContent = text;
+        endField.input?.setAttribute('aria-label', text);
+      }
+      if (compareToggle?.label) {
+        compareToggle.label.textContent = translate('range.compare', 'Compare');
       }
     }
 
@@ -138,36 +144,29 @@
         button.classList.remove('active');
         button.setAttribute('aria-pressed', String(isActive));
       });
-      if (range && range.start) start.value = range.start; else start.value = '';
-      if (range && range.end) end.value = range.end; else end.value = '';
+      if (startField?.input) {
+        startField.input.value = range && range.start ? range.start : '';
+      }
+      if (endField?.input) {
+        endField.input.value = range && range.end ? range.end : '';
+      }
     }
 
     function updateCompareState(){
-      if (!compareToggle) return;
-      const input = compareToggle.querySelector('input[type="checkbox"]');
-      if (input) {
-        input.checked = readCompare();
-      }
+      if (!compareToggle?.input) return;
+      compareToggle.input.checked = readCompare();
     }
 
     presetButtons.forEach(button => {
       button.addEventListener('click', () => {
         const key = button.dataset.preset;
-        if (key) {
-          saveRange({preset: key});
-          start.value = '';
-          end.value = '';
-          updateActive();
-        }
+        if (!key) return;
+        saveRange({preset: key});
+        if (startField?.input) startField.input.value = '';
+        if (endField?.input) endField.input.value = '';
+        updateActive();
       });
     });
-
-    if (compareToggle) {
-      const input = compareToggle.querySelector('input[type="checkbox"]');
-      input.addEventListener('change', () => {
-        saveCompare(Boolean(input.checked));
-      });
-    }
 
     document.addEventListener('i18n:change', updateLocale);
     if (g.I18N?.onReady) {
@@ -199,30 +198,76 @@
     });
   }
 
+  function resolveElement(target){
+    if (!target) return null;
+    if (typeof target === 'string') return document.querySelector(target);
+    if (target instanceof Element) return target;
+    if (target && target.nodeType === 1) return target;
+    return null;
+  }
+
   function createPresetButton(key, wrapper){
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.preset = key;
-    button.className = 'dc__preset range-pill';
+    button.className = 'seg range-pill';
     button.setAttribute('aria-pressed', 'false');
     button.textContent = translateRange(key, key.toUpperCase());
     wrapper.appendChild(button);
     return button;
   }
 
-  function createCompareToggle(wrapper){
-    const label = document.createElement('label');
-    label.className = 'dc__compare';
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.className = 'dc__compare-input';
-    const span = document.createElement('span');
-    span.className = 'dc__compare-label';
-    span.textContent = translate('range.compare', 'Compare');
-    label.appendChild(input);
-    label.appendChild(span);
-    wrapper.appendChild(label);
-    return label;
+  function ensureDateField(slot, id, key, fallback){
+    const host = resolveElement(slot);
+    if (!host) return null;
+    host.classList.add('toolbar-date-slot');
+    let label = host.querySelector('.toolbar-date-slot__label');
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'toolbar-date-slot__label';
+      host.prepend(label);
+    }
+    let input = host.querySelector('input[type="date"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'date';
+      host.appendChild(input);
+    }
+    label.id = label.id || `${id}-label`;
+    input.id = id;
+    input.classList.add('toolbar-date-slot__input');
+    input.classList.add('date-input');
+    input.setAttribute('aria-labelledby', label.id);
+    label.textContent = translate(key, fallback);
+    input.setAttribute('aria-label', translate(key, fallback));
+    return {host, label, input};
+  }
+
+  function ensureCompareField(slot, enabled){
+    const host = resolveElement(slot);
+    if (!host) return null;
+    if (!enabled) {
+      host.hidden = true;
+      host.setAttribute('aria-hidden', 'true');
+      return null;
+    }
+    host.hidden = false;
+    host.removeAttribute('aria-hidden');
+    host.classList.add('compare');
+    let input = host.querySelector('input[type="checkbox"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'checkbox';
+      host.prepend(input);
+    }
+    let label = host.querySelector('.compare__label');
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'compare__label';
+      host.appendChild(label);
+    }
+    label.textContent = translate('range.compare', 'Compare');
+    return {host, input, label};
   }
 
   g.DateControls = {
