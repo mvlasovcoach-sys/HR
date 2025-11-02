@@ -1,4 +1,5 @@
 :root{
+  --font-sans:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --bg:#08161C;
   --surface:#0E1E27;
   --border:rgba(255,255,255,.06);
@@ -14,14 +15,17 @@
   --hero-chart-h:360px;
   --demo-hero-h:280px;
   --shadow:0 12px 32px rgba(0,0,0,.28);
-  --font-h1: clamp(20px, 2.2vw, 32px);
-  --font-h2: clamp(18px, 1.8vw, 28px);
-  --font-body: clamp(14px, 1.2vw, 16px);
+  --font-h1:28px;
+  --font-h2:20px;
+  --font-body:16px;
+  --font-body-sm:14px;
   --risk-green:#30d158;
   --risk-amber:#ffb020;
   --risk-red:#ff453a;
   --toolbar-gap:12px;
   --toolbar-pad:16px;
+  --toolbar-item-height:36px;
+  --toolbar-radius:999px;
 }
 
 body.light{
@@ -41,7 +45,17 @@ body.density--compact{
   --shadow:0 6px 24px rgba(0,0,0,.25);
 }
 
-body{font-size:var(--font-body);}
+@font-face{
+  font-family:"Inter";
+  src:url("../fonts/Inter-Variable.woff2") format("woff2-variations");
+  font-weight:100 900;
+  font-display:swap;
+  font-style:normal;
+}
+
+html{font-size:16px;}
+
+body{font-size:var(--font-body);font-family:var(--font-sans);line-height:1.5;}
 
 .header__title{font-size:var(--font-h1);}
 
