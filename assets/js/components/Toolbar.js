@@ -100,10 +100,10 @@ function normaliseMode(value){
   return text === 'LIVE' ? 'LIVE' : 'DEMO';
 }
 
-function createButton(label){
+function createRangeButton(label){
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'range-pill toolbar-range-btn';
+  btn.className = 'seg toolbar-range-btn';
   btn.textContent = label;
   return btn;
 }
@@ -111,11 +111,44 @@ function createButton(label){
 function createSegmentButton(label, mode){
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'seg__btn';
+  btn.className = 'seg toolbar-mode-btn';
   btn.dataset.mode = mode;
   btn.setAttribute('role', 'tab');
   btn.textContent = label;
   return btn;
+}
+
+function fallbackExport(button){
+  if (typeof document === 'undefined') return;
+  const data = {
+    title: document.querySelector('.page-title')?.textContent?.trim?.() || document.title || 'HR Dashboard',
+    mode: window.ModeStore?.mode || ModeStore.mode || 'DEMO',
+    range: (() => {
+      try {
+        return JSON.parse(localStorage.getItem(RANGE_KEY) || 'null');
+      } catch (err) {
+        return null;
+      }
+    })(),
+    compare: readCompare(),
+    generatedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const iso = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `export_${iso}.json`;
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    if (link.parentNode) link.parentNode.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 0);
+  if (button && window.exporter?.notifyStart) {
+    window.exporter.notifyStart(button, 'toolbar.export');
+  }
 }
 
 export function renderToolbar(options = {}){
@@ -133,8 +166,10 @@ export function renderToolbar(options = {}){
 
   const titleRow = document.createElement('div');
   titleRow.className = 'toolbar-row toolbar-title-row';
+
   const titleGroup = document.createElement('div');
   titleGroup.className = 'toolbar-title';
+
   const title = document.createElement('h1');
   title.className = 'page-title';
   if (options.pageTitleKey) {
@@ -165,22 +200,53 @@ export function renderToolbar(options = {}){
   titleGroup.appendChild(infoButton);
 
   titleRow.appendChild(titleGroup);
-  const titleActions = document.createElement('div');
-  titleActions.className = 'toolbar-actions';
-  titleRow.appendChild(titleActions);
 
+  const langStack = document.createElement('div');
+  langStack.className = 'lang-stack';
+
+  const langHost = document.createElement('div');
+  langHost.id = 'lang-switch';
+  langHost.className = 'lang-switch';
+  langStack.appendChild(langHost);
+
+  const exportButton = document.createElement('button');
+  exportButton.type = 'button';
+  exportButton.className = 'toolbar-export';
+  exportButton.id = options.exportButtonId || 'toolbar-export';
+  const exportIcon = document.createElement('span');
+  exportIcon.className = 'toolbar-export__icon';
+  exportIcon.setAttribute('aria-hidden', 'true');
+  exportIcon.textContent = '⇩';
+  const exportText = document.createElement('span');
+  exportText.className = 'toolbar-export__label';
+  exportButton.appendChild(exportIcon);
+  exportButton.appendChild(exportText);
+  exportButton.addEventListener('click', () => {
+    if (typeof options.onExport === 'function') {
+      options.onExport({button: exportButton});
+      return;
+    }
+    if (window.exporter?.exportCurrentView) {
+      window.exporter.exportCurrentView({button: exportButton});
+    } else {
+      fallbackExport(exportButton);
+    }
+  });
+  langStack.appendChild(exportButton);
+
+  titleRow.appendChild(langStack);
   toolbar.appendChild(titleRow);
 
-  const filterRow = document.createElement('div');
-  filterRow.className = 'toolbar-row toolbar-grid';
+  const controlsRow = document.createElement('div');
+  controlsRow.className = 'toolbar-row toolbar-controls';
 
-  const leftCol = document.createElement('div');
-  leftCol.className = 'toolbar-stack';
+  const leftGroup = document.createElement('div');
+  leftGroup.className = 'toolbar-left';
 
-  const rangeLine = document.createElement('div');
-  rangeLine.className = 'toolbar-line toolbar-line--ranges';
-  rangeLine.setAttribute('role', 'group');
-  rangeLine.setAttribute('aria-label', t('range.presets', 'Date range presets'));
+  const rangeGroup = document.createElement('div');
+  rangeGroup.className = 'toolbar-range';
+  rangeGroup.setAttribute('role', 'group');
+  rangeGroup.setAttribute('aria-label', t('range.presets', 'Date range presets'));
 
   const rangeButtons = presets.map(key => {
     const fallback = (() => {
@@ -193,7 +259,7 @@ export function renderToolbar(options = {}){
         default: return key.toUpperCase();
       }
     })();
-    const btn = createButton(translateRange(key, fallback));
+    const btn = createRangeButton(translateRange(key, fallback));
     btn.dataset.preset = key;
     btn.setAttribute('aria-pressed', 'false');
     btn.addEventListener('click', () => {
@@ -202,83 +268,80 @@ export function renderToolbar(options = {}){
     });
     return btn;
   });
-  rangeButtons.forEach(btn => rangeLine.appendChild(btn));
+  rangeButtons.forEach(btn => rangeGroup.appendChild(btn));
 
-  const modeLine = document.createElement('div');
-  modeLine.className = 'toolbar-line toolbar-line--mode';
+  leftGroup.appendChild(rangeGroup);
+
+  const modeGroup = document.createElement('div');
+  modeGroup.className = 'mode-switch';
   const modeLabel = document.createElement('span');
-  modeLabel.className = 'toolbar-mode-label';
-  modeLine.appendChild(modeLabel);
+  modeLabel.className = 'mode-switch__label';
+  const modeLabelId = `toolbar-mode-${Math.random().toString(36).slice(2, 9)}`;
+  modeLabel.id = modeLabelId;
+  modeGroup.appendChild(modeLabel);
   const segment = document.createElement('div');
-  segment.className = 'seg';
+  segment.className = 'mode-switch__tabs';
   segment.setAttribute('role', 'tablist');
+  segment.setAttribute('aria-labelledby', modeLabelId);
   segment.setAttribute('aria-label', t('toolbar.modeGroup', 'Mode toggle'));
   const demoBtn = createSegmentButton('Demo', 'DEMO');
   const liveBtn = createSegmentButton('Live', 'LIVE');
   segment.appendChild(demoBtn);
   segment.appendChild(liveBtn);
-  modeLine.appendChild(segment);
+  modeGroup.appendChild(segment);
+  leftGroup.appendChild(modeGroup);
 
-  leftCol.appendChild(rangeLine);
-  leftCol.appendChild(modeLine);
-
-  const rightCol = document.createElement('div');
-  rightCol.className = 'toolbar-right';
+  const rightGroup = document.createElement('div');
+  rightGroup.className = 'toolbar-right';
 
   const teamSlot = document.createElement('div');
   teamSlot.id = 'team-filter';
-  teamSlot.className = 'toolbar-slot toolbar-slot--team';
-  rightCol.appendChild(teamSlot);
+  teamSlot.className = 'toolbar-team';
+  rightGroup.appendChild(teamSlot);
 
-  const dateSlot = document.createElement('div');
-  dateSlot.id = 'date-controls';
-  dateSlot.className = 'toolbar-slot toolbar-slot--dates';
-  const datesWrapper = document.createElement('div');
-  datesWrapper.className = 'toolbar-dates';
   const startLabel = document.createElement('label');
+  startLabel.className = 'toolbar-date';
+  startLabel.setAttribute('for', 'toolbar-date-start');
   const startText = document.createElement('span');
+  startText.className = 'toolbar-date__label';
   const startInput = document.createElement('input');
   startInput.type = 'date';
   startInput.id = 'toolbar-date-start';
-  startInput.className = 'toolbar-date-input';
-  startInput.placeholder = 'From';
+  startInput.className = 'toolbar-date__input';
   startLabel.appendChild(startText);
   startLabel.appendChild(startInput);
 
   const endLabel = document.createElement('label');
+  endLabel.className = 'toolbar-date';
+  endLabel.setAttribute('for', 'toolbar-date-end');
   const endText = document.createElement('span');
+  endText.className = 'toolbar-date__label';
   const endInput = document.createElement('input');
   endInput.type = 'date';
   endInput.id = 'toolbar-date-end';
-  endInput.className = 'toolbar-date-input';
-  endInput.placeholder = 'To';
+  endInput.className = 'toolbar-date__input';
   endLabel.appendChild(endText);
   endLabel.appendChild(endInput);
 
-  datesWrapper.appendChild(startLabel);
-  datesWrapper.appendChild(endLabel);
-  dateSlot.appendChild(datesWrapper);
+  rightGroup.appendChild(startLabel);
+  rightGroup.appendChild(endLabel);
 
   const compareLabel = document.createElement('label');
   compareLabel.className = 'toolbar-compare';
+  compareLabel.setAttribute('for', 'toolbar-compare');
   const compareInput = document.createElement('input');
   compareInput.type = 'checkbox';
   compareInput.id = 'toolbar-compare';
+  compareInput.className = 'toolbar-compare__checkbox';
   const compareText = document.createElement('span');
+  compareText.className = 'toolbar-compare__label';
   compareLabel.appendChild(compareInput);
   compareLabel.appendChild(compareText);
-  dateSlot.appendChild(compareLabel);
+  rightGroup.appendChild(compareLabel);
 
-  rightCol.appendChild(dateSlot);
-
-  const langSlot = document.createElement('div');
-  langSlot.id = 'lang-switch';
-  langSlot.className = 'toolbar-slot toolbar-slot--lang lang-switch';
-  rightCol.appendChild(langSlot);
-
-  filterRow.appendChild(leftCol);
-  filterRow.appendChild(rightCol);
-  toolbar.appendChild(filterRow);
+  controlsRow.appendChild(leftGroup);
+  controlsRow.appendChild(rightGroup);
+  toolbar.appendChild(controlsRow);
 
   host.innerHTML = '';
   host.appendChild(toolbar);
@@ -293,18 +356,27 @@ export function renderToolbar(options = {}){
           case 'mtd': return 'Month to date';
           case 'qtd': return 'Quarter to date';
           case 'ytd': return 'Year to date';
-          default: return key.toUpperCase();
+          default: return String(key || '').toUpperCase();
         }
       })();
       btn.textContent = translateRange(key, fallback);
     });
-    startText.textContent = t('range.start', 'From');
-    endText.textContent = t('range.end', 'To');
-    startInput.setAttribute('aria-label', startText.textContent);
-    endInput.setAttribute('aria-label', endText.textContent);
-    compareText.textContent = t('range.compare', 'Compare');
-    compareInput.setAttribute('aria-label', compareText.textContent);
-    modeLabel.textContent = `${t('toolbar.modeLabel', 'Mode')}:`;
+    const startLabelText = t('range.start', 'Start date');
+    const endLabelText = t('range.end', 'End date');
+    startText.textContent = startLabelText;
+    endText.textContent = endLabelText;
+    startInput.setAttribute('aria-label', startLabelText);
+    endInput.setAttribute('aria-label', endLabelText);
+    const compareLabelText = t('range.compare', 'Compare');
+    compareText.textContent = compareLabelText;
+    compareInput.setAttribute('aria-label', compareLabelText);
+    const modeLabelText = t('toolbar.modeLabel', 'Mode');
+    modeLabel.textContent = modeLabelText;
+    const exportLabel = t('toolbar.export', 'Export');
+    exportText.textContent = exportLabel;
+    exportButton.setAttribute('aria-label', exportLabel);
+    exportButton.setAttribute('title', exportLabel);
+    exportButton.setAttribute('data-export-label', exportLabel);
   }
 
   function updateRangeState(){
@@ -312,7 +384,7 @@ export function renderToolbar(options = {}){
     const preset = range && range.preset ? normalisePreset(range.preset) : null;
     rangeButtons.forEach(btn => {
       const isActive = Boolean(preset && btn.dataset.preset === preset);
-      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('seg-active', isActive);
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-pressed', String(isActive));
     });
@@ -329,7 +401,9 @@ export function renderToolbar(options = {}){
   }
 
   function updateCompareState(){
-    compareInput.checked = readCompare();
+    const checked = readCompare();
+    compareInput.checked = checked;
+    compareInput.setAttribute('aria-checked', String(checked));
   }
 
   function handleDateChange(){
@@ -343,7 +417,9 @@ export function renderToolbar(options = {}){
   endInput.addEventListener('change', handleDateChange);
 
   compareInput.addEventListener('change', () => {
-    saveCompare(Boolean(compareInput.checked));
+    const checked = Boolean(compareInput.checked);
+    saveCompare(checked);
+    compareInput.setAttribute('aria-checked', String(checked));
     updateCompareState();
   });
 
@@ -373,11 +449,30 @@ export function renderToolbar(options = {}){
       }
       updateModeButtons(targetMode);
       if (typeof options.onModeChange === 'function') {
-        options.onModeChange(targetMode);
+        Promise.resolve(options.onModeChange(targetMode))
+          .catch(err => console.error('[Toolbar] mode change handler failed', err));
       } else {
         ModeStore.set(targetMode);
       }
     });
+  });
+
+  segment.addEventListener('keydown', event => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const order = [demoBtn, liveBtn];
+    const index = order.findIndex(btn => btn.dataset.mode === currentMode);
+    let nextIndex = index;
+    if (event.key === 'ArrowLeft') {
+      nextIndex = index <= 0 ? order.length - 1 : index - 1;
+    } else if (event.key === 'ArrowRight') {
+      nextIndex = index >= order.length - 1 ? 0 : index + 1;
+    }
+    const nextBtn = order[nextIndex];
+    if (nextBtn) {
+      nextBtn.focus();
+      nextBtn.click();
+    }
   });
 
   const onModeChangeEvent = event => {
