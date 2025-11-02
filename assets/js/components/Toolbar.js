@@ -167,6 +167,9 @@ export function renderToolbar(options = {}){
   const titleRow = document.createElement('div');
   titleRow.className = 'toolbar-row toolbar-title-row';
 
+  const titleLeft = document.createElement('div');
+  titleLeft.className = 'toolbar-title-left';
+
   const titleGroup = document.createElement('div');
   titleGroup.className = 'toolbar-title';
 
@@ -199,7 +202,11 @@ export function renderToolbar(options = {}){
   });
   titleGroup.appendChild(infoButton);
 
-  titleRow.appendChild(titleGroup);
+  titleLeft.appendChild(titleGroup);
+  titleRow.appendChild(titleLeft);
+
+  const titleRight = document.createElement('div');
+  titleRight.className = 'toolbar-title-right';
 
   const langStack = document.createElement('div');
   langStack.className = 'lang-stack';
@@ -234,7 +241,8 @@ export function renderToolbar(options = {}){
   });
   langStack.appendChild(exportButton);
 
-  titleRow.appendChild(langStack);
+  titleRight.appendChild(langStack);
+  titleRow.appendChild(titleRight);
   toolbar.appendChild(titleRow);
 
   const controlsRow = document.createElement('div');
