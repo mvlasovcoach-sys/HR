@@ -3,6 +3,7 @@
 .filters-select{min-width:320px;max-width:460px;line-height:1.2;height:auto;padding:6px 8px;border-radius:8px;background:#0f1f24;border:1px solid var(--outline)}
 
 .team-filter{display:flex;flex-direction:column;gap:8px;color:var(--text-0,#e7f1f5);font-weight:500}
+.team-filter,#filters-bar{border:none!important;outline:none!important;box-shadow:none!important;background:transparent}
 .team-filter .filters-label{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-1,#aac0cb)}
 .tf-control{position:relative;display:inline-flex;align-items:center;width:100%;max-width:360px}
 .tf-button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px 14px;border-radius:var(--radius-12,12px);border:1px solid var(--line-a20,rgba(231,241,245,.2));background:rgba(12,28,36,.92);background:color-mix(in srgb,rgba(12,28,36,.92) 88%,transparent);color:inherit;font-weight:600;line-height:1.2;text-align:left;cursor:pointer;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
