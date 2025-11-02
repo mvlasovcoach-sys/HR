@@ -443,7 +443,7 @@ function initPage(){
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? (t('caption.scenarioPrefix') || 'Night scenario · ') : '';
+      return readScenario() === 'night' ? (t('caption.scenarioPrefix') || '') : '';
     }
 
     function toggleInsufficient(active){

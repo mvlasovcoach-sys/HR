@@ -500,7 +500,7 @@
     }
 
     function scenarioPrefix(){
-      return readScenario() === 'night' ? (window.t('caption.scenarioPrefix') || 'Night scenario · ') : '';
+      return readScenario() === 'night' ? (window.t('caption.scenarioPrefix') || '') : '';
     }
 
     async function handleExport(){

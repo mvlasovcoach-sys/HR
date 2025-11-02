@@ -1428,7 +1428,7 @@ function initPage(){
 
     function scenarioPrefix(){
       const key = resolvedScenarioKey || readScenario();
-      if (key === 'night') return t('caption.scenarioPrefix', 'Night • ');
+      if (key === 'night') return t('caption.scenarioPrefix', '');
       if (key === 'demo') return t('caption.demoPrefix', 'Demo • ');
       return '';
     }
