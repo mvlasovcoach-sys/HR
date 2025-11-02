@@ -42,8 +42,7 @@
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
-  <main class="main main--engagement">
-    <div class="page-wrap">
+  <main class="main main--engagement page-wrap">
       <div id="toolbar"></div>
       <div id="page-content">
         <div id="global-caption"></div>
@@ -55,7 +54,6 @@
           <div class="kpi-grid" id="eng-kpi-grid" aria-live="polite" data-mount="renderEngagementPage"></div>
         </section>
       </div>
-    </div>
   </main>
 </div>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('engagement');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
