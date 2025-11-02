@@ -1,6 +1,5 @@
 (function(){
   const ROUTE_MAP = {
-    summary: {roles: ['HR', 'OH', 'Admin']},
     analytics: {roles: ['HR', 'OH', 'Admin']},
     engagement: {roles: ['HR', 'OH', 'Admin']},
     corporate: {roles: ['HR', 'OH', 'Admin']},
@@ -14,7 +13,6 @@
   };
 
   const FILE_TO_KEY = {
-    'summary.html': 'summary',
     'analytics.html': 'analytics',
     'engagement.html': 'engagement',
     'corporate.html': 'corporate',

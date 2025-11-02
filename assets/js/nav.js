@@ -2,7 +2,6 @@
 (function(){
   // 1) Single source of nav items
   window.NAV_ITEMS = [
-    {id:'summary',    href:'Summary.html',    i18n:'nav.summary'},
     {id:'analytics',  href:'Analytics.html',  i18n:'nav.analytics'},
     {id:'engagement', href:'Engagement.html', i18n:'nav.engagement'},
     {id:'corporate',  href:'Corporate.html',  i18n:'nav.corporate'},
@@ -14,7 +13,7 @@
 
   // 2) Fallback English labels (in case i18n is late)
   const LABEL_EN = {
-    summary:'Summary', analytics:'Analytics', engagement:'Engagement',
+    analytics:'Analytics', engagement:'Engagement',
     corporate:'Corporate', devices:'Devices', settings:'Settings', demo:'Demo'
   };
 
@@ -103,7 +102,7 @@
   // 4) Last-resort auto-render if page forgot to call
   document.addEventListener('DOMContentLoaded', ()=>{
     if(!document.querySelector('#side-nav a, #sidebar-slot a')){
-      const guess = (location.pathname.match(/(\w+)\.html$/)?.[1] || 'summary').toLowerCase();
+      const guess = (location.pathname.match(/(\w+)\.html$/)?.[1] || 'corporate').toLowerCase();
       renderSideNav(guess);
     }
   });
