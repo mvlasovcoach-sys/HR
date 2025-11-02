@@ -4,30 +4,12 @@ import { loadSamples } from '../services/dataSource.js';
 import { AppState } from '../appState.js';
 import { renderSummary } from '../render/summaryRender.js';
 
-function updateBanner(mode){
-  const banner = document.getElementById('scenario-banner');
-  if (!banner) return;
-  const textEl = banner.querySelector('.banner__text') || banner;
-  const resolved = mode === 'LIVE' ? 'LIVE' : 'DEMO';
-  const message = resolved === 'DEMO'
-    ? 'Demo scenario active — simulated data.'
-    : 'Live (connected). No live data yet.';
-  banner.classList.toggle('banner--demo', resolved === 'DEMO');
-  banner.classList.toggle('banner--live', resolved === 'LIVE');
-  banner.dataset.mode = resolved;
-  textEl.textContent = message;
-  banner.hidden = false;
-}
-
 async function applyMode(mode){
   ModeStore.set(mode);
-  const data = await loadSamples(mode);
   AppState.setMode(mode);
-  AppState.setSamples(data);
-  updateBanner(mode);
-  renderSummary();
+  AppState.setSamples(await loadSamples(mode));
+  renderSummary(); // строит KPI/Trends/At-Risk или empty для Live
 }
-
 async function initPage(){
   ModeStore.init();
   renderToolbar({
@@ -36,11 +18,6 @@ async function initPage(){
     mode: ModeStore.mode,
     onModeChange: applyMode
   });
-  await applyMode(ModeStore.mode);
+  await applyMode(ModeStore.mode); // DEMO по умолчанию
 }
-
-if (document.readyState !== 'loading') {
-  initPage();
-} else {
-  document.addEventListener('DOMContentLoaded', initPage);
-}
+document.addEventListener('DOMContentLoaded', initPage);
