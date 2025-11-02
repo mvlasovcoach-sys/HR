@@ -102,45 +102,88 @@ function worstStatus(statuses: RiskStatus[]): RiskStatus {
   return statuses.reduce((worst, current) => (STATUS_ORDER[current] > STATUS_ORDER[worst] ? current : worst), statuses[0]);
 }
 
-function collectRowDrivers(sample: PersonSample): string[] {
+function collectSampleDrivers(sample: PersonSample | null): string[] {
+  if (!sample?.explain) return [];
   const drivers = new Set<string>();
-  const explain = sample.explain;
-  if (!explain) return [];
-  ['stress', 'burnout', 'fatigue'].forEach((metric) => {
-    const list = explain[metric as keyof typeof explain];
-    if (list) {
-      list.forEach((item) => drivers.add(item));
-    }
+  (['stress', 'burnout', 'fatigue'] as const).forEach((metric) => {
+    const list = sample.explain?.[metric];
+    list?.forEach((item) => drivers.add(item));
   });
   return Array.from(drivers).slice(0, 4);
 }
 
-function buildAtRiskRows(samples: PersonSample[]): AtRiskRow[] {
-  const latest = new Map<string, PersonSample>();
+function getMetricMax(samples: PersonSample[], metric: 'stress' | 'burnout' | 'fatigue'): number {
+  let maxValue = Number.NEGATIVE_INFINITY;
   samples.forEach((sample) => {
-    const current = latest.get(sample.person_id);
-    if (!current || new Date(sample.ts).getTime() > new Date(current.ts).getTime()) {
-      latest.set(sample.person_id, sample);
+    const value = sample.scores?.[metric];
+    if (typeof value === 'number' && !Number.isNaN(value)) {
+      maxValue = Math.max(maxValue, value);
     }
   });
+  return maxValue === Number.NEGATIVE_INFINITY ? 0 : maxValue;
+}
 
-  return Array.from(latest.values()).map((sample) => {
+function getWorstSample(samples: PersonSample[]): PersonSample | null {
+  let candidate: { sample: PersonSample; score: number } | null = null;
+  samples.forEach((sample) => {
     const { stress, burnout, fatigue } = sample.scores;
+    const values = [stress, burnout, fatigue].filter((value) => typeof value === 'number' && !Number.isNaN(value));
+    const score = values.length ? Math.max(...values) : Number.NEGATIVE_INFINITY;
+    if (!candidate || score > candidate.score) {
+      candidate = { sample, score };
+      return;
+    }
+    if (candidate && score === candidate.score) {
+      const currentTs = new Date(sample.ts).getTime();
+      const prevTs = new Date(candidate.sample.ts).getTime();
+      if (Number.isFinite(currentTs) && Number.isFinite(prevTs) && currentTs > prevTs) {
+        candidate = { sample, score };
+      }
+    }
+  });
+  return candidate?.score === Number.NEGATIVE_INFINITY ? null : candidate?.sample ?? null;
+}
+
+function buildAtRiskRows(samples: PersonSample[]): AtRiskRow[] {
+  const grouped = new Map<string, PersonSample[]>();
+  samples.forEach((sample) => {
+    const list = grouped.get(sample.person_id) ?? [];
+    list.push(sample);
+    grouped.set(sample.person_id, list);
+  });
+
+  const rows = Array.from(grouped.entries()).map(([personId, entries]) => {
+    const stressMax = getMetricMax(entries, 'stress');
+    const burnoutMax = getMetricMax(entries, 'burnout');
+    const fatigueMax = getMetricMax(entries, 'fatigue');
     const statuses: RiskStatus[] = [
-      mapToStatus('stress', stress),
-      mapToStatus('burnout', burnout),
-      mapToStatus('fatigue', fatigue),
+      mapToStatus('stress', stressMax),
+      mapToStatus('burnout', burnoutMax),
+      mapToStatus('fatigue', fatigueMax),
     ];
+    const worstSample = getWorstSample(entries);
+
     return {
-      personId: sample.person_id,
-      name: formatName(sample.person_id),
-      stress: clampScore(stress),
-      burnout: clampScore(burnout),
-      fatigue: clampScore(fatigue),
+      personId,
+      name: formatName(personId),
+      stress: clampScore(stressMax),
+      burnout: clampScore(burnoutMax),
+      fatigue: clampScore(fatigueMax),
       maxStatus: worstStatus(statuses),
-      drivers: collectRowDrivers(sample),
+      drivers: collectSampleDrivers(worstSample),
     } satisfies AtRiskRow;
   });
+
+  return rows
+    .sort((a, b) => {
+      const aMax = Math.max(a.stress, a.burnout, a.fatigue);
+      const bMax = Math.max(b.stress, b.burnout, b.fatigue);
+      if (bMax !== aMax) {
+        return bMax - aMax;
+      }
+      return STATUS_ORDER[b.maxStatus] - STATUS_ORDER[a.maxStatus];
+    })
+    .slice(0, 10);
 }
 
 export default async function SummaryPage() {

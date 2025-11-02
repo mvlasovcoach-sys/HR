@@ -16,7 +16,7 @@ export function renderSummary() {
   kpiEl.innerHTML = trEl.innerHTML = riskEl.innerHTML = '';
 
   if (!samples.length) {
-    riskEl.innerHTML = `<div class="empty">No data for selected range</div>`;
+    riskEl.innerHTML = `<div class="empty">Live mode enabled. Connect data source to see metrics.</div>`;
     return;
   }
 
