@@ -41,37 +41,41 @@
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
-  <main class="main main--pilot">
-    <div id="app-topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.pilot">Pilot Dashboard</h1>
-          </div>
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
-            <div class="toolbar__filter">
-              <button class="brand-btn--primary btn--export" type="button" id="btn-export-pilot" data-export-key="label.export.pdf" data-export-icon="⇩">
-                <span class="btn__icon" aria-hidden="true">⇩</span>
-                <span class="btn__label" data-i18n="label.export.pdf">Export Pilot Summary (PDF)</span>
-              </button>
+  <main class="main main--pilot page-wrap">
+    <div id="toolbar">
+      <div id="app-topbar">
+        <div class="topbar-left">
+          <div class="toolbar">
+            <div class="toolbar__title">
+              <h1 class="header__title page-title" data-i18n="header.pilot">Pilot Dashboard</h1>
+            </div>
+            <div class="toolbar__filters">
+              <div id="team-filter" class="toolbar__filter"></div>
+              <div id="date-controls" class="toolbar__filter"></div>
+              <div class="toolbar__filter">
+                <button class="brand-btn--primary btn--export" type="button" id="btn-export-pilot" data-export-key="label.export.pdf" data-export-icon="⇩">
+                  <span class="btn__icon" aria-hidden="true">⇩</span>
+                  <span class="btn__label" data-i18n="label.export.pdf">Export Pilot Summary (PDF)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        <div class="topbar-right">
+          <div id="lang-switch" class="lang-switch"></div>
+          <button class="header__icon" type="button" data-about-open
+            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        </div>
       </div>
     </div>
-    <div id="global-caption"></div>
+    <div id="page-content">
+      <div id="global-caption"></div>
 
-    <section class="panel" id="pilot-kpis" aria-live="polite"></section>
-    <section class="panel" id="pilot-heatmap" aria-live="polite"></section>
-    <section class="panel" id="pilot-events" aria-live="polite"></section>
-    <p class="pilot-note" data-i18n="pilot.gdpr">GDPR note: dashboards expose only aggregates with no personal data.</p>
+      <section class="panel" id="pilot-kpis" aria-live="polite"></section>
+      <section class="panel" id="pilot-heatmap" aria-live="polite"></section>
+      <section class="panel" id="pilot-events" aria-live="polite"></section>
+      <p class="pilot-note" data-i18n="pilot.gdpr">GDPR note: dashboards expose only aggregates with no personal data.</p>
+    </div>
   </main>
 </div>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('pilot');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>

@@ -44,99 +44,102 @@
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
-  <main class="main">
-    <div id="app-topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="demo.title">Demo</h1>
-          </div>
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
+  <main class="main main--demo page-wrap">
+    <div id="toolbar">
+      <div id="app-topbar">
+        <div class="topbar-left">
+          <div class="toolbar">
+            <div class="toolbar__title">
+              <h1 class="header__title page-title" data-i18n="demo.title">Demo</h1>
+            </div>
+            <div class="toolbar__filters">
+              <div id="team-filter" class="toolbar__filter"></div>
+              <div id="date-controls" class="toolbar__filter"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        <div class="topbar-right">
+          <div id="lang-switch" class="lang-switch"></div>
+          <button class="header__icon" type="button" data-about-open
+            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        </div>
       </div>
     </div>
+    <div id="page-content">
+      <div id="global-caption"></div>
+      <span id="site-badge" class="pill" aria-live="polite"></span>
 
-    <div id="global-caption"></div>
-    <span id="site-badge" class="pill" aria-live="polite"></span>
+      <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
 
-    <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
+      <section id="demo-overview" class="grid grid-4 demo-info-grid" aria-live="polite">
+        <div id="card-site" class="tile card"></div>
+        <div id="card-headcount" class="tile card"></div>
+        <div id="card-rotation" class="tile card"></div>
+        <div id="card-shifts" class="tile card"></div>
+      </section>
 
-    <section id="demo-overview" class="grid grid-4 demo-info-grid" aria-live="polite">
-      <div id="card-site" class="tile card"></div>
-      <div id="card-headcount" class="tile card"></div>
-      <div id="card-rotation" class="tile card"></div>
-      <div id="card-shifts" class="tile card"></div>
-    </section>
+      <section id="demo-org" class="panel" aria-live="polite">
+        <div class="panel__head" data-i18n="demo.orgStructure">Organization</div>
+        <div id="org-table"></div>
+      </section>
 
-    <section id="demo-org" class="panel" aria-live="polite">
-      <div class="panel__head" data-i18n="demo.orgStructure">Organization</div>
-      <div id="org-table"></div>
-    </section>
+      <section id="demo-demographics" class="section">
 
-    <section id="demo-demographics" class="section">
+        <div class="panel panel--chart" data-stats="true" data-source-id="demo-synth-2025">
+          <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n="source.link" data-i18n-attr="aria-label">i</button>
+          <h2 class="panel__title">
+            <span data-i18n="demo.age_title">Age — Headcount by band</span>
+            <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="age-n">0</span>)</span>
+          </h2>
+          <div class="panel__meta note note--meta" id="age-meta"></div>
+          <div class="chart-host chart-host--bar" data-chart="age-overall">
+            <div id="chart-age-overall" class="chart-root"></div>
+          </div>
+          <div class="chart-mini">
+            <h3 class="chart-mini__title">
+              <span data-i18n="demo.gender_title">Gender — Headcount</span>
+              <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="gender-n">0</span>)</span>
+            </h3>
+            <div id="chart-gender-overall" class="chart-mini__root"></div>
+          </div>
+          <div class="chart-notes" data-note-host="age"></div>
+        </div>
 
-      <div class="panel panel--chart" data-stats="true" data-source-id="demo-synth-2025">
+        <article class="card panel" data-stats="true" data-source-id="demo-synth-2025">
+          <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n="source.link" data-i18n-attr="aria-label">i</button>
+          <h3 data-i18n="demo.byDepartment">By Department</h3>
+          <div class="legend legend--inline">
+            <span class="legend__item"><i class="dot dot--green"></i><span data-i18n="legend.ok">OK (≥ threshold)</span></span>
+            <span class="legend__item"><i class="dot dot--blue"></i><span data-i18n="legend.nok">Not OK (&lt; threshold)</span></span>
+          </div>
+          <div class="panel__meta note note--meta" id="dept-meta"></div>
+          <div class="chart-block">
+            <div id="chart-by-dept" class="chart-root"></div>
+          </div>
+          <div class="chart-notes" data-note-host="dept"></div>
+        </article>
+
+      </section>
+
+      <section id="demo-shifts" class="panel" aria-live="polite" data-stats="true" data-source-id="demo-synth-2025">
         <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
           data-i18n="source.link" data-i18n-attr="aria-label">i</button>
-        <h2 class="panel__title">
-          <span data-i18n="demo.age_title">Age — Headcount by band</span>
-          <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="age-n">0</span>)</span>
-        </h2>
-        <div class="panel__meta note note--meta" id="age-meta"></div>
-        <div class="chart-host chart-host--bar" data-chart="age-overall">
-          <div id="chart-age-overall" class="chart-root"></div>
-        </div>
-        <div class="chart-mini">
-          <h3 class="chart-mini__title">
-            <span data-i18n="demo.gender_title">Gender — Headcount</span>
-            <span class="muted">(<span data-i18n="demo.age.unit_people">n</span>=<span id="gender-n">0</span>)</span>
-          </h3>
-          <div id="chart-gender-overall" class="chart-mini__root"></div>
-        </div>
-        <div class="chart-notes" data-note-host="age"></div>
+        <div class="panel__head" data-i18n="demo.shiftPattern">Shift Pattern</div>
+        <div class="panel__meta note note--meta" id="shift-meta"></div>
+        <div id="shift-grid"></div>
+      </section>
+
+      <div class="actions">
+        <button id="btn-export-brief" class="brand-btn--primary btn--export" data-export-key="demo.exportBrief" data-export-icon="⇩">
+          <span class="btn__icon" aria-hidden="true">⇩</span>
+          <span class="btn__label" data-i18n="demo.exportBrief">Export Site Brief (PDF)</span>
+        </button>
       </div>
 
-      <article class="card panel" data-stats="true" data-source-id="demo-synth-2025">
-        <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
-          data-i18n="source.link" data-i18n-attr="aria-label">i</button>
-        <h3 data-i18n="demo.byDepartment">By Department</h3>
-        <div class="legend legend--inline">
-          <span class="legend__item"><i class="dot dot--green"></i><span data-i18n="legend.ok">OK (≥ threshold)</span></span>
-          <span class="legend__item"><i class="dot dot--blue"></i><span data-i18n="legend.nok">Not OK (&lt; threshold)</span></span>
-        </div>
-        <div class="panel__meta note note--meta" id="dept-meta"></div>
-        <div class="chart-block">
-          <div id="chart-by-dept" class="chart-root"></div>
-        </div>
-        <div class="chart-notes" data-note-host="dept"></div>
-      </article>
-
-    </section>
-
-    <section id="demo-shifts" class="panel" aria-live="polite" data-stats="true" data-source-id="demo-synth-2025">
-      <button class="src-info" type="button" aria-haspopup="dialog" aria-expanded="false"
-        data-i18n="source.link" data-i18n-attr="aria-label">i</button>
-      <div class="panel__head" data-i18n="demo.shiftPattern">Shift Pattern</div>
-      <div class="panel__meta note note--meta" id="shift-meta"></div>
-      <div id="shift-grid"></div>
-    </section>
-
-    <div class="actions">
-      <button id="btn-export-brief" class="brand-btn--primary btn--export" data-export-key="demo.exportBrief" data-export-icon="⇩">
-        <span class="btn__icon" aria-hidden="true">⇩</span>
-        <span class="btn__label" data-i18n="demo.exportBrief">Export Site Brief (PDF)</span>
-      </button>
+      <div id="demo-toast" class="toast" role="status" aria-live="assertive" hidden></div>
     </div>
-
-    <div id="demo-toast" class="toast" role="status" aria-live="assertive" hidden></div>
   </main>
 </div>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>

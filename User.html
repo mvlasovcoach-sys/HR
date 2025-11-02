@@ -43,27 +43,30 @@
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
-  <main class="main">
-    <div id="app-topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.wellness">Wellness</h1>
-          </div>
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
+  <main class="main page-wrap">
+    <div id="toolbar">
+      <div id="app-topbar">
+        <div class="topbar-left">
+          <div class="toolbar">
+            <div class="toolbar__title">
+              <h1 class="header__title page-title" data-i18n="header.wellness">Wellness</h1>
+            </div>
+            <div class="toolbar__filters">
+              <div id="team-filter" class="toolbar__filter"></div>
+              <div id="date-controls" class="toolbar__filter"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        <div class="topbar-right">
+          <div id="lang-switch" class="lang-switch"></div>
+          <button class="header__icon" type="button" data-about-open
+            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
+        </div>
       </div>
     </div>
-    <div id="global-caption"></div>
-    <section id="wellness-root" class="wellness-grid" aria-live="polite">
+    <div id="page-content">
+      <div id="global-caption"></div>
+      <section id="wellness-root" class="wellness-grid" aria-live="polite">
       <article class="tile wellness-tile wellness-tile--wellbeing">
         <header class="tile__head">
           <span class="tile__title">Wellbeing Score</span>
@@ -175,7 +178,8 @@
           </li>
         </ul>
       </article>
-    </section>
+      </section>
+    </div>
   </main>
 </div>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('wellness');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
