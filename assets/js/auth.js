@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const STORAGE_KEY = 'hr:role';
   const DEFAULT_ROLE = 'HR';
   const VALID_ROLES = new Set(['HR', 'OH', 'Admin']);
@@ -42,7 +44,7 @@
         return role;
       }
     } catch (e) {
-      console.warn('auth: failed to parse role from URL', e);
+      devWarn('auth: failed to parse role from URL', e);
     }
     return null;
   }
@@ -52,7 +54,7 @@
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored && VALID_ROLES.has(stored)) return stored;
     } catch (e) {
-      console.warn('auth: failed to read role from storage', e);
+      devWarn('auth: failed to read role from storage', e);
     }
     return null;
   }
@@ -61,7 +63,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, role);
     } catch (e) {
-      console.warn('auth: failed to persist role', e);
+      devWarn('auth: failed to persist role', e);
     }
   }
 
@@ -80,7 +82,7 @@
         url.searchParams.set('role', role);
         window.history.replaceState({}, document.title, url);
       } catch (e) {
-        console.warn('auth: unable to push role to URL', e);
+        devWarn('auth: unable to push role to URL', e);
       }
     }
     notifyRoleChange();

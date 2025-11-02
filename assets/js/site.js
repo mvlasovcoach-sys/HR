@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const EVENT_NAME = 'site:ready';
   const GROUPS = {
     ops: ['ops'],
@@ -31,7 +33,7 @@
       payload = await response.json();
     } catch (err) {
       error = err;
-      console.error('site: data load failed', err);
+      devError('site: data load failed', err);
     }
 
     const site = normalizeSite(payload);

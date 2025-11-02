@@ -1,4 +1,5 @@
 (function(g, d){
+  const devWarn = g && typeof g.devWarn === 'function' ? g.devWarn : () => {};
   if (!g || !d) return;
 
   const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
@@ -37,7 +38,7 @@
     if (!source) {
       host.innerHTML = `<span class="note__label">${escapeHtml(t('source.short', 'Source'))}:</span> —`;
       if (sourceId) {
-        console.warn('[SOURCE] Missing source for panel', sourceId);
+        devWarn('[SOURCE] Missing source for panel', sourceId);
       }
       return;
     }

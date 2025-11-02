@@ -1,4 +1,5 @@
 import { loadDemoSamples, loadLiveSamples } from '../../services/dataSource.js';
+import { devError } from '../../utils/env.js';
 
 export class AppStore {
   constructor() {
@@ -54,7 +55,7 @@ export class AppStore {
       try {
         listener(this.state);
       } catch (err) {
-        console.error('[AppStore] listener failed', err);
+        devError('[AppStore] listener failed', err);
       }
     });
   }

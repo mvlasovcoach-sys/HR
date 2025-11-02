@@ -1,3 +1,6 @@
+const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
+
 document.addEventListener('click', event => {
     const trigger = event.target;
     if (!(trigger instanceof Element)) return;
@@ -32,10 +35,18 @@ function initPage(){
     const loadJson = typeof loaderGlobals.fetchJson === 'function'
       ? loaderGlobals.fetchJson
       : async url => {
-          const response = await fetch(url, {cache: 'no-store'});
-          if (response.status === 404) return null;
-          if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
-          return response.json();
+          if (typeof window.safeFetchJson === 'function') {
+            return window.safeFetchJson(url, { label: '[analytics] dataset not found:' });
+          }
+          try {
+            const response = await fetch(url, {cache: 'no-store'});
+            if (response.status === 404) return null;
+            if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+            return await response.json();
+          } catch (err) {
+            devWarn('[analytics] dataset fetch failed', url, err);
+            return null;
+          }
         };
 
     const canonicalScenario = typeof loaderGlobals.canonicalScenarioKey === 'function'
@@ -405,7 +416,7 @@ function initPage(){
           });
         }
       } catch (err) {
-        console.error('Analytics render failed', err);
+        devError('Analytics render failed', err);
         renderNoData(insight, { message: t('toast.scenarioUnavailable', 'Scenario data unavailable. Please reload.'), reload: true });
         return;
       } finally {
@@ -420,7 +431,7 @@ function initPage(){
         const path = map[canonical] || map.default || `./data/org/metrics_${canonical}.json`;
         return await fetchData(path, {range, team});
       } catch (e) {
-        console.error('Analytics metrics failed', e);
+        devError('Analytics metrics failed', e);
         return null;
       }
     }

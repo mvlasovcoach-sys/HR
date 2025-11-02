@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const LIBS = [
     {global: 'html2canvas', src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'},
     {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
@@ -366,7 +368,7 @@
         doc.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
         y += renderHeight + options.spacing;
       } catch (err) {
-        console.warn('exportSiteBriefPDF: capture failed', err);
+        devWarn('exportSiteBriefPDF: capture failed', err);
       }
     }
   }
@@ -605,7 +607,7 @@
         URL.revokeObjectURL(url);
       }, 0);
     } catch (err) {
-      console.error('exportCurrentView failed', err);
+      devError('exportCurrentView failed', err);
     }
   }
 

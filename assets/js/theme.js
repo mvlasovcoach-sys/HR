@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const STORAGE_KEY = 'hr:theme';
   const DEFAULT_THEME = './data/theme.json';
 
@@ -40,7 +42,7 @@
         persistTheme(themeFromUrl);
       }
     } catch (e) {
-      console.warn('theme: failed to load theme file, using default', e);
+      devWarn('theme: failed to load theme file, using default', e);
       currentTheme = await fallbackTheme();
     }
     if (!currentTheme) {
@@ -83,7 +85,7 @@
       window.history.replaceState({}, document.title, next);
       return value.toLowerCase();
     } catch (e) {
-      console.warn('theme: unable to parse theme parameter', e);
+      devWarn('theme: unable to parse theme parameter', e);
       return null;
     }
   }
@@ -100,7 +102,7 @@
     try {
       localStorage.setItem(STORAGE_KEY, id);
     } catch (e) {
-      console.warn('theme: persist failed', e);
+      devWarn('theme: persist failed', e);
     }
   }
 
@@ -132,7 +134,7 @@
       const data = await fetchJson(withVersion(url.toString()));
       if (data) return data;
     } catch (e) {
-      console.warn('theme: fallback fetch failed', e);
+      devWarn('theme: fallback fetch failed', e);
     }
     return {brand: 'SPA2099 HR Health', primary: '#27E0FF', logo: ''};
   }

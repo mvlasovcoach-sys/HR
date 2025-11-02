@@ -1,6 +1,16 @@
 import { loadDemoSamples, loadLiveSamples } from '@/services/dataSource';
 import type { PersonSample } from '@/types/metrics';
 
+const devError: (...args: unknown[]) => void = typeof window !== 'undefined' && typeof (window as any).devError === 'function'
+  ? (window as any).devError
+  : (...args: unknown[]) => {
+      const host = typeof location === 'object' ? location.host : '';
+      if (/github\.io$/i.test(host)) return;
+      if (typeof console !== 'undefined' && typeof console.error === 'function') {
+        console.error(...args);
+      }
+    };
+
 export type DataSourceMode = 'DEMO' | 'LIVE';
 
 export interface AppState {
@@ -65,7 +75,7 @@ export class AppStore {
       try {
         listener(this.state);
       } catch (err) {
-        console.error('[AppStore] listener failed', err);
+        devError('[AppStore] listener failed', err);
       }
     });
   }

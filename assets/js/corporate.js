@@ -1,3 +1,6 @@
+const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
+
 document.addEventListener('DOMContentLoaded', () => {
   if (window.I18N?.onReady) {
     window.I18N.onReady(initCorporatePage);
@@ -128,7 +131,7 @@ function initCorporatePage(){
     return key.replace(/^label\.|^range\./, '');
   };
 
-  boot().catch(err => console.error('Corporate init failed', err));
+  boot().catch(err => devError('Corporate init failed', err));
 
   function canonicalPreset(value){
     const key = String(value || '').toLowerCase();
@@ -201,7 +204,7 @@ function initCorporatePage(){
       state.teams = list;
       state.teamMap = new Map(list.map(item => [item.id, item.name || item.id]));
     } catch (err) {
-      console.error('Teams load failed', err);
+      devError('Teams load failed', err);
       state.teams = [];
       state.teamMap = new Map();
     }
@@ -258,7 +261,7 @@ function initCorporatePage(){
       const data = await fetchJson(`${DATA_ROOT}/events.json`);
       state.events = Array.isArray(data) ? data.map(event => ({...event})) : [];
     } catch (err) {
-      console.error('Events load failed', err);
+      devError('Events load failed', err);
       state.events = [];
     }
   }
@@ -287,7 +290,7 @@ function initCorporatePage(){
       mapEventsToColumns();
       buildEventTypeOptions();
     } catch (err) {
-      console.error('Metrics load failed', err);
+      devError('Metrics load failed', err);
       state.metrics = null;
       state.insufficient = false;
       state.heatmapColumns = [];
@@ -353,10 +356,10 @@ function initCorporatePage(){
 
   function renderAll(){
     toggleInsufficientOverlays();
-    try { renderKpis(state.metrics?.kpi, state.metrics?.delta, state.metrics?.n); } catch (err) { console.error('KPI', err); }
-    try { renderHeatmap(state.metrics?.heatmap); } catch (err) { console.error('Heatmap', err); }
-    try { renderEvents(state.events); } catch (err) { console.error('Events', err); }
-    try { renderActivity(state.metrics?.activity); } catch (err) { console.error('Activity', err); }
+    try { renderKpis(state.metrics?.kpi, state.metrics?.delta, state.metrics?.n); } catch (err) { devError('KPI', err); }
+    try { renderHeatmap(state.metrics?.heatmap); } catch (err) { devError('Heatmap', err); }
+    try { renderEvents(state.events); } catch (err) { devError('Events', err); }
+    try { renderActivity(state.metrics?.activity); } catch (err) { devError('Activity', err); }
     updateCaption();
   }
 
@@ -1204,7 +1207,7 @@ function initCorporatePage(){
       localStorage.setItem('hr:scenario', next);
       dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
     } catch (err) {
-      console.warn('scenario set failed', err);
+      devWarn('scenario set failed', err);
     }
     updateScenarioButtons();
   }

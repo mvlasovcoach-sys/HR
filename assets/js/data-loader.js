@@ -1,3 +1,6 @@
+import { devError, devWarn } from './utils/env.js';
+import { safeFetchJson } from './services/dataSource.js';
+
 export const BUILD_V='2025-10-26-01';
 export const withV=u=>{
   if(u==null)return u;
@@ -10,7 +13,9 @@ export const withV=u=>{
     return `${value}${value.includes('?')?'&':'?'}v=${BUILD_V}`;
   }
 };
-export async function fetchJson(u){const r=await fetch(u,{cache:'no-store'});if(r.status===404)return null;if(!r.ok)throw new Error(`HTTP ${r.status} for ${u}`);return r.json();}
+export async function fetchJson(u){
+  return await safeFetchJson(u, { label: '[stress] dataset not found:' });
+}
 
 const BASE='/HR';
 const SCENARIO_PATH={
@@ -112,7 +117,7 @@ export async function loadScenarioManifest(input,{refresh=false,fallback=true}={
   let result=await fetchManifest(requested);
   if(!result.ok){
     if(result.status===404&&fallback&&requested!=='demo'){
-      console.warn('Scenario not found, fallback to demo');
+      devWarn('Scenario not found, fallback to demo');
       const fallbackResult=await fetchManifest('demo');
       if(!fallbackResult.ok){
         const error=new Error('No dataset available');
@@ -180,7 +185,7 @@ export async function loadIndex({ refresh = false, scenario } = {}){
   try {
     manifest = await loadScenarioManifest(scenarioKey);
   } catch (err) {
-    console.error('[DataLoader] Failed to resolve scenario index', err);
+    devError('[DataLoader] Failed to resolve scenario index', err);
   }
 
   const indexPath = manifest?.stress?.index || './data/stress/raw/index.json';
@@ -190,7 +195,7 @@ export async function loadIndex({ refresh = false, scenario } = {}){
     indexCache.set(cacheKey, payload);
     return payload;
   } catch (err) {
-    console.error('[DataLoader] Failed to load stress index', err);
+    devError('[DataLoader] Failed to load stress index', err);
     indexCache.set(cacheKey, null);
     return null;
   }
@@ -204,7 +209,7 @@ export async function loadDay(input, { refresh = false, scenario } = {}){
   try {
     manifest = await loadScenarioManifest(requestedScenario);
   } catch (err) {
-    console.error('[DataLoader] Failed to resolve scenario manifest', err);
+    devError('[DataLoader] Failed to resolve scenario manifest', err);
   }
   const resolvedScenario = canonicalScenarioKey(manifest?.meta?.resolved || manifest?.key || requestedScenario);
   const cacheKey = `${resolvedScenario}|${iso}`;
@@ -221,7 +226,7 @@ export async function loadDay(input, { refresh = false, scenario } = {}){
     dayCache.set(cacheKey, payload);
     return payload;
   } catch (err) {
-    console.error(`[DataLoader] Failed to load stress day ${iso}`, err);
+    devError(`[DataLoader] Failed to load stress day ${iso}`, err);
     dayCache.set(cacheKey, null);
     return null;
   }

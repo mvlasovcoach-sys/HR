@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const loaderGlobals = window.loaderGlobals || {};
   const DEFAULT_BUILD_V = loaderGlobals.BUILD_V || '2025-10-26-01';
   const withVersion = typeof loaderGlobals.withV === 'function'
@@ -119,7 +121,7 @@
       await Promise.all(ready);
       await initPage();
     } catch (err) {
-      console.error('[Devices] init failed', err);
+      devError('[Devices] init failed', err);
     }
   }
 
@@ -200,14 +202,14 @@
     });
 
     const safeRender = () => render().catch(err => {
-      console.error('[Devices] load failed', err);
+      devError('[Devices] load failed', err);
       showError('Unable to load devices data.');
     });
 
     try {
       await render();
     } catch (err) {
-      console.error('[Devices] load failed', err);
+      devError('[Devices] load failed', err);
       showError('Unable to load devices data.');
     }
 
@@ -825,7 +827,7 @@
       }
       integrityState.coverage = true;
       warningShown = true;
-      console.warn('Devices integrity: issued mismatch', {expected, actual: totalIssued});
+      devWarn('Devices integrity: issued mismatch', {expected, actual: totalIssued});
     } else {
       integrityState.coverage = false;
     }
@@ -843,7 +845,7 @@
         }
         integrityState.aggregate = true;
         warningShown = true;
-        console.warn('Devices integrity: aggregate mismatch', {
+        devWarn('Devices integrity: aggregate mismatch', {
           expected: org,
           computed: aggregate,
           deltas: {online: diffOnline, battery: diffBattery, sync: diffSync}
