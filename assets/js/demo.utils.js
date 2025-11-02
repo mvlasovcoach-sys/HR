@@ -1,5 +1,6 @@
 (function(global){
   const root = global || (typeof window !== 'undefined' ? window : {});
+  const devWarn = typeof root.devWarn === 'function' ? root.devWarn : () => {};
 
   function isFiniteNumber(value){
     return typeof value === 'number' && Number.isFinite(value);
@@ -101,9 +102,7 @@
     const sumNumber = toNumber(sum);
     if (totalNumber === sumNumber) return;
     const message = `[DEMO] ${label}: ${sumNumber} != n=${totalNumber}`;
-    if (typeof console !== 'undefined' && console.warn) {
-      console.warn(message);
-    }
+    devWarn(message);
     if (typeof document === 'undefined') return;
     const host = document.querySelector('[data-note-host="age"]');
     if (!host) return;

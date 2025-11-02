@@ -2,6 +2,7 @@ import {mountKpi, renderKpiSkeletons, renderKpiEmpty} from './components/kpi.js'
 import { appStore } from './modules/store/appState.js';
 import { STRINGS as METRIC_HINT_STRINGS } from './modules/i18n/strings.js';
 import { mapToStatus } from './modules/lib/status.js';
+import { devError, devWarn } from './utils/env.js';
 
 (function(){
   const loaderGlobals = window.loaderGlobals || {};
@@ -206,7 +207,7 @@ import { mapToStatus } from './modules/lib/status.js';
       localStorage.setItem('hr:scenario', next);
       dispatchEvent(new StorageEvent('storage', {key: 'hr:scenario'}));
     } catch (err) {
-      console.warn('scenario set failed', err);
+      devWarn('scenario set failed', err);
     }
     updateScenarioButtons();
     renderSkeleton();
@@ -305,7 +306,7 @@ import { mapToStatus } from './modules/lib/status.js';
     try {
       await store.loadSamples(mode);
     } catch (err) {
-      console.error('[Summary] sample load failed', err);
+      devError('[Summary] sample load failed', err);
     }
   }
 
@@ -435,7 +436,7 @@ import { mapToStatus } from './modules/lib/status.js';
       updateRangeMetadata(metrics);
       renderTopKpis(host, metrics, trend);
     } catch (err) {
-      console.error('Summary metrics failed', err);
+      devError('Summary metrics failed', err);
       host.replaceChildren();
       clearLoadingState(host);
       renderKpiEmpty(host);

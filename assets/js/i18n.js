@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   let dict = {};
   let ready = false;
   let queue = [];
@@ -8,7 +10,7 @@
     try {
       fn();
     } catch (err) {
-      console.error('i18n:onReady handler', err);
+      devError('i18n:onReady handler', err);
     }
   }
 
@@ -98,7 +100,7 @@
       if (target !== 'en') {
         return init('en');
       }
-      console.warn('i18n: fallback to keys');
+      devWarn('i18n: fallback to keys');
       dict = {};
       currentLang = 'en';
     }

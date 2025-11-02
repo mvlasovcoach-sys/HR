@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const heroEl = document.getElementById('demo-hero');
   if (!heroEl) return;
 
@@ -68,7 +70,7 @@
       try {
         prev.destroy();
       } catch (err) {
-        console.warn('demo: chart cleanup failed', err);
+        devWarn('demo: chart cleanup failed', err);
       }
     }
     DEMO_CHARTS[selector] = drawFn(root, data, opts) || null;
@@ -108,7 +110,7 @@
       updateDemoMeta();
     });
     loadData().catch(err => {
-      console.error('demo: data load failed', err);
+      devError('demo: data load failed', err);
       showToast(getText('demo.error', 'Unable to load demo data'));
       heroEl.classList.remove('is-loading');
       heroEl.removeAttribute('aria-busy');
@@ -146,7 +148,7 @@
       badgeText: els.badge?.textContent?.trim?.() || '',
       version: state.version || ''
     }).catch(err => {
-      console.error('demo: export failed', err);
+      devError('demo: export failed', err);
       showToast(getText('demo.exportError', 'Unable to export PDF'));
     });
   }
@@ -221,7 +223,7 @@
         try {
           chart.destroy();
         } catch (err) {
-          console.warn('demo: chart destroy failed', err);
+          devWarn('demo: chart destroy failed', err);
         }
       }
       DEMO_CHARTS[key] = null;

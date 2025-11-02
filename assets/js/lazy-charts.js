@@ -1,4 +1,6 @@
 (function(g){
+  const devError = typeof g.devError === 'function' ? g.devError : () => {};
+  const devWarn = typeof g.devWarn === 'function' ? g.devWarn : () => {};
   if (!('IntersectionObserver' in g)) {
     document.querySelectorAll('[data-mount]').forEach(node => {
       const mount = node.getAttribute('data-mount');
@@ -18,7 +20,7 @@
         try {
           g[mount](target);
         } catch (err) {
-          console.error('[lazy-charts] mount failed', mount, err);
+          devError('[lazy-charts] mount failed', mount, err);
         }
       }
       io.unobserve(target);

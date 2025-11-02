@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   function initPage(){
     const loaderGlobals = window.loaderGlobals || {};
     const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
@@ -128,7 +130,7 @@
         const data = await fetchData('./data/org/events.json');
         events = Array.isArray(data) ? data : Array.isArray(data?.events) ? data.events : [];
       } catch (e) {
-        console.error('Pilot events failed', e);
+        devError('Pilot events failed', e);
         events = [];
       }
     }
@@ -212,7 +214,7 @@
         const path = `./data/org/engagement_${preset}.json`;
         return await fetchData(path, {range, team});
       } catch (e) {
-        console.error('Pilot engagement failed', e);
+        devError('Pilot engagement failed', e);
         return null;
       }
     }
@@ -222,7 +224,7 @@
         const path = `./data/org/metrics_${preset}.json`;
         return await fetchData(path, {range, team});
       } catch (e) {
-        console.error('Pilot metrics failed', e);
+        devError('Pilot metrics failed', e);
         return null;
       }
     }
@@ -567,7 +569,7 @@
         };
         await window.exporter.exportPilotSummary(payload);
       } catch (e) {
-        console.error('Pilot export failed', e);
+        devError('Pilot export failed', e);
         alert('Export failed. Please try again.');
       }
     }
@@ -583,7 +585,7 @@
           });
         }
       } catch (e) {
-        console.error('Failed to load NPS cache', e);
+        devError('Failed to load NPS cache', e);
       }
     }
 

@@ -1,3 +1,6 @@
+const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
+
 function initHrBoard(host){
     const mount = typeof host === 'string' ? document.querySelector(host) : host;
     if (!mount) return;
@@ -149,7 +152,7 @@ function initHrBoard(host){
       try {
         return await fetchData(path, {range, team: readTeam()});
       } catch (e) {
-        console.error('Failed to load metrics', e);
+        devError('Failed to load metrics', e);
         return null;
       }
     }

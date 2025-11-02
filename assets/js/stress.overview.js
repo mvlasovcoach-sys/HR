@@ -1,3 +1,4 @@
+import { devError } from './utils/env.js';
 import { loadIndex, loadDay } from './data-loader.js';
 
 const loaderGlobals = typeof globalThis !== 'undefined' ? (globalThis.loaderGlobals || {}) : {};
@@ -117,21 +118,21 @@ export function initStressTabs() {
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       setRange(btn.dataset.range).catch(err => {
-        console.error('[Analytics] Failed to switch stress range', err);
+        devError('[Analytics] Failed to switch stress range', err);
       });
     });
   });
 
   handleTabKeys(buttons);
   setRange(state.range, { pushUrl: false }).catch(err => {
-    console.error('[Analytics] Failed to initialise stress tabs', err);
+    devError('[Analytics] Failed to initialise stress tabs', err);
   });
 
   window.addEventListener('storage', event => {
     if (!event || event.key !== 'hr:scenario') return;
     state.index = null;
     setRange(state.range, { pushUrl: false }).catch(err => {
-      console.error('[Analytics] Failed to refresh stress data after scenario change', err);
+      devError('[Analytics] Failed to refresh stress data after scenario change', err);
     });
   });
 }
@@ -213,7 +214,7 @@ async function setRange(range, { pushUrl = true } = {}) {
       history.replaceState({}, '', nextUrl);
     }
   } catch (err) {
-    console.error('[Analytics] Failed to load stress data', err);
+    devError('[Analytics] Failed to load stress data', err);
     showEmpty(translate('stress.empty', 'No stress data for this range. Try switching dates or scenario.'));
   }
 }
@@ -1007,6 +1008,6 @@ window.addEventListener('i18n:change', () => {
   renderMeta(state.data);
   renderLowSample(state.data);
   renderStressChart(state.data).catch(err => {
-    console.error('[Analytics] Failed to refresh stress chart', err);
+    devError('[Analytics] Failed to refresh stress chart', err);
   });
 });

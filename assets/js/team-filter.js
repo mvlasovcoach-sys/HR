@@ -1,4 +1,6 @@
 (function(){
+  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const loaderGlobals = window.loaderGlobals || {};
   const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
   const loadJson = typeof loaderGlobals.fetchJson === 'function'
@@ -70,7 +72,7 @@
         // ignore storage issues
       }
     } catch (e) {
-      console.error('Failed to load teams', e);
+      devError('Failed to load teams', e);
       teams = [];
     }
   }

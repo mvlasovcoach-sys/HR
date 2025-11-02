@@ -1,3 +1,6 @@
+const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
+
 function initPage(){
     const grid = document.getElementById('eng-kpi-grid');
     if (!grid) return;
@@ -108,7 +111,7 @@ function initPage(){
       try {
         npsData = await fetchData('./data/org/nps.json');
       } catch (e) {
-        console.error('Failed to load NPS data', e);
+        devError('Failed to load NPS data', e);
         npsData = null;
       }
     }
@@ -118,7 +121,7 @@ function initPage(){
         const data = await fetchData('./data/org/events.json');
         events = Array.isArray(data) ? data : Array.isArray(data?.events) ? data.events : [];
       } catch (e) {
-        console.error('Failed to load events', e);
+        devError('Failed to load events', e);
         events = [];
       }
     }
@@ -197,7 +200,7 @@ function initPage(){
         const path = `./data/org/engagement_${preset}.json`;
         return await fetchData(path, {range, team});
       } catch (e) {
-        console.error('Failed to load engagement data', e);
+        devError('Failed to load engagement data', e);
         return null;
       }
     }

@@ -1,3 +1,5 @@
+import { devError } from '../utils/env.js';
+
 const TEAM_KEY = 'hr:team';
 const TEAMS_KEY = 'hr:teams';
 const TEAM_NAMES_KEY = 'hr:team:names';
@@ -55,7 +57,7 @@ async function fetchTeams(){
     }
     return options;
   } catch (err) {
-    console.error('Failed to load teams', err);
+    devError('Failed to load teams', err);
     return [];
   }
 }
@@ -100,7 +102,7 @@ export const AppState = {
         state.teamOptions = options;
         return options;
       }).catch(err => {
-        console.error('Teams request failed', err);
+        devError('Teams request failed', err);
         return [];
       });
     }
