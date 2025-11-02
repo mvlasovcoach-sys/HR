@@ -132,19 +132,6 @@
   z-index: 10;
 }
 
-.brand-v1 .toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--brand-space-md);
-  align-items: center;
-}
-
-.brand-v1 .toolbar__title {
-  display: flex;
-  align-items: center;
-  gap: var(--brand-space-sm);
-}
-
 .brand-v1 .header__title {
   font-size: var(--brand-font-size-2xl);
   margin: 0;
@@ -171,17 +158,6 @@
   background: color-mix(in oklch, var(--brand-color-accent) 18%, transparent);
   box-shadow: var(--brand-shadow-ring);
   outline: none;
-}
-
-.brand-v1 .toolbar__filters {
-  display: flex;
-  gap: var(--brand-space-md);
-  align-items: center;
-}
-
-.brand-v1 .toolbar__filter {
-  display: flex;
-  align-items: center;
 }
 
 .brand-v1 .lang-switch {
