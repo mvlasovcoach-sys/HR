@@ -15,20 +15,19 @@ export function exportCurrentView(){
   });
 }
 
-export function renderToolbar({
-  mount, title, mode, onModeChange, onInfo
-}){
+export function renderToolbar({ mount, title, mode, onModeChange, onInfo }) {
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
   if (!host) return;
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
   host.innerHTML = `
   <div class="toolbar">
     <div class="toolbar-row">
-      <div class="title"><h1 class="page-title">${title || ''}</h1>
+      <div class="title">
+        <h1 class="page-title">${title || ''}</h1>
         <button class="info" aria-label="About this page">i</button>
       </div>
       <div class="lang-stack">
-        <div class="lang-switch" id="langSwitch">
+        <div class="lang-switch">
           <button data-lang="EN">EN</button>
           <button data-lang="NL">NL</button>
           <button data-lang="RU">RU</button>
@@ -54,7 +53,7 @@ export function renderToolbar({
         <div id="teamSelect"></div>
         <div id="dateStart"></div>
         <div id="dateEnd"></div>
-        <label class="compare"><input type="checkbox" id="compareChk"/> Compare</label>
+        <label class="compare"><input type="checkbox" id="compareChk"> Compare</label>
       </div>
     </div>
   </div>`;
