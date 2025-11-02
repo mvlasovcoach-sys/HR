@@ -3,6 +3,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <base href="./">
 <title>SPA2099 HR Health — Summary</title>
+<script>
+  (function redirectSummary() {
+    const sp = new URLSearchParams(location.search);
+    const mode = (sp.get('mode') || 'demo').toLowerCase();
+    location.replace(`Corporate.html?mode=${mode}`);
+  })();
+</script>
 <link rel="preload" href="assets/fonts/Inter-Variable.woff2?v=2025-11-02-1" as="font" type="font/woff2" crossorigin>
 
 <!-- Базовая тема (легаси, не трогаем визуал) -->
