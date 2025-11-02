@@ -2,9 +2,9 @@
 (function(){
   // 1) Single source of nav items
   window.NAV_ITEMS = [
+    {id:'corporate',  href:'Corporate.html',  i18n:'nav.corporate'},
     {id:'analytics',  href:'Analytics.html',  i18n:'nav.analytics'},
     {id:'engagement', href:'Engagement.html', i18n:'nav.engagement'},
-    {id:'corporate',  href:'Corporate.html',  i18n:'nav.corporate'},
     {id:'devices',    href:'Devices.html',    i18n:'nav.devices'},
     {id:'settings',   href:'Settings.html',   i18n:'nav.settings'},
     // pinned at bottom:
@@ -25,10 +25,25 @@
 
     host.innerHTML = `
       <nav class="side">
-        <div class="brand">SPA2099 HR Health</div>
+        <a class="brand" data-brand-link href="Corporate.html">SPA2099 HR Health</a>
         <ul class="menu top"   aria-label="Primary"></ul>
         <ul class="menu bottom" aria-label="Secondary"></ul>
       </nav>`;
+
+    const logoLink = host.querySelector('[data-brand-link]');
+    if (logoLink) {
+      let mode = 'demo';
+      try {
+        const sp = new URLSearchParams(location.search);
+        const queryMode = sp.get('mode');
+        const stored = localStorage.getItem('spa2099_mode') || 'DEMO';
+        mode = String(queryMode || stored || 'DEMO').toLowerCase();
+      } catch (err) {
+        const sp = new URLSearchParams(location.search);
+        mode = String(sp.get('mode') || 'DEMO').toLowerCase();
+      }
+      logoLink.href = `Corporate.html?mode=${mode}`;
+    }
 
     const top = host.querySelector('.menu.top');
     const bottom = host.querySelector('.menu.bottom');
@@ -73,7 +88,7 @@
     // Translate just-in-time (if i18n is present)
     try { window.I18N?.refresh?.(host); } catch(e){/* noop */}
 
-    const links = Array.from(host.querySelectorAll('a'));
+    const links = Array.from(host.querySelectorAll('.menu a'));
     links.forEach(link => {
       const labelText = link.querySelector('.nav-label')?.textContent?.trim?.();
       if (labelText) {
