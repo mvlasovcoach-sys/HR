@@ -28,7 +28,6 @@
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
@@ -38,39 +37,18 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/pages/devices.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--devices">
-    <div id="app-topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.devices">Devices</h1>
-          </div>
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
-            <div class="toolbar__filter">
-              <button class="brand-btn--primary btn--export" type="button" id="export-fleet"
-                      data-export-key="ui.exportCSV" data-export-icon="⇩" disabled aria-disabled="true" title="Load data to export">
-                <span class="btn__icon" aria-hidden="true">⇩</span>
-                <span class="btn__label" data-i18n="ui.exportCSV">Export CSV</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
-      </div>
-    </div>
-    <div id="global-caption"></div>
-    <div id="devices-coverage" class="devices-coverage" aria-live="polite"></div>
+    <div class="page-wrap">
+      <div id="toolbar"></div>
+      <div id="page-content">
+        <div id="global-caption"></div>
+        <div id="devices-coverage" class="devices-coverage" aria-live="polite"></div>
 
-    <section class="panel" id="fleet-table-panel">
+        <section class="panel" id="fleet-table-panel">
       <div class="panel__meta" data-i18n="devices.byTeam">Devices by team</div>
       <div class="devices-layout">
         <div class="devices-table" id="fleet-table" aria-live="polite"></div>
@@ -81,12 +59,14 @@
       </div>
     </section>
 
-    <section class="panel" id="fleet-summary-panel">
+        <section class="panel" id="fleet-summary-panel">
       <div class="panel__meta" data-i18n="section.devicesOverview">Fleet status</div>
       <div class="kpi-grid" id="fleet-cards" aria-live="polite"></div>
     </section>
+      </div>
+    </div>
   </main>
 </div>
   <div id="devices-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('devices');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('devices');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

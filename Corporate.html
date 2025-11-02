@@ -28,7 +28,6 @@
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
@@ -38,42 +37,22 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/pages/corporate.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--corporate">
-    <div id="app-topbar">
-      <div class="topbar-left">
-        <div class="toolbar">
-          <div class="toolbar__title">
-            <h1 class="header__title" data-i18n="header.corporate">Corporate</h1>
-          </div>
-          <div class="toolbar__filters">
-            <div id="team-filter" class="toolbar__filter"></div>
-            <div id="date-controls" class="toolbar__filter"></div>
-          </div>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div id="lang-switch" class="lang-switch"></div>
-        <button class="header__icon" type="button" data-about-open
-          data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
-      </div>
-    </div>
+    <div class="page-wrap">
+      <div id="toolbar"></div>
+      <div id="page-content">
+        <div id="global-caption"></div>
 
-    <div id="global-caption"></div>
-
-    <div class="scenario-controls" role="group" data-i18n="aria.scenario" data-i18n-attr="aria-label">
-      <button class="brand-pill range-pill" type="button" data-scenario="night" data-i18n="demo.night">Night-Shift Scenario</button>
-      <button class="brand-pill range-pill" type="button" data-scenario="live" data-i18n="demo.live">Return to Live</button>
-    </div>
-
-    <section id="corp-kpis" class="panel">
+        <section id="corp-kpis" class="panel">
       <div class="panel__head" data-i18n="section.corporateOverview">Overview KPIs</div>
       <div id="corp-kpi-grid" class="grid grid-4"></div>
     </section>
 
-    <section id="corp-heatmap" class="panel">
+        <section id="corp-heatmap" class="panel">
       <div class="panel__head">
         <span data-i18n="section.corporateHeatmap">Divisional Heatmap</span>
         <span class="legend" aria-hidden="true">
@@ -85,7 +64,7 @@
       <div id="heatmap-grid"></div>
     </section>
 
-    <section id="corp-events" class="panel">
+        <section id="corp-events" class="panel">
       <div class="panel__head">
         <span data-i18n="section.corporateEvents">Detected Events</span>
         <div class="event-badges" id="event-badges" aria-live="polite">
@@ -106,7 +85,7 @@
       <div id="events-list"></div>
     </section>
 
-    <section id="corp-activity" class="panel">
+        <section id="corp-activity" class="panel">
       <div class="panel__head">
         <span data-i18n="section.corporateActivity">Activity Log</span>
         <button id="export-activity" class="brand-btn--primary btn--export" data-export-key="ui.exportCSV" data-export-icon="⇩">
@@ -117,7 +96,9 @@
       <table id="activity-table" class="table"></table>
       <div id="activity-cards" class="table-cards" aria-live="polite"></div>
     </section>
+      </div>
+    </div>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('corporate');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('corporate');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>

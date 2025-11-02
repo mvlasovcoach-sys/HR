@@ -49,6 +49,7 @@
 
 .banner{margin-top:8px;padding:10px 14px;border-radius:var(--radius);display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:rgba(7,23,32,.65)}
 .banner--demo{background:rgba(31,226,194,.10);border-color:rgba(31,226,194,.28)}
+.banner--live{background:rgba(130,182,255,.12);border-color:rgba(130,182,255,.24)}
 .link-quiet{color:var(--cyan);text-decoration:none;font-weight:600}
 
 @media (max-width:768px){
