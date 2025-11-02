@@ -123,10 +123,31 @@ function clearEmptyCard(root) {
 }
 
 function lastNDays(list, n) {
-  return [...list]
-    .filter(item => item?.ts)
-    .sort((a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime())
-    .slice(-n);
+  if (!Array.isArray(list) || !list.length) {
+    return [];
+  }
+
+  const withTs = list
+    .map(item => {
+      const ts = item?.ts;
+      const time = ts ? new Date(ts).getTime() : NaN;
+      return Number.isFinite(time) ? { item, time } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.time - b.time);
+
+  if (!withTs.length) {
+    return [];
+  }
+
+  const days = Math.max(1, Math.floor(Number(n) || 0));
+  const windowMs = (days - 1) * 24 * 60 * 60 * 1000;
+  const endTime = withTs.at(-1).time;
+  const fromTime = endTime - windowMs;
+
+  return withTs
+    .filter(entry => entry.time >= fromTime)
+    .map(entry => entry.item);
 }
 
 function ts(list, key) {
