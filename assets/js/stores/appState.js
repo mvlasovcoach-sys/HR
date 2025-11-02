@@ -86,7 +86,8 @@ function normaliseTeams(values){
 
 const state = {
   teams: readStoredTeams(),
-  teamOptions: []
+  teamOptions: [],
+  allTeamsIds: []
 };
 
 let teamsPromise = null;
@@ -100,6 +101,7 @@ export const AppState = {
     if (!teamsPromise) {
       teamsPromise = fetchTeams().then(options => {
         state.teamOptions = options;
+        state.allTeamsIds = Array.isArray(options) ? options.map(option => option.id) : [];
         return options;
       }).catch(err => {
         devError('Teams request failed', err);
@@ -133,5 +135,10 @@ export const AppState = {
     } catch (err) {
       /* dispatch optional */
     }
+  },
+  getActiveTeams(){
+    return Array.isArray(state.teams) && state.teams.length
+      ? state.teams
+      : state.allTeamsIds;
   }
 };

@@ -35,7 +35,8 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   };
 
   const teamLabel = translate('label.teamFilter', 'Team');
-  const allTeamsLabel = translate('label.team.all', 'All teams');
+  const teamButtonLabel = translate('label.teamFilter.button', 'Teams');
+  const allTeamsLabel = translate('filter.teamButton.all', translate('label.team.all', 'All teams'));
   const searchPlaceholder = translate('filter.searchTeams', 'Search teams…');
   const selectAllLabel = translate('filter.selectAll', 'Select all');
   const clearLabel = translate('filter.clear', 'Clear');
@@ -114,34 +115,34 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
 
   function applyLabel() {
     const count = getSelectedCount();
-    if (!totalCount || count === totalCount) {
+    const displayCount = usingAll ? totalCount : count;
+    if (!totalCount || displayCount === 0 || displayCount === totalCount) {
       btn.textContent = allTeamsLabel;
-    } else {
-      btn.textContent = `${teamLabel} · ${count}/${totalCount}`;
+      return;
     }
+    btn.textContent = `${teamButtonLabel} · ${displayCount}/${totalCount}`;
   }
 
   function applyChips() {
-    const count = getSelectedCount();
-    if (!count || count === totalCount) {
+    const ids = usingAll ? [] : Array.from(selected);
+    if (!ids.length) {
       chips.innerHTML = '';
       return;
     }
-    const ids = usingAll ? [] : Array.from(selected);
-    chips.innerHTML = ids
-      .slice(0, 6)
+    const visible = ids.slice(0, 4);
+    chips.innerHTML = visible
       .map(id => {
         const label = optionIndex.get(id) ?? id;
         const labelHtml = escapeHtml(label);
         const ariaLabel = escapeHtml(removeChipLabel(label));
         const dataId = escapeHtml(id);
-        return `<span class="tf-chip">${labelHtml}<button data-id="${dataId}" class="tf-chip-remove" type="button" aria-label="${ariaLabel}">×</button></span>`;
+        return `<span class="chip">${labelHtml}<button data-id="${dataId}" class="chip-x" type="button" aria-label="${ariaLabel}">×</button></span>`;
       })
       .join('');
-    if (ids.length > 6) {
-      chips.insertAdjacentHTML('beforeend', `<span class="tf-chip tf-chip--more">+${ids.length - 6}</span>`);
+    if (ids.length > visible.length) {
+      chips.insertAdjacentHTML('beforeend', `<span class="chip more">+${ids.length - visible.length}</span>`);
     }
-    chips.querySelectorAll('.tf-chip-remove').forEach(button => {
+    chips.querySelectorAll('.chip-x').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.dataset.id;
         if (!id) return;
