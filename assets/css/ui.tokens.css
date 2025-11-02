@@ -1,4 +1,5 @@
 :root {
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bg: #08161C;
   --surface-glass-a: rgba(19, 38, 51, 0.85);
   --surface-glass-b: rgba(7, 23, 32, 0.62);
@@ -32,11 +33,22 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-7: 32px;
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-h1: clamp(20px, 2.2vw, 32px);
-  --font-h2: clamp(18px, 1.8vw, 28px);
-  --font-body: clamp(14px, 1.2vw, 16px);
+  --font-h1: 28px;
+  --font-h2: 20px;
+  --font-body: 16px;
+  --font-body-sm: 14px;
+  --toolbar-gap: 12px;
+  --toolbar-item-height: 36px;
+  --toolbar-radius: 999px;
   --focus-ring: 0 0 0 3px rgba(33, 226, 194, 0.28);
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
 }
 
 html,
@@ -45,9 +57,14 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--txt);
+  font-family: var(--font-sans);
   font-size: var(--font-body);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+html {
+  font-size: 16px;
 }
 
 h2 {
