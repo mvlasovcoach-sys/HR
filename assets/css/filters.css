@@ -1,33 +1,166 @@
-.filters-row{display:flex;align-items:center;gap:12px;margin:8px 0 20px}
-.filters-label{opacity:.8;min-width:64px}
-.filters-select{min-width:320px;max-width:460px;line-height:1.2;height:auto;padding:6px 8px;border-radius:8px;background:#0f1f24;border:1px solid var(--outline)}
+#filters-bar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  margin:8px 0 10px;
+}
 
-.team-filter{display:flex;flex-direction:column;gap:8px;color:var(--text-0,#e7f1f5);font-weight:500}
-.team-filter,#filters-bar{border:none!important;outline:none!important;box-shadow:none!important;background:transparent}
-.team-filter .filters-label{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-1,#aac0cb)}
-.tf-control{position:relative;display:inline-flex;align-items:center;width:100%;max-width:360px}
-.tf-button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:10px 14px;border-radius:var(--radius-12,12px);border:1px solid var(--line-a20,rgba(231,241,245,.2));background:rgba(12,28,36,.92);background:color-mix(in srgb,rgba(12,28,36,.92) 88%,transparent);color:inherit;font-weight:600;line-height:1.2;text-align:left;cursor:pointer;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
-.tf-button::after{content:"▾";font-size:.85em;opacity:.7}
-.tf-button:hover{border-color:var(--brand-mint-a35,rgba(0,239,208,.35));border-color:color-mix(in srgb,var(--brand-mint-500,#00efd0) 45%,rgba(231,241,245,.2));box-shadow:0 8px 18px rgba(5,19,27,.38)}
-.tf-button:focus-visible{outline:2px solid var(--brand-mint-500,#00efd0);outline-offset:2px}
-.tf-panel{position:absolute;top:calc(100% + 8px);left:0;z-index:20;min-width:100%;max-width:400px;padding:14px;border-radius:var(--radius-16,16px);background:var(--surface-popover,rgba(7,19,28,.94));border:1px solid var(--line-a20,rgba(231,241,245,.2));box-shadow:var(--shadow-soft,0 18px 46px rgba(5,19,27,.42))}
-.tf-panel[hidden]{display:none}
-.tf-search{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.tf-search input{flex:1 1 auto;height:38px;padding:0 12px;border-radius:var(--radius-12,12px);border:1px solid var(--line-a20,rgba(231,241,245,.2));background:rgba(8,22,28,.85);color:var(--text-0,#e7f1f5);font-weight:500}
-.tf-search input::placeholder{color:var(--text-1,#aac0cb);opacity:.8}
-.tf-search input:focus-visible{outline:2px solid var(--brand-mint-500,#00efd0);outline-offset:2px}
-.tf-search button{flex:0 0 auto;height:32px;padding:0 12px;border-radius:var(--radius-12,12px);border:1px solid transparent;background:rgba(15,40,50,.78);color:var(--text-0,#e7f1f5);font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease}
-.tf-search button:hover{background:rgba(21,58,70,.92);border-color:var(--brand-mint-a35,rgba(0,239,208,.35))}
-.tf-search button:focus-visible{outline:2px solid var(--brand-mint-500,#00efd0);outline-offset:2px}
-.tf-list{margin:0;padding:0;list-style:none;max-height:240px;overflow:auto;border-top:1px solid rgba(255,255,255,.08)}
-.tf-item{margin:0}
-.tf-item label{display:flex;gap:10px;align-items:center;padding:10px;border-radius:var(--radius-12,12px);cursor:pointer;font-weight:500;color:var(--text-0,#e7f1f5);transition:background .15s ease,color .15s ease}
-.tf-item label:hover,.tf-item[aria-selected="true"] label{background:rgba(var(--brand-mint-500-rgb,0,239,208),.14);color:var(--text-0,#e7f1f5)}
-.tf-item:focus-within label{outline:2px solid var(--brand-mint-500,#00efd0);outline-offset:2px}
-.tf-item input{width:18px;height:18px;accent-color:var(--brand-mint-500,#00efd0)}
-.tf-chips{display:flex;flex-wrap:wrap;gap:8px;min-height:28px}
-.tf-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-pill,999px);background:rgba(7,19,28,.66);border:1px solid rgba(231,241,245,.18);color:var(--text-0,#e7f1f5);font-size:.8rem;font-weight:600}
-.tf-chip-remove{background:none;border:none;color:inherit;cursor:pointer;font-size:1rem;line-height:1}
-.tf-chip-remove:hover{color:var(--brand-mint-500,#00efd0)}
-.tf-chip-remove:focus-visible{outline:2px solid var(--brand-mint-500,#00efd0);outline-offset:2px;border-radius:50%}
-.tf-chip--more{opacity:.7}
+.filters-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:8px 0 10px;
+}
+
+.filters-label{
+  min-width:56px;
+  font-size:14px;
+  opacity:.85;
+}
+
+.filters-select{
+  min-width:320px;
+  max-width:460px;
+  line-height:1.2;
+  height:auto;
+  padding:6px 8px;
+  border-radius:8px;
+  background:#0f1f24;
+  border:1px solid var(--outline);
+}
+
+.team-filter{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:6px 0;
+  flex:1 1 420px;
+  max-width:540px;
+}
+
+.tf-control{
+  position:relative;
+  flex:1;
+}
+
+.tf-button{
+  height:32px;
+  padding:0 12px;
+  border-radius:10px;
+  background:#0f1f24;
+  border:1px solid var(--outline);
+  opacity:.95;
+  font-size:14px;
+  line-height:32px;
+  width:100%;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.tf-button::after{
+  content:"▾";
+  opacity:.8;
+  font-size:.9em;
+}
+
+.tf-panel{
+  position:absolute;
+  z-index:20;
+  top:36px;
+  left:0;
+  min-width:260px;
+  max-height:240px;
+  overflow:auto;
+  background:#0b161a;
+  border:1px solid var(--outline);
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+.tf-panel[hidden]{
+  display:none;
+}
+
+.tf-search{
+  display:flex;
+  gap:8px;
+  padding:8px;
+  border-bottom:1px solid var(--outline);
+}
+
+.tf-search input{
+  flex:1;
+  height:28px;
+  border-radius:8px;
+  padding:0 10px;
+  background:#081216;
+  border:1px solid #14323b;
+  font-size:13px;
+}
+
+.tf-search button{
+  height:28px;
+  padding:0 8px;
+  border-radius:8px;
+  font-size:12px;
+}
+
+.tf-list{
+  list-style:none;
+  margin:0;
+  padding:6px;
+}
+
+.tf-item{
+  padding:2px 0;
+}
+
+.tf-item label{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:6px 8px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.tf-item label:hover{
+  background:rgba(255,255,255,.06);
+}
+
+.tf-item input{
+  width:16px;
+  height:16px;
+}
+
+.tf-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+}
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:1px 6px;
+  border-radius:999px;
+  background:#0f1f24;
+  border:1px solid var(--outline);
+  font-size:11px;
+}
+
+.chip .chip-x{
+  background:none;
+  border:0;
+  color:#7aa;
+  cursor:pointer;
+}
+
+.chip.more{
+  opacity:.7;
+}
