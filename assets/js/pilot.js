@@ -39,7 +39,7 @@
     const heatmapSection = document.getElementById('pilot-heatmap');
     const eventsSection = document.getElementById('pilot-events');
     const captionEl = document.getElementById('global-caption');
-    const exportBtn = document.getElementById('btn-export-pilot');
+    const exportBtn = document.getElementById('btnExport');
 
     let events = [];
     const state = {
@@ -89,7 +89,30 @@
       }
     }
 
-    exportBtn?.addEventListener('click', handleExport);
+    function getExportLabel(){
+      if (typeof window.t === 'function') {
+        const label = window.t('label.export.pdf');
+        if (label && label !== 'label.export.pdf') return label;
+      }
+      if (window.I18N?.t) {
+        const label = window.I18N.t('label.export.pdf');
+        if (label && label !== 'label.export.pdf') return label;
+      }
+      return 'Export Pilot Summary (PDF)';
+    }
+
+    if (exportBtn) {
+      exportBtn.dataset.exportKey = exportBtn.dataset.exportKey || 'label.export.pdf';
+      exportBtn.addEventListener('click', evt => {
+        evt.preventDefault();
+        evt.stopImmediatePropagation();
+        handleExport();
+      }, {capture: true});
+      const label = getExportLabel();
+      exportBtn.setAttribute('aria-label', label);
+      exportBtn.setAttribute('title', label);
+      exportBtn.textContent = label;
+    }
     window.addEventListener('storage', evt => {
       if (!evt) return;
       if (evt.key === 'hr:range' || evt.key === 'hr:team' || evt.key === 'hr:scenario') {
@@ -168,9 +191,10 @@
         } else {
           exportBtn.removeAttribute('aria-disabled');
         }
-        const baseLabel = exportBtn.getAttribute('data-export-label') || (window.t('label.export.pdf') || 'Export Pilot Summary (PDF)');
+        const baseLabel = getExportLabel();
         exportBtn.setAttribute('aria-label', baseLabel);
         exportBtn.setAttribute('title', baseLabel);
+        exportBtn.textContent = baseLabel;
       }
       renderKpis(engagement, preset, team, range);
       renderHeatmap(metrics);

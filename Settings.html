@@ -37,35 +37,17 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
+<script type="module" src="./assets/js/pages/settings.js?v=2025.10.19-05"></script>
 </head><body>
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main page-wrap">
-    <div id="toolbar">
-      <div id="app-topbar">
-        <div class="topbar-left">
-          <div class="toolbar">
-            <div class="toolbar__title">
-              <h1 class="header__title page-title" data-i18n="header.settings">Settings</h1>
-            </div>
-            <div class="toolbar__filters">
-              <div id="team-filter" class="toolbar__filter"></div>
-              <div id="date-controls" class="toolbar__filter"></div>
-            </div>
-          </div>
-        </div>
-        <div class="topbar-right">
-          <div id="lang-switch" class="lang-switch"></div>
-          <button class="header__icon" type="button" data-about-open
-            data-i18n="ui.about" data-i18n-attr="aria-label">i</button>
-        </div>
-      </div>
-    </div>
+    <div id="toolbar"></div>
     <div id="page-content">
       <div id="global-caption"></div>
       <p style="opacity:.7">Coming soon.</p>
     </div>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('settings');window.DateControls?.mount('#date-controls',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('settings');window.DateControls?.mount('#rangeSwitch',{presets:['Today','7D','MTD','QTD','YTD'],compare:true});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 </body></html>
