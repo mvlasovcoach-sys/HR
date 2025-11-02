@@ -31,6 +31,7 @@
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/config.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
@@ -115,5 +116,17 @@
   <script type="module" src="assets/js/components/Toolbar.js?v=2025-11-02-1"></script>
   <!-- страничный js ниже -->
   <script type="module" src="./assets/js/pages/summary.js?v=2025.10.19-05"></script>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('summary');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSideNav('summary');
+      window.DateControls?.mount('#rangeSwitch', {
+        presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
+        compare: true
+      });
+      window.Caption?.render('#global-caption', {
+        asOf: new Date(),
+        insight: window.PageInsight || ''
+      });
+    });
+  </script>
 </body></html>
