@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="./">
+  <title>SPA2099 HR Health — Page not found</title>
+  <link rel="preload" href="assets/fonts/Inter-Variable.woff2?v=2025-11-02-1" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
+  <link rel="stylesheet" href="./shared/brand.tokens.css?v=2025-10-26">
+  <link rel="stylesheet" href="./shared/fonts.css?v=2025-10-26">
+  <link rel="stylesheet" href="./shared/brand.buttons.css?v=2025-10-26">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-muted, #f5f7fb);
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-primary, #1d2733);
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 3rem 4rem;
+      background: var(--surface-raised, #ffffff);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(29, 39, 51, 0.08);
+      max-width: 480px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-secondary, #425466);
+    }
+
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .cta-group a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .cta-group a.primary {
+      background: var(--brand-gradient, linear-gradient(135deg, #3b8dff, #3b49ff));
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(59, 137, 255, 0.25);
+    }
+
+    .cta-group a.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(59, 137, 255, 0.35);
+    }
+
+    .cta-group a.secondary {
+      border: 1px solid rgba(59, 73, 255, 0.25);
+      color: var(--brand-ink, #3b49ff);
+      background: rgba(59, 73, 255, 0.06);
+    }
+
+    .cta-group a.secondary:hover {
+      transform: translateY(-2px);
+      background: rgba(59, 73, 255, 0.12);
+    }
+
+    .code {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: rgba(59, 137, 255, 0.12);
+      color: var(--brand-ink, #3b49ff);
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 2.5rem 1.75rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="code">404</span>
+    <h1>Page not found</h1>
+    <p>The page you requested no longer exists or has been moved. Please check the address or continue with one of the dashboards below.</p>
+    <div class="cta-group">
+      <a class="primary" href="Corporate.html">Open Corporate dashboard</a>
+      <a class="secondary" href="Demo.html">View Demo tour</a>
+    </div>
+  </main>
+</body>
+</html>
