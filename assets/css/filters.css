@@ -1,3 +1,16 @@
 .filters-row{display:flex;align-items:center;gap:12px;margin:8px 0 20px}
 .filters-label{opacity:.8;min-width:64px}
 .filters-select{min-width:320px;max-width:460px;line-height:1.2;height:auto;padding:6px 8px;border-radius:8px;background:#0f1f24;border:1px solid var(--outline)}
+.team-filter{display:flex;align-items:flex-start;gap:12px;margin:10px 0 18px}
+.tf-control{position:relative}
+.tf-button{height:36px;padding:0 14px;border-radius:12px;background:#0f1f24;border:1px solid var(--outline);opacity:.95}
+.tf-panel{position:absolute;z-index:20;top:42px;left:0;min-width:320px;max-height:320px;overflow:auto;background:#0b161a;border:1px solid var(--outline);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.tf-search{display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--outline)}
+.tf-search input{flex:1;height:34px;border-radius:8px;padding:0 10px;background:#081216;border:1px solid #14323b}
+.tf-list{list-style:none;margin:0;padding:8px}
+.tf-item{padding:4px 2px}
+.tf-item label{display:flex;gap:8px;align-items:center}
+.tf-chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;background:#0f1f24;border:1px solid var(--outline);font-size:12px}
+.chip .chip-x{background:none;border:0;color:#7aa;cursor:pointer}
+.chip.more{opacity:.7}
