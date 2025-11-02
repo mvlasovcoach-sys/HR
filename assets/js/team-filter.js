@@ -21,9 +21,10 @@
   let teams = [];
 
   async function init(){
-    mount = document.getElementById('team-filter');
+    mount = document.getElementById('teamSelect') || document.getElementById('team-filter');
     if (!mount) return;
 
+    mount.classList.add('team-filter');
     mount.classList.add('team-filter--loading');
     await loadTeams();
     render();
