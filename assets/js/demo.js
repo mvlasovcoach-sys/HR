@@ -5,7 +5,6 @@ import { loadDataset } from './services/dataSource.js';
   const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
   const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const heroEl = document.getElementById('demo-hero');
-  if (!heroEl) return;
 
   const state = { data: null, version: null, headcount: 0 };
   const DEMO_CHARTS = {};
@@ -89,16 +88,6 @@ import { loadDataset } from './services/dataSource.js';
     // Всегда demo
     appStore?.setMode && appStore.setMode('demo');
 
-    // Обёртки от отсутствующих контролов дат/compare/team
-    const byId = (id) => document.getElementById(id);
-    const safe = (el, fn) => el && fn(el);
-
-    // Ничего не делаем, если элементов нет
-    safe(byId('startDate'), el => {/* no-op */});
-    safe(byId('endDate'),   el => {/* no-op */});
-    safe(byId('compare'),   el => {/* no-op */});
-    safe(byId('teamSelect'),el => {/* no-op */});
-
     applySkeletons();
     bindEvents();
     if (window.I18N?.onReady) {
@@ -115,8 +104,10 @@ import { loadDataset } from './services/dataSource.js';
     loadData().catch(err => {
       devError('demo: data load failed', err);
       showToast(getText('demo.error', 'Unable to load demo data'));
-      heroEl.classList.remove('is-loading');
-      heroEl.removeAttribute('aria-busy');
+      if (heroEl) {
+        heroEl.classList.remove('is-loading');
+        heroEl.removeAttribute('aria-busy');
+      }
     });
   }
 
@@ -204,12 +195,14 @@ import { loadDataset } from './services/dataSource.js';
     const message = getText('status.noData', 'No data available');
     state.data = null;
     state.headcount = 0;
-    heroEl.classList.remove('is-loading');
-    heroEl.removeAttribute('aria-busy');
-    heroEl.classList.remove('is-fallback');
-    heroEl.removeAttribute('role');
-    heroEl.removeAttribute('aria-label');
-    heroEl.innerHTML = `<p class="demo-empty" role="status" aria-live="polite">${escapeHtml(message)}</p>`;
+    if (heroEl) {
+      heroEl.classList.remove('is-loading');
+      heroEl.removeAttribute('aria-busy');
+      heroEl.classList.remove('is-fallback');
+      heroEl.removeAttribute('role');
+      heroEl.removeAttribute('aria-label');
+      heroEl.innerHTML = `<p class="demo-empty" role="status" aria-live="polite">${escapeHtml(message)}</p>`;
+    }
     Object.values(els.cards).forEach(card => {
       if (!card) return;
       card.classList.remove('skeleton');
@@ -255,8 +248,10 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function applySkeletons(){
-    heroEl.classList.add('is-loading');
-    heroEl.setAttribute('aria-busy', 'true');
+    if (heroEl) {
+      heroEl.classList.add('is-loading');
+      heroEl.setAttribute('aria-busy', 'true');
+    }
     Object.values(els.cards).forEach(card => {
       if (!card) return;
       card.classList.add('skeleton');
@@ -358,6 +353,7 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function renderHero(name){
+    if (!heroEl) return;
     heroEl.classList.remove('is-fallback');
     heroEl.removeAttribute('data-fallback-label');
     heroEl.innerHTML = '';
