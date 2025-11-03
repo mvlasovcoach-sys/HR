@@ -33,7 +33,7 @@
 }
 
 /* контейнер не должен прятать всплывашку */
-#page-content, .cards-wrap, .kpis-wrap{ overflow:visible !important; }
+#page-content, .cards-wrap, .kpis-wrap, .grid{ overflow:visible !important; }
 
 .team-filter{
   display:flex;
