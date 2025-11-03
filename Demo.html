@@ -47,28 +47,14 @@
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.utils.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/stores/modeStore.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/components/Toolbar.js?v=2025-11-02-01"></script>
-<script type="module" src="./assets/js/pages/demo.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/demo.js?v=2025.10.19-05"></script>
-</head><body>
+<script type="module" src="./assets/js/demo.js?v=2025.10.19-05"></script>
+</head><body data-page="demo">
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--demo page-wrap">
-    <header class="toolbar" id="toolbar">
-      <div class="tb-left">
-        <h1 class="page-title">Demo <button class="i i-info" aria-label="Info"></button></h1>
-        <div id="scenarioBadge" class="scenario-badge"></div>
-      </div>
-
-      <div class="tb-right">
-        <div class="seg-group lang-switch">
-          <button id="langEN" class="seg is-active" data-lang="en">EN</button>
-          <button id="langNL" class="seg" data-lang="nl">NL</button>
-          <button id="langRU" class="seg" data-lang="ru">RU</button>
-        </div>
-        <button id="btnExport" class="seg">Export</button>
-      </div>
-    </header>
+    <h1 class="page-title">Demo <i class="info-dot" aria-hidden="true">i</i></h1>
+    <div id="toolbar"></div>
+    <div class="scenario-badge">DEMO • AURORA DEEPWATER PLATFORM • 100 STAFF • 24/7</div>
     <div id="page-content">
       <div id="global-caption"></div>
       <span id="site-badge" class="pill" aria-live="polite"></span>

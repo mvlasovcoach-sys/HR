@@ -58,6 +58,7 @@
 
 .lang-switch {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -93,12 +94,17 @@
   color: var(--accent, #19e1c0);
 }
 
+.lang-switch .chip {
+  min-width: 48px;
+}
+
+
 .toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: space-between;
   padding: var(--toolbar-pad, 16px);
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -111,6 +117,22 @@
 .toolbar > * {
   display: flex;
   align-items: center;
+}
+
+.toolbar__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .tb-left {

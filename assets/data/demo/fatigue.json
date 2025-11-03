@@ -1,0 +1,15 @@
+{
+  "summary": {
+    "highRisk": 12,
+    "delta": -1
+  },
+  "distribution": [
+    { "label": "Low", "percent": 54 },
+    { "label": "Medium", "percent": 34 },
+    { "label": "High", "percent": 12 }
+  ],
+  "shiftPatterns": [
+    { "pattern": "2-2-2", "fatigue": 14 },
+    { "pattern": "Day only", "fatigue": 9 }
+  ]
+}
