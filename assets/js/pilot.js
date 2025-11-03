@@ -41,7 +41,7 @@
     const heatmapSection = document.getElementById('pilot-heatmap');
     const eventsSection = document.getElementById('pilot-events');
     const captionEl = document.getElementById('global-caption');
-    const exportBtn = document.getElementById('btnExport');
+    const exportBtn = document.getElementById('tb-export');
 
     let events = [];
     const state = {
