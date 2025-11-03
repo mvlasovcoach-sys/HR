@@ -24,14 +24,20 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
       const fn = window.I18N?.t;
       if (typeof fn === 'function') {
         const result = fn.call(window.I18N, key);
-        if (typeof result === 'string' && result.trim()) {
-          return result;
+        if (typeof result === 'string') {
+          const trimmed = result.trim();
+          if (trimmed && trimmed !== key) {
+            return result;
+          }
         }
       }
     } catch (err) {
       /* noop */
     }
-    return fallback;
+    if (typeof fallback === 'string' && fallback.trim()) {
+      return fallback;
+    }
+    return key;
   };
 
   const teamLabel = translate('label.teamFilter', 'Team');
