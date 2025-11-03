@@ -19,7 +19,8 @@
   font-weight: 700;
 }
 
-.page-header__right {
+.page-header__right,
+.page-header__actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -338,15 +339,21 @@
 }
 
 .scenario-badge {
+  margin: 8px 0 16px;
+}
+
+.scenario-badge .badge {
   display: inline-block;
-  margin-top: 0;
   padding: 8px 12px;
   border-radius: 14px;
   font-weight: 600;
   letter-spacing: 0.2px;
-  border: 1px solid var(--outline, #174447);
   color: #8cece1;
-  background: #0d2a2c;
+}
+
+.badge--demo {
+  background: var(--teal-900);
+  border: 1px solid var(--teal-500);
 }
 
 .scenario-hero {

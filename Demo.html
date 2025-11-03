@@ -52,9 +52,17 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--demo page-wrap">
-    <h1 class="page-title">Demo <i class="info-dot" aria-hidden="true">i</i></h1>
-    <div id="toolbar"></div>
-    <div class="scenario-badge">DEMO • AURORA DEEPWATER PLATFORM • 100 STAFF • 24/7</div>
+    <header class="page-header">
+      <h1 class="page-title">Demo <i class="info" aria-hidden="true"></i></h1>
+      <div class="page-header__actions">
+        <div class="lang-switch" data-lang></div>
+        <button class="btn btn--ghost" data-export>Export</button>
+      </div>
+    </header>
+
+    <section class="scenario-badge">
+      <span class="badge badge--demo">DEMO • AURORA DEEPWATER PLATFORM • 100 STAFF • 24/7</span>
+    </section>
     <div id="page-content">
       <div id="global-caption"></div>
       <span id="site-badge" class="pill" aria-live="polite"></span>

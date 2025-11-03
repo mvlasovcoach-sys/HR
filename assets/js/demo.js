@@ -1,3 +1,4 @@
+import { getMode, getSelectedTeams, getDateRange } from './filters/state.js';
 import { loadDataset } from './services/dataSource.js';
 
 (function(){
@@ -158,23 +159,29 @@ import { loadDataset } from './services/dataSource.js';
   async function loadData(){
     const version = await resolveVersion();
     state.version = version;
+
+    const mode = getMode();
+    const teams = getSelectedTeams();
+    const range = getDateRange();
+
     const [org, engagement, stress, fatigue] = await Promise.all([
-      loadDataset('org'),
-      loadDataset('engagement'),
-      loadDataset('stress'),
-      loadDataset('fatigue')
+      loadDataset('org', { mode, teams, range }),
+      loadDataset('engagement', { mode, teams, range }),
+      loadDataset('stress', { mode, teams, range }),
+      loadDataset('fatigue', { mode, teams, range })
     ]);
 
     if (!org) {
       renderNoData();
       return;
     }
-    const data = combineDemoDatasets({ org, engagement, stress, fatigue });
-    state.data = data;
+
+    const payload = { org, engagement, stress, fatigue };
     if (typeof console !== 'undefined' && console.info) {
-      console.info('[demo] datasets loaded', { org, engagement, stress, fatigue });
+      console.info('[demo] datasets loaded', payload);
     }
-    render(data);
+    renderOverview(payload);
+    renderCharts(payload);
     if (els.exportBtn) {
       els.exportBtn.disabled = false;
       els.exportBtn.removeAttribute('aria-disabled');
@@ -287,21 +294,60 @@ import { loadDataset } from './services/dataSource.js';
 
   function render(data){
     if (!data) return;
-    const departments = Array.isArray(data.departments) ? data.departments : [];
-    const headcount = departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+    const departments = getDepartments(data);
+    const headcount = computeHeadcount(departments);
+    state.data = data;
     state.headcount = headcount;
     if (typeof window !== 'undefined') {
       window.DEMO_TOTAL = headcount;
     }
+    renderOverviewSections(data, departments, headcount);
+    renderChartSections(data, departments, headcount);
+  }
+
+  function renderOverview(datasets){
+    const data = combineDemoDatasets(datasets);
+    const departments = getDepartments(data);
+    const headcount = computeHeadcount(departments);
+    state.data = data;
+    state.headcount = headcount;
+    if (typeof window !== 'undefined') {
+      window.DEMO_TOTAL = headcount;
+    }
+    renderOverviewSections(data, departments, headcount);
+  }
+
+  function renderCharts(datasets){
+    const data = state.data || combineDemoDatasets(datasets);
+    const departments = getDepartments(data);
+    const headcount = state.headcount || computeHeadcount(departments);
+    if (typeof window !== 'undefined') {
+      window.DEMO_TOTAL = headcount;
+    }
+    renderChartSections(data, departments, headcount);
+  }
+
+  function getDepartments(data){
+    return Array.isArray(data?.departments) ? data.departments : [];
+  }
+
+  function computeHeadcount(departments){
+    return departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+  }
+
+  function renderOverviewSections(data, departments, headcount){
     renderBadge(data.site, headcount);
     renderHero(data.site);
     renderOverviewCards(data, headcount, departments);
     renderOrgTable(departments);
+    renderShiftGrid(departments);
+    updateSourceMeta(headcount);
+  }
+
+  function renderChartSections(data, departments, headcount){
     renderGenderOverall(data.gender_overall, headcount);
     renderAgeOverall(data.age_overall, headcount);
     renderByDepartment(departments, data.byDeptBattery);
-    renderShiftGrid(departments);
-    updateSourceMeta(headcount);
   }
 
   function renderBadge(name, headcount){
