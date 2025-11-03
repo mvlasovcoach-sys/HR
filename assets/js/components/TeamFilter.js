@@ -244,31 +244,30 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   }
 
   function openPanel() {
-    if (!panel.hidden) return;
     panel.hidden = false;
     control?.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-expanded', 'true');
-    // позиция
+
     panel.style.left = '0px';
     panel.style.top = '36px';
     panel.style.bottom = 'auto';
     panel.style.maxHeight = '280px';
-    const r = panel.getBoundingClientRect();
+
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    if (r.right > vw - 8) {
-      panel.style.left = `${Math.max(0, vw - 8 - r.width)}px`;
+    const pr = panel.getBoundingClientRect();
+    const br = btn.getBoundingClientRect();
+
+    if (pr.right > vw - 8) {
+      const left = Math.max(0, vw - 8 - pr.width);
+      panel.style.left = left + 'px';
     }
-    const btnRect = btn.getBoundingClientRect();
-    if (r.bottom > vh - 8) {
+    if (pr.bottom > vh - 8) {
       panel.style.top = 'auto';
-      panel.style.bottom = `${btnRect.height + 8}px`;
-      panel.style.maxHeight = `${Math.min(280, btnRect.top - 16)}px`;
-    } else {
-      panel.style.top = '36px';
-      panel.style.bottom = 'auto';
-      panel.style.maxHeight = '280px';
+      panel.style.bottom = (br.height + 8) + 'px';
+      panel.style.maxHeight = Math.min(280, br.top - 16) + 'px';
     }
+
     search.value = '';
     renderList('');
     search.focus();
@@ -284,13 +283,14 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     }
   }
 
-  btn.addEventListener('click', () => {
-    if (panel.hidden) {
-      openPanel();
-    } else {
+  btn.onclick = () => {
+    const open = !panel.hidden;
+    if (open) {
       closePanel();
+    } else {
+      openPanel();
     }
-  });
+  };
 
   selectAllButton?.addEventListener('click', () => {
     usingAll = true;
@@ -320,14 +320,11 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     }
   });
 
-  document.addEventListener(
-    'click',
-    event => {
-      if (!host.contains(event.target)) {
-        closePanel();
-      }
+  document.addEventListener('click', event => {
+    if (!host.contains(event.target)) {
+      closePanel();
     }
-  );
+  });
 
   sync({ notify: false, refreshList: true });
 }
