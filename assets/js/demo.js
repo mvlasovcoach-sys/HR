@@ -1,5 +1,28 @@
 import { getMode, getSelectedTeams, getDateRange } from './filters/state.js';
 import { loadDataset } from './services/dataSource.js';
+import { appStore as moduleAppStore } from './modules/store/appState.js';
+
+const globalStore = typeof window !== 'undefined' ? window.appStore : undefined;
+let fallbackStoreState = { mode: 'DEMO', teams: ['*'], range: { preset: '7d' } };
+const fallbackStore = {
+  getState: () => fallbackStoreState,
+  setState: next => {
+    if (!next || typeof next !== 'object') return;
+    fallbackStoreState = { ...fallbackStoreState, ...next };
+  },
+  setMode: mode => {
+    const nextMode = String(mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+    fallbackStoreState = { ...fallbackStoreState, mode: nextMode };
+  },
+  subscribe: () => () => {},
+  loadSamples: async () => [],
+};
+
+const store = moduleAppStore ?? globalStore ?? fallbackStore;
+
+if (typeof window !== 'undefined' && !window.appStore) {
+  window.appStore = store;
+}
 
 (function(){
   const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
@@ -86,7 +109,7 @@ import { loadDataset } from './services/dataSource.js';
 
   function init(){
     // Всегда demo
-    appStore?.setMode && appStore.setMode('demo');
+    store?.setMode && store.setMode('DEMO');
 
     applySkeletons();
     bindEvents();
@@ -288,8 +311,15 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function render(data){
-    if (!data) return;
+    if (!data || typeof data !== 'object') {
+      renderNoData();
+      return;
+    }
     const departments = getDepartments(data);
+    if (!departments.length) {
+      renderNoData();
+      return;
+    }
     const headcount = computeHeadcount(departments);
     state.data = data;
     state.headcount = headcount;
@@ -303,6 +333,10 @@ import { loadDataset } from './services/dataSource.js';
   function renderOverview(datasets){
     const data = combineDemoDatasets(datasets);
     const departments = getDepartments(data);
+    if (!departments.length) {
+      renderNoData();
+      return;
+    }
     const headcount = computeHeadcount(departments);
     state.data = data;
     state.headcount = headcount;
@@ -315,6 +349,10 @@ import { loadDataset } from './services/dataSource.js';
   function renderCharts(datasets){
     const data = state.data || combineDemoDatasets(datasets);
     const departments = getDepartments(data);
+    if (!departments.length) {
+      renderNoData();
+      return;
+    }
     const headcount = state.headcount || computeHeadcount(departments);
     if (typeof window !== 'undefined') {
       window.DEMO_TOTAL = headcount;
@@ -331,6 +369,9 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function renderOverviewSections(data, departments, headcount){
+    if (!data || !Array.isArray(departments) || departments.length === 0) {
+      return;
+    }
     renderBadge(data.site, headcount);
     renderHero(data.site);
     renderOverviewCards(data, headcount, departments);
@@ -340,6 +381,9 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function renderChartSections(data, departments, headcount){
+    if (!data || !Array.isArray(departments) || departments.length === 0) {
+      return;
+    }
     renderGenderOverall(data.gender_overall, headcount);
     renderAgeOverall(data.age_overall, headcount);
     renderByDepartment(departments, data.byDeptBattery);
@@ -347,18 +391,28 @@ import { loadDataset } from './services/dataSource.js';
 
   function renderBadge(name, headcount){
     if (!els.badge) return;
-    const text = getText('demo.badge', `Demo · ${name} · ${formatInteger(headcount)} staff · 24/7`, {name, headcount: formatInteger(headcount)});
+    const siteName = typeof name === 'string' && name.trim()
+      ? name.trim()
+      : getText('demo.siteFallback', 'Demo site');
+    const total = Number(headcount) || 0;
+    const text = getText('demo.badge', `Demo · ${siteName} · ${formatInteger(total)} staff · 24/7`, {
+      name: siteName,
+      headcount: formatInteger(total)
+    });
     els.badge.textContent = text;
     els.badge.setAttribute('aria-label', text);
   }
 
   function renderHero(name){
     if (!heroEl) return;
+    const siteName = typeof name === 'string' && name.trim()
+      ? name.trim()
+      : getText('demo.siteFallback', 'Demo site');
     heroEl.classList.remove('is-fallback');
     heroEl.removeAttribute('data-fallback-label');
     heroEl.innerHTML = '';
     const img = new Image();
-    img.alt = getText('demo.heroAlt', '{name} offshore platform illustration', {name});
+    img.alt = getText('demo.heroAlt', '{name} offshore platform illustration', {name: siteName});
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => {
@@ -372,21 +426,24 @@ import { loadDataset } from './services/dataSource.js';
         heroEl.removeChild(img);
       }
       heroEl.classList.add('is-fallback');
-      heroEl.setAttribute('data-fallback-label', name);
-      heroEl.setAttribute('aria-label', name);
+      heroEl.setAttribute('data-fallback-label', siteName);
+      heroEl.setAttribute('aria-label', siteName);
     });
     img.src = `${HERO_SRC}?v=${encodeURIComponent(state.version || '')}`;
     heroEl.appendChild(img);
     heroEl.setAttribute('role', 'img');
-    heroEl.setAttribute('aria-label', getText('demo.heroLabel', '{name} hero image', {name}));
+    heroEl.setAttribute('aria-label', getText('demo.heroLabel', '{name} hero image', {name: siteName}));
   }
 
   function renderOverviewCards(data, headcount, departments){
+    const info = (data && typeof data === 'object') ? data : {};
+    const list = Array.isArray(departments) ? departments : [];
+    const safeHeadcount = Number(headcount) || 0;
     const dayLabel = getText('demo.day', 'Day');
     const nightLabel = getText('demo.night', '');
     const offLabel = getText('demo.off', 'Off');
-    const opsGroups = departments.filter(d => (d.pattern || '').toLowerCase() === '2-2-2').map(d => d.name).join(' / ');
-    const supportGroups = departments.filter(d => (d.pattern || '').toLowerCase() === 'day-only').map(d => d.name).join(' / ');
+    const opsGroups = list.filter(d => (d.pattern || '').toLowerCase() === '2-2-2').map(d => d.name).join(' / ');
+    const supportGroups = list.filter(d => (d.pattern || '').toLowerCase() === 'day-only').map(d => d.name).join(' / ');
     const shiftMetaParts = [];
     if (opsGroups) {
       shiftMetaParts.push(getText('demo.shiftMetaOps', '{groups}: {pattern}', {
@@ -401,38 +458,43 @@ import { loadDataset } from './services/dataSource.js';
       }));
     }
 
+    const noValue = '—';
+    const siteValue = typeof info.site === 'string' && info.site.trim() ? info.site : noValue;
     renderCard(els.cards.site, {
       label: getText('demo.site', 'Site'),
-      value: data.site,
-      aria: `${getText('demo.site', 'Site')}: ${data.site}`
+      value: siteValue,
+      aria: `${getText('demo.site', 'Site')}: ${siteValue}`
     }, {skipMetaWhenEmpty: true});
 
-    const formattedHeadcount = formatInteger(headcount);
+    const formattedHeadcount = formatInteger(safeHeadcount);
     renderCard(els.cards.headcount, {
       label: getText('demo.headcount', 'Headcount'),
-      value: formattedHeadcount,
-      meta: getText('demo.departmentCount', '{count} departments', {count: formatInteger(departments.length)}),
+      value: formattedHeadcount || noValue,
+      meta: getText('demo.departmentCount', '{count} departments', {count: formatInteger(list.length)}),
       aria: `${getText('demo.headcount', 'Headcount')}: ${formattedHeadcount}`
     });
 
-    const rotationParts = String(data.rotation || '').split('/').map(part => part.trim());
+    const rotationParts = String(info.rotation || '').split('/').map(part => part.trim()).filter(Boolean);
     const rotationMeta = rotationParts.length === 2
       ? getText('demo.rotationDetail', '{on} days on / {off} days off', {on: rotationParts[0], off: rotationParts[1]})
       : '';
+    const rotationValue = typeof info.rotation === 'string' && info.rotation.trim() ? info.rotation : noValue;
     renderCard(els.cards.rotation, {
       label: getText('demo.rotation', 'Rotation'),
-      value: data.rotation,
+      value: rotationValue,
       meta: rotationMeta,
-      aria: `${getText('demo.rotation', 'Rotation')}: ${data.rotation}${rotationMeta ? `. ${rotationMeta}` : ''}`
+      aria: `${getText('demo.rotation', 'Rotation')}: ${rotationValue}${rotationMeta ? `. ${rotationMeta}` : ''}`
     });
 
-    const shiftHours = Number(data.shift_hours) || 0;
-    const formattedHours = formatInteger(shiftHours);
+    const shiftHours = Number(info.shift_hours);
+    const formattedHours = Number.isFinite(shiftHours) && shiftHours > 0 ? formatInteger(shiftHours) : noValue;
+    const shiftLabel = formattedHours === noValue ? noValue : `${formattedHours}h`;
+    const shiftMeta = shiftMetaParts.join('. ');
     renderCard(els.cards.shifts, {
       label: getText('demo.shifts', 'Shifts'),
-      value: `${formattedHours}h`,
+      value: shiftLabel,
       meta: shiftMetaParts.join(' · '),
-      aria: `${getText('demo.shifts', 'Shifts')}: ${formattedHours}h. ${shiftMetaParts.join('. ')}`
+      aria: `${getText('demo.shifts', 'Shifts')}: ${shiftLabel}${shiftMeta ? `. ${shiftMeta}` : ''}`
     });
   }
 
@@ -456,7 +518,16 @@ import { loadDataset } from './services/dataSource.js';
 
   function renderOrgTable(departments){
     if (!els.orgTable) return;
-    const rows = departments.map(dept => {
+    const list = Array.isArray(departments) ? departments : [];
+    if (!list.length) {
+      const noData = getText('status.noData', 'No data available');
+      els.orgTable.removeAttribute('aria-busy');
+      els.orgTable.innerHTML = `<p class="demo-empty">${escapeHtml(noData)}</p>`;
+      els.orgTable.removeAttribute('role');
+      els.orgTable.removeAttribute('aria-describedby');
+      return;
+    }
+    const rows = list.map(dept => {
       const name = escapeHtml(dept.name);
       const head = Number(dept.headcount) || 0;
       const brigadesRaw = Number(dept.brigades);
@@ -488,7 +559,7 @@ import { loadDataset } from './services/dataSource.js';
     `;
     els.orgTable.innerHTML = table;
     els.orgTable.removeAttribute('aria-busy');
-    const summary = departments.map(dept => getText('demo.departmentSummary', '{name}: {headcount}', {name: dept.name, headcount: formatInteger(dept.headcount)})).join('; ');
+    const summary = list.map(dept => getText('demo.departmentSummary', '{name}: {headcount}', {name: dept.name, headcount: formatInteger(dept.headcount)})).join('; ');
     setDescription(els.orgTable, 'org-desc', `${getText('demo.orgStructure', 'Organization')}. ${summary}`);
   }
 
@@ -806,14 +877,28 @@ import { loadDataset } from './services/dataSource.js';
 
   function renderShiftGrid(departments){
     if (!els.shiftGrid) return;
+    const list = Array.isArray(departments) ? departments : [];
+    const showEmpty = () => {
+      const noData = getText('status.noData', 'No data available');
+      els.shiftGrid.removeAttribute('aria-busy');
+      els.shiftGrid.innerHTML = `<p class="demo-empty">${escapeHtml(noData)}</p>`;
+      els.shiftGrid.removeAttribute('role');
+      els.shiftGrid.removeAttribute('aria-label');
+      els.shiftGrid.removeAttribute('aria-describedby');
+      updateDemoMeta();
+    };
+    if (!list.length) {
+      showEmpty();
+      return;
+    }
     const basePattern = ['day', 'day', 'night', 'night', 'off', 'off'];
     const rotate = (arr, offset) => {
       const len = arr.length;
       const index = ((offset % len) + len) % len;
       return arr.slice(index).concat(arr.slice(0, index));
     };
-    const operations = departments.filter(d => (d.pattern || '').toLowerCase() === '2-2-2');
-    const support = departments.filter(d => (d.pattern || '').toLowerCase() === 'day-only');
+    const operations = list.filter(d => (d.pattern || '').toLowerCase() === '2-2-2');
+    const support = list.filter(d => (d.pattern || '').toLowerCase() === 'day-only');
     const rows = [];
     operations.forEach(dept => {
       ['A', 'B', 'C'].forEach((brigade, idx) => {
@@ -826,6 +911,10 @@ import { loadDataset } from './services/dataSource.js';
         brigade: '—',
         pattern: Array(6).fill('day')
       });
+    }
+    if (!rows.length) {
+      showEmpty();
+      return;
     }
     const dayLabel = getText('demo.day', 'Day');
     const nightLabel = getText('demo.night', '');

@@ -35,7 +35,9 @@ export async function loadDataset(kind, ctx = {}){
   const key = normaliseKind(kind);
   if (!key) return null;
 
-  const mode = ctx.mode || (typeof getMode === 'function' ? getMode() : 'demo') || 'demo';
+  const storeMode = typeof window !== 'undefined' ? window.appStore?.getState?.()?.mode : undefined;
+  const rawMode = ctx.mode ?? storeMode ?? (typeof getMode === 'function' ? getMode() : 'demo');
+  const mode = String(rawMode || '').toLowerCase() === 'live' ? 'live' : 'demo';
   const cacheKey = `${mode}:${key}`;
   if (datasetCache.has(cacheKey)) {
     return datasetCache.get(cacheKey);
