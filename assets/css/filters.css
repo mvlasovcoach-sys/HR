@@ -76,7 +76,8 @@ html, body { overflow: auto; }
 }
 
 /* базовый стиль панели */
-.tf-panel{
+.tf-panel,
+.tf-panel.portal{
   position: absolute;
   z-index: 1000;
   min-width: 260px;
@@ -84,22 +85,15 @@ html, body { overflow: auto; }
   max-height: 280px;
   overflow: auto;
   background: var(--surface, #0b161a);
-  border: 1px solid var(--outline, #14323b);
   border-radius: 10px;
-  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  border: 1px solid var(--accent, #19e1c0);
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.45),
+    0 0 0 1px rgba(25,225,192,.15) inset;
 }
 
 /* попап в портале */
-.tf-panel.portal{
-  position: absolute;
-  min-width: 260px; max-width: 520px;
-  max-height: 280px; overflow: auto;
-  background: var(--surface, #0b161a);
-  border: 1px solid var(--outline, #14323b);
-  border-radius: 10px;
-  box-shadow: 0 16px 40px rgba(0,0,0,.45);
-  pointer-events: auto;
-}
+.tf-panel.portal{ pointer-events: auto; }
 
 .tf-panel[hidden]{
   display:none;
@@ -110,6 +104,11 @@ html, body { overflow: auto; }
 .tf-search input{
   flex: 1; height: 28px; border-radius: 8px; padding: 0 10px;
   background: #081216; border: 1px solid #14323b; color: var(--text); font-size: 13px;
+}
+.tf-search input:focus{
+  outline: none;
+  border-color: var(--accent, #19e1c0);
+  box-shadow: 0 0 0 2px rgba(25,225,192,.18);
 }
 .tf-search button{ height: 28px; padding: 0 8px; border-radius: 8px; font-size: 12px;
   background: var(--surface-2); border: 1px solid var(--outline); color: var(--text-muted,#9dc2ca); }
@@ -157,4 +156,33 @@ html, body { overflow: auto; }
 
 .chip.more{
   opacity:.7;
+}
+
+/* 1) зелёные чекбоксы через accent-color (современные браузеры) */
+.tf-panel input[type="checkbox"]{
+  accent-color: var(--accent, #19e1c0);
+}
+
+/* 2) fallback для старых браузеров (если accent-color не поддерживается) */
+@supports not (accent-color: #0f0){
+  .tf-panel input[type="checkbox"]{
+    appearance: none; -webkit-appearance: none;
+    width: 18px; height: 18px; margin: 0;
+    border: 1.5px solid var(--outline, #14323b);
+    border-radius: 4px; background: transparent;
+    display: inline-grid; place-content: center;
+  }
+  .tf-panel input[type="checkbox"]::after{
+    content: ""; width: 10px; height: 10px; transform: rotate(45deg) scale(0);
+    border-right: 2px solid var(--accent, #19e1c0);
+    border-bottom: 2px solid var(--accent, #19e1c0);
+    transition: transform .12s ease-in-out;
+  }
+  .tf-panel input[type="checkbox"]:checked{
+    border-color: var(--accent, #19e1c0);
+    background: rgba(25,225,192,.08);
+  }
+  .tf-panel input[type="checkbox"]:checked::after{
+    transform: rotate(45deg) scale(1);
+  }
 }
