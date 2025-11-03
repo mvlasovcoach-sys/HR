@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "risk": 18,
+    "delta": -3
+  },
+  "byDepartment": [
+    { "id": "ops", "label": "Production", "risk": 20 },
+    { "id": "it", "label": "Maintenance & IT", "risk": 16 },
+    { "id": "lab", "label": "Lab & HSE", "risk": 15 },
+    { "id": "adm", "label": "Admin", "risk": 12 }
+  ],
+  "trend": [
+    { "date": "2025-09-22", "risk": 22 },
+    { "date": "2025-09-29", "risk": 21 },
+    { "date": "2025-10-06", "risk": 19 },
+    { "date": "2025-10-13", "risk": 18 }
+  ]
+}

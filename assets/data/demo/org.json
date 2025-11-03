@@ -1,0 +1,39 @@
+{
+  "site": "Aurora Deepwater Platform",
+  "rotation": "14/14",
+  "shift_hours": 12,
+  "shift_pattern_ops": "2-2-2",
+  "devicesIssued": 100,
+  "departments": [
+    {"id":"ops","name":"Production","headcount":32,"devicesIssued":32,"brigades":3,"pattern":"2-2-2"},
+    {"id":"it","name":"Maintenance & IT","headcount":18,"devicesIssued":18,"brigades":3,"pattern":"2-2-2"},
+    {"id":"lab","name":"Lab & HSE","headcount":16,"devicesIssued":16,"brigades":3,"pattern":"2-2-2"},
+    {"id":"adm","name":"Admin","headcount":8,"devicesIssued":8,"brigades":1,"pattern":"day-only"},
+    {"id":"cat","name":"Catering/Accommodation","headcount":12,"devicesIssued":12,"brigades":1,"pattern":"day-only"},
+    {"id":"oim","name":"OIM / Control Room / Tech Mgmt","headcount":14,"devicesIssued":14,"brigades":1,"pattern":"day-only"}
+  ],
+  "byDeptBattery": [
+    {"id":"ops","avg":64},
+    {"id":"it","avg":69},
+    {"id":"lab","avg":66},
+    {"id":"adm","avg":62},
+    {"id":"cat","avg":61},
+    {"id":"oim","avg":63}
+  ],
+  "gender_overall": {"male":69,"female":31},
+  "gender_by_dept": {
+    "ops":{"male":28,"female":4},
+    "it":{"male":14,"female":4},
+    "lab":{"male":8,"female":8},
+    "adm":{"male":3,"female":5},
+    "cat":{"male":6,"female":6},
+    "oim":{"male":10,"female":4}
+  },
+  "age_overall": {
+    "20-29":16,
+    "30-39":28,
+    "40-49":30,
+    "50-59":20,
+    "60+":6
+  }
+}

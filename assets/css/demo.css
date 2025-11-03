@@ -5,6 +5,18 @@
   margin-bottom: var(--space-4);
 }
 
+.scenario-badge {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #0f2e2c;
+  border: 1px solid rgba(43, 217, 178, .5);
+  color: #bff4ea;
+  font-weight: 600;
+  letter-spacing: .2px;
+  margin-bottom: var(--space-5);
+}
+
 .demo-hero {
   position: relative;
   width: 100%;

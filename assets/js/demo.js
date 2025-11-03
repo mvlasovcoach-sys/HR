@@ -1,21 +1,10 @@
+import { loadDataset } from './services/dataSource.js';
+
 (function(){
   const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
   const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const heroEl = document.getElementById('demo-hero');
   if (!heroEl) return;
-
-  const loaderGlobals = window.loaderGlobals || {};
-  const fetchJson = typeof loaderGlobals.fetchJson === 'function'
-    ? loaderGlobals.fetchJson
-    : async url => {
-        const response = await fetch(url, {cache: 'no-store'});
-        if (response.status === 404) return null;
-        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
-        return response.json();
-      };
-  const withVersion = typeof loaderGlobals.withV === 'function'
-    ? loaderGlobals.withV
-    : value => value;
 
   const state = { data: null, version: null, headcount: 0 };
   const DEMO_CHARTS = {};
@@ -169,16 +158,22 @@
   async function loadData(){
     const version = await resolveVersion();
     state.version = version;
-    const dataUrl = new URL('./data/site/demo.json', document.baseURI);
-    if (version) {
-      dataUrl.searchParams.set('app', version);
-    }
-    const data = await fetchJson(withVersion(dataUrl.toString()));
-    if (!data) {
+    const [org, engagement, stress, fatigue] = await Promise.all([
+      loadDataset('org'),
+      loadDataset('engagement'),
+      loadDataset('stress'),
+      loadDataset('fatigue')
+    ]);
+
+    if (!org) {
       renderNoData();
       return;
     }
+    const data = combineDemoDatasets({ org, engagement, stress, fatigue });
     state.data = data;
+    if (typeof console !== 'undefined' && console.info) {
+      console.info('[demo] datasets loaded', { org, engagement, stress, fatigue });
+    }
     render(data);
     if (els.exportBtn) {
       els.exportBtn.disabled = false;
@@ -187,6 +182,15 @@
       els.exportBtn.setAttribute('aria-label', baseLabel);
       els.exportBtn.setAttribute('title', baseLabel);
     }
+  }
+
+  function combineDemoDatasets(datasets){
+    const base = datasets?.org && typeof datasets.org === 'object' ? datasets.org : {};
+    const merged = Object.assign({}, base);
+    merged.engagement = datasets?.engagement || null;
+    merged.stress = datasets?.stress || null;
+    merged.fatigue = datasets?.fatigue || null;
+    return merged;
   }
 
   function renderNoData(){

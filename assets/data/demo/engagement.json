@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "score": 74,
+    "delta": 2,
+    "benchmark": 70
+  },
+  "trend": [
+    { "date": "2025-09-22", "score": 72 },
+    { "date": "2025-09-29", "score": 73 },
+    { "date": "2025-10-06", "score": 74 },
+    { "date": "2025-10-13", "score": 75 }
+  ],
+  "drivers": [
+    { "id": "leadership", "label": "Leadership", "score": 76 },
+    { "id": "culture", "label": "Culture", "score": 72 },
+    { "id": "recognition", "label": "Recognition", "score": 71 }
+  ]
+}
