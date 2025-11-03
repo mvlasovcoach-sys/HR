@@ -1,0 +1,9 @@
+node_modules/
+
+# keep baselines under *-snapshots/* in git
+!tests/visual/*-snapshots/
+
+# ignore Playwright outputs
+test-results/
+playwright-report/
+blob-report/

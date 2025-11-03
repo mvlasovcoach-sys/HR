@@ -1,0 +1,4 @@
+# treat images as binary; disable text diffs
+*.png  binary -diff
+*.webp binary -diff
+*.jpg  binary -diff

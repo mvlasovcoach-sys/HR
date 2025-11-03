@@ -27,7 +27,10 @@
 
   let preferredLang = 'en';
   try {
-    preferredLang = localStorage.getItem('lang') || localStorage.getItem('hr:lang') || 'en';
+    preferredLang = localStorage.getItem('demo-lang')
+      || localStorage.getItem('lang')
+      || localStorage.getItem('hr:lang')
+      || 'en';
   } catch (err) {
     preferredLang = 'en';
   }

@@ -60,6 +60,8 @@
       };
 
       try {
+        const upperLang = typeof lang === 'string' ? lang.toUpperCase() : 'EN';
+        localStorage.setItem('demo-lang', upperLang);
         localStorage.setItem('lang', lang);
         localStorage.setItem('hr:lang', lang);
       } catch (err) {
@@ -84,7 +86,11 @@
 
     const saved = (() => {
       try {
-        return localStorage.getItem('lang') || localStorage.getItem('hr:lang') || window.I18N?.getLang?.() || 'en';
+        return localStorage.getItem('demo-lang')
+          || localStorage.getItem('lang')
+          || localStorage.getItem('hr:lang')
+          || window.I18N?.getLang?.()
+          || 'en';
       } catch (err) {
         return window.I18N?.getLang?.() || 'en';
       }
