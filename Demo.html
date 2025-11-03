@@ -46,17 +46,33 @@
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.utils.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/demo.toolbar.js?v=2025-11-05"></script>
 <script type="module" src="./assets/js/stores/modeStore.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/demo.js?v=2025.10.19-05"></script>
 </head><body data-page="demo">
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
-  <main class="main main--demo page-wrap">
+  <main class="main main--demo page-wrap page-demo">
     <header class="page-header">
-      <h1 class="page-title">Demo <i class="info" aria-hidden="true"></i></h1>
-      <div class="page-header__actions">
-        <div class="lang-switch" id="lang-switch" data-lang></div>
-        <button class="btn btn--ghost" id="btn-export" data-export>Export</button>
+      <div id="demo-toolbar" class="demo-toolbar" role="region" aria-label="Demo toolbar">
+        <h1 class="demo-toolbar__title" data-demo-title>Demo</h1>
+        <div class="demo-toolbar__spacer" aria-hidden="true"></div>
+        <div class="demo-toolbar__actions">
+          <div class="demo-toolbar__lang" role="group" aria-label="Language">
+            <button type="button" class="btn btn--ghost" data-demo-lang="EN" aria-pressed="true">EN</button>
+            <button type="button" class="btn btn--ghost" data-demo-lang="NL" aria-pressed="false">NL</button>
+            <button type="button" class="btn btn--ghost" data-demo-lang="RU" aria-pressed="false">RU</button>
+          </div>
+          <div class="demo-toolbar__lang-menu" data-demo-lang-menu>
+            <button type="button" class="btn btn--ghost demo-lang-toggle" data-demo-lang-toggle aria-haspopup="true" aria-expanded="false" aria-controls="demo-lang-menu">Lang</button>
+            <div id="demo-lang-menu" class="demo-lang-menu" hidden>
+              <button type="button" class="btn btn--ghost" data-demo-lang="EN" aria-pressed="true">EN</button>
+              <button type="button" class="btn btn--ghost" data-demo-lang="NL" aria-pressed="false">NL</button>
+              <button type="button" class="btn btn--ghost" data-demo-lang="RU" aria-pressed="false">RU</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn--ghost demo-toolbar__export" data-demo-export aria-label="Export Demo data" data-label="Export" data-empty-label="No data to export" disabled title="No data to export">Export</button>
+        </div>
       </div>
     </header>
 
