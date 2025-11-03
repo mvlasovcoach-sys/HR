@@ -25,6 +25,10 @@
 <link rel="stylesheet" href="./shared/brand.kpi.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.skeleton.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
+<link rel="stylesheet" href="./components/kpi-cards/kpi-cards.css">
+<style>
+  body[data-kpi="new"] [data-legacy-kpi] { display: none !important; }
+</style>
 <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 <script type="module" src="./assets/js/utils/env.js?v=2025-11-02-1"></script>
 <script type="module" src="./assets/js/data-loader.js"></script>
@@ -54,14 +58,31 @@
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/hr-board.neon.js?v=2025.10.19-05"></script>
-</head><body>
+</head><body data-variant="life">
 <main class="page-wrap">
   <div id="toolbar"></div>
-  <div id="page-content"></div>
+  <div id="page-content">
+    <!-- KPI BLOCK START -->
+    <section class="kpi-cards" id="kpi"></section>
+    <!-- KPI BLOCK END -->
+  </div>
 </main>
 <script type="module" src="assets/js/stores/modeStore.js?v=2025-11-02-2"></script>
 <script type="module" src="assets/js/components/Toolbar.js?v=2025-11-02-2"></script>
 <script type="module" src="assets/js/pages/summary.js?v=2025-11-02-2"></script>
+<script type="module">
+  import { mountKpiCards, KPI_CONFIG } from './components/kpi-cards/kpi-cards.js';
+  import { getKpiData } from './adapters/kpiAdapter.js';
+
+  // Feature flag: ?kpi=new
+  const isNew = new URLSearchParams(location.search).get('kpi') === 'new';
+  if (isNew) document.body.setAttribute('data-kpi', 'new');
+
+  if (document.body.dataset.kpi === 'new') {
+    const data = await getKpiData();
+    mountKpiCards('#kpi', data, KPI_CONFIG);
+  }
+</script>
 <!-- UI portal for floating panels -->
 <div id="ui-portal"></div>
 

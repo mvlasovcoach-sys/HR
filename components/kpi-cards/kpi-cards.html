@@ -1,0 +1,42 @@
+<template id="tpl-kpi-cards">
+  <div class="kpi-cards__shell">
+    <header class="kpi-cards__header">
+      <div class="kpi-cards__title-block">
+        <h2 class="kpi-cards__title">Key wellbeing KPIs</h2>
+        <p class="kpi-cards__subtitle">Daily health outlook</p>
+      </div>
+      <div class="kpi-cards__ranges" role="group" aria-label="Time range">
+        <button type="button" class="kpi-range" data-range="1d" aria-pressed="false">24h</button>
+        <button type="button" class="kpi-range" data-range="7d" aria-pressed="false">7d</button>
+        <button type="button" class="kpi-range" data-range="30d" aria-pressed="false">30d</button>
+      </div>
+    </header>
+    <div class="kpi-cards__grid" role="list"></div>
+  </div>
+</template>
+
+<template id="tpl-kpi-card">
+  <article class="kpi-card" role="group">
+    <header class="kpi-card__header">
+      <span class="kpi-card__label"></span>
+      <span class="kpi-card__hint sr-only"></span>
+      <span class="kpi-card__badge" aria-hidden="true"></span>
+    </header>
+    <div class="kpi-card__body">
+      <div class="kpi-card__value" aria-live="polite">
+        <span class="kpi-card__number">—</span>
+        <span class="kpi-card__unit"></span>
+      </div>
+      <p class="kpi-card__assistive sr-only"></p>
+      <div class="kpi-card__delta" aria-live="polite">
+        <span class="kpi-card__delta-icon" aria-hidden="true"></span>
+        <span class="kpi-card__delta-value">N/A</span>
+      </div>
+    </div>
+    <div class="kpi-card__mini" aria-hidden="true">
+      <div class="kpi-card__mini-track">
+        <div class="kpi-card__mini-fill"></div>
+      </div>
+    </div>
+  </article>
+</template>
