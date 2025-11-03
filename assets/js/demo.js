@@ -1,10 +1,10 @@
+import { getMode, getSelectedTeams, getDateRange } from './filters/state.js';
 import { loadDataset } from './services/dataSource.js';
 
 (function(){
   const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
   const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const heroEl = document.getElementById('demo-hero');
-  if (!heroEl) return;
 
   const state = { data: null, version: null, headcount: 0 };
   const DEMO_CHARTS = {};
@@ -88,16 +88,6 @@ import { loadDataset } from './services/dataSource.js';
     // Всегда demo
     appStore?.setMode && appStore.setMode('demo');
 
-    // Обёртки от отсутствующих контролов дат/compare/team
-    const byId = (id) => document.getElementById(id);
-    const safe = (el, fn) => el && fn(el);
-
-    // Ничего не делаем, если элементов нет
-    safe(byId('startDate'), el => {/* no-op */});
-    safe(byId('endDate'),   el => {/* no-op */});
-    safe(byId('compare'),   el => {/* no-op */});
-    safe(byId('teamSelect'),el => {/* no-op */});
-
     applySkeletons();
     bindEvents();
     if (window.I18N?.onReady) {
@@ -114,8 +104,10 @@ import { loadDataset } from './services/dataSource.js';
     loadData().catch(err => {
       devError('demo: data load failed', err);
       showToast(getText('demo.error', 'Unable to load demo data'));
-      heroEl.classList.remove('is-loading');
-      heroEl.removeAttribute('aria-busy');
+      if (heroEl) {
+        heroEl.classList.remove('is-loading');
+        heroEl.removeAttribute('aria-busy');
+      }
     });
   }
 
@@ -158,23 +150,29 @@ import { loadDataset } from './services/dataSource.js';
   async function loadData(){
     const version = await resolveVersion();
     state.version = version;
+
+    const mode = getMode();
+    const teams = getSelectedTeams();
+    const range = getDateRange();
+
     const [org, engagement, stress, fatigue] = await Promise.all([
-      loadDataset('org'),
-      loadDataset('engagement'),
-      loadDataset('stress'),
-      loadDataset('fatigue')
+      loadDataset('org', { mode, teams, range }),
+      loadDataset('engagement', { mode, teams, range }),
+      loadDataset('stress', { mode, teams, range }),
+      loadDataset('fatigue', { mode, teams, range })
     ]);
 
     if (!org) {
       renderNoData();
       return;
     }
-    const data = combineDemoDatasets({ org, engagement, stress, fatigue });
-    state.data = data;
+
+    const payload = { org, engagement, stress, fatigue };
     if (typeof console !== 'undefined' && console.info) {
-      console.info('[demo] datasets loaded', { org, engagement, stress, fatigue });
+      console.info('[demo] datasets loaded', payload);
     }
-    render(data);
+    renderOverview(payload);
+    renderCharts(payload);
     if (els.exportBtn) {
       els.exportBtn.disabled = false;
       els.exportBtn.removeAttribute('aria-disabled');
@@ -197,12 +195,14 @@ import { loadDataset } from './services/dataSource.js';
     const message = getText('status.noData', 'No data available');
     state.data = null;
     state.headcount = 0;
-    heroEl.classList.remove('is-loading');
-    heroEl.removeAttribute('aria-busy');
-    heroEl.classList.remove('is-fallback');
-    heroEl.removeAttribute('role');
-    heroEl.removeAttribute('aria-label');
-    heroEl.innerHTML = `<p class="demo-empty" role="status" aria-live="polite">${escapeHtml(message)}</p>`;
+    if (heroEl) {
+      heroEl.classList.remove('is-loading');
+      heroEl.removeAttribute('aria-busy');
+      heroEl.classList.remove('is-fallback');
+      heroEl.removeAttribute('role');
+      heroEl.removeAttribute('aria-label');
+      heroEl.innerHTML = `<p class="demo-empty" role="status" aria-live="polite">${escapeHtml(message)}</p>`;
+    }
     Object.values(els.cards).forEach(card => {
       if (!card) return;
       card.classList.remove('skeleton');
@@ -248,8 +248,10 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function applySkeletons(){
-    heroEl.classList.add('is-loading');
-    heroEl.setAttribute('aria-busy', 'true');
+    if (heroEl) {
+      heroEl.classList.add('is-loading');
+      heroEl.setAttribute('aria-busy', 'true');
+    }
     Object.values(els.cards).forEach(card => {
       if (!card) return;
       card.classList.add('skeleton');
@@ -287,21 +289,68 @@ import { loadDataset } from './services/dataSource.js';
 
   function render(data){
     if (!data) return;
-    const departments = Array.isArray(data.departments) ? data.departments : [];
-    const headcount = departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+    const departments = getDepartments(data);
+    const headcount = computeHeadcount(departments);
+    state.data = data;
     state.headcount = headcount;
     if (typeof window !== 'undefined') {
       window.DEMO_TOTAL = headcount;
     }
+    renderOverviewSections(data, departments, headcount);
+    renderChartSections(data, departments, headcount);
+  }
+
+  function renderOverview(datasets){
+    const data = combineDemoDatasets(datasets);
+    const departments = getDepartments(data);
+    if (!departments.length) {
+      renderNoData();
+      return;
+    }
+    const headcount = computeHeadcount(departments);
+    state.data = data;
+    state.headcount = headcount;
+    if (typeof window !== 'undefined') {
+      window.DEMO_TOTAL = headcount;
+    }
+    renderOverviewSections(data, departments, headcount);
+  }
+
+  function renderCharts(datasets){
+    const data = state.data || combineDemoDatasets(datasets);
+    const departments = getDepartments(data);
+    if (!departments.length) {
+      renderNoData();
+      return;
+    }
+    const headcount = state.headcount || computeHeadcount(departments);
+    if (typeof window !== 'undefined') {
+      window.DEMO_TOTAL = headcount;
+    }
+    renderChartSections(data, departments, headcount);
+  }
+
+  function getDepartments(data){
+    return Array.isArray(data?.departments) ? data.departments : [];
+  }
+
+  function computeHeadcount(departments){
+    return departments.reduce((sum, dept) => sum + (Number(dept.headcount) || 0), 0);
+  }
+
+  function renderOverviewSections(data, departments, headcount){
     renderBadge(data.site, headcount);
     renderHero(data.site);
     renderOverviewCards(data, headcount, departments);
     renderOrgTable(departments);
+    renderShiftGrid(departments);
+    updateSourceMeta(headcount);
+  }
+
+  function renderChartSections(data, departments, headcount){
     renderGenderOverall(data.gender_overall, headcount);
     renderAgeOverall(data.age_overall, headcount);
     renderByDepartment(departments, data.byDeptBattery);
-    renderShiftGrid(departments);
-    updateSourceMeta(headcount);
   }
 
   function renderBadge(name, headcount){
@@ -312,6 +361,7 @@ import { loadDataset } from './services/dataSource.js';
   }
 
   function renderHero(name){
+    if (!heroEl) return;
     heroEl.classList.remove('is-fallback');
     heroEl.removeAttribute('data-fallback-label');
     heroEl.innerHTML = '';
@@ -414,6 +464,12 @@ import { loadDataset } from './services/dataSource.js';
 
   function renderOrgTable(departments){
     if (!els.orgTable) return;
+    if (!Array.isArray(departments) || departments.length === 0) {
+      setEmptyState(els.orgTable, {
+        label: `${getText('demo.orgStructure', 'Organization')}: ${getNoDataMessage()}`
+      });
+      return;
+    }
     const rows = departments.map(dept => {
       const name = escapeHtml(dept.name);
       const head = Number(dept.headcount) || 0;
@@ -463,12 +519,12 @@ import { loadDataset } from './services/dataSource.js';
       nEl.textContent = formatInteger(total);
     }
     if (!entries.length) {
-      const noData = window.I18N?.t?.('status.noData') || 'No data available';
-      container.innerHTML = `<p id="${descId}" class="sr-only">${noData}</p>`;
-      container.setAttribute('role', 'group');
-      container.setAttribute('tabindex', '0');
-      container.setAttribute('aria-describedby', descId);
-      container.setAttribute('aria-label', `${getText('demo.gender_title', 'Gender — Headcount')}: ${noData}`);
+      setEmptyState(container, {
+        role: 'group',
+        tabIndex: 0,
+        describeId: descId,
+        label: `${getText('demo.gender_title', 'Gender — Headcount')}: ${getNoDataMessage()}`
+      });
       return;
     }
     const dataset = entries.map(([key, value]) => {
@@ -525,6 +581,15 @@ import { loadDataset } from './services/dataSource.js';
     if (Number.isFinite(globalTotal) && globalTotal > 0) {
       warnOnMismatch('Age bands sum', total, globalTotal);
     }
+    if (!total) {
+      setEmptyState(container, {
+        role: 'group',
+        tabIndex: 0,
+        label: `${getText('demo.age_title', 'Age — Headcount by band')}: ${getNoDataMessage()}`
+      });
+      updateDemoMeta();
+      return;
+    }
     mountChart('#chart-age-overall', drawAgeOverall, { data: bands, total });
     updateDemoMeta();
   }
@@ -534,6 +599,15 @@ import { loadDataset } from './services/dataSource.js';
     if (!container) return;
     container.classList.remove('is-loading');
     container.removeAttribute('aria-busy');
+    if (!Array.isArray(departments) || !departments.length) {
+      setEmptyState(container, {
+        role: 'group',
+        tabIndex: 0,
+        label: `${getText('demo.byDepartment', 'By department')}: ${getNoDataMessage()}`
+      });
+      updateDemoMeta();
+      return;
+    }
     mountChart('#chart-by-dept', drawByDept, { departments, wellnessByDept });
     updateDemoMeta();
   }
@@ -765,6 +839,14 @@ import { loadDataset } from './services/dataSource.js';
   function renderShiftGrid(departments){
     if (!els.shiftGrid) return;
     const basePattern = ['day', 'day', 'night', 'night', 'off', 'off'];
+    if (!Array.isArray(departments) || !departments.length) {
+      setEmptyState(els.shiftGrid, {
+        role: 'region',
+        label: `${getText('demo.shiftPattern', 'Shift Pattern')}: ${getNoDataMessage()}`
+      });
+      updateDemoMeta();
+      return;
+    }
     const rotate = (arr, offset) => {
       const len = arr.length;
       const index = ((offset % len) + len) % len;
@@ -998,6 +1080,55 @@ import { loadDataset } from './services/dataSource.js';
     if (value === 'day') return dayLabel.charAt(0) || 'D';
     if (value === 'night') return nightLabel.charAt(0) || 'N';
     return offLabel.charAt(0) || 'O';
+  }
+
+  function getNoDataMessage(){
+    return getText('status.noData', 'No data available');
+  }
+
+  function setEmptyState(target, options = {}){
+    const host = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!host) return;
+    const message = options.message || getNoDataMessage();
+    host.classList.remove('skeleton', 'is-loading');
+    host.removeAttribute('aria-busy');
+    host.innerHTML = `<p class="demo-empty">${escapeHtml(message)}</p>`;
+    if (options.role === false) {
+      host.removeAttribute('role');
+    } else {
+      host.setAttribute('role', options.role || 'status');
+    }
+    if (typeof options.tabIndex === 'number') {
+      host.setAttribute('tabindex', String(options.tabIndex));
+    } else {
+      host.removeAttribute('tabindex');
+    }
+    if (options.label) {
+      host.setAttribute('aria-label', options.label);
+    } else if (options.role && options.role !== 'presentation') {
+      host.setAttribute('aria-label', message);
+    } else {
+      host.removeAttribute('aria-label');
+    }
+    if (options.describeId) {
+      const descId = String(options.describeId);
+      let desc = host.querySelector(`#${descId}`);
+      if (!desc) {
+        desc = document.createElement('p');
+        desc.id = descId;
+        desc.className = 'sr-only';
+        host.appendChild(desc);
+      }
+      desc.textContent = options.describeText || message;
+      host.setAttribute('aria-describedby', descId);
+    } else {
+      host.removeAttribute('aria-describedby');
+    }
+    if (options.ariaLive === false) {
+      host.removeAttribute('aria-live');
+    } else {
+      host.setAttribute('aria-live', options.ariaLive || 'polite');
+    }
   }
 
   function setDescription(container, id, text){
