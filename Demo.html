@@ -54,52 +54,24 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--demo page-wrap">
-    <div class="toolbar" id="toolbar">
-      <div class="tb-row">
-        <div class="tb-group tb-quick">
-          <button class="seg" data-range="today">Today</button>
-          <button class="seg" data-range="7d">7 Days</button>
-          <button class="seg" data-range="mtd">Month to date</button>
-          <button class="seg" data-range="qtd">Quarter to date</button>
-          <button class="seg" data-range="ytd">Year to date</button>
-        </div>
-
-        <div class="tb-group tb-mode">
-          <button class="seg" id="btn-demo" data-mode="demo">Demo</button>
-          <button class="seg" id="btn-live" data-mode="live">Live</button>
-        </div>
-
-        <div class="tb-group tb-dates">
-          <label class="seg seg-input">
-            <span>Start date</span>
-            <input id="startDate" type="text" placeholder="mm / dd / yyyy">
-            <i class="ico cal"></i>
-          </label>
-          <label class="seg seg-input">
-            <span>End date</span>
-            <input id="endDate" type="text" placeholder="mm / dd / yyyy">
-            <i class="ico cal"></i>
-          </label>
-        </div>
-
-        <div class="tb-group tb-team">
-          <label class="seg seg-input">
-            <span>Team</span>
-            <select id="teamSelect">
-              <option value="all">All Teams</option>
-              <!-- опции ниже -->
-            </select>
-            <i class="ico chevron"></i>
-          </label>
-        </div>
+    <header class="toolbar" id="toolbar">
+      <div class="tb-left">
+        <h1 class="page-title">Demo <button class="i i-info" aria-label="Info"></button></h1>
+        <div id="scenarioBadge" class="scenario-badge"></div>
       </div>
-    </div>
-    <div id="scenarioBadge" class="scenario-badge"></div>
+
+      <div class="tb-right">
+        <div class="seg-group lang-switch">
+          <button id="langEN" class="seg is-active" data-lang="en">EN</button>
+          <button id="langNL" class="seg" data-lang="nl">NL</button>
+          <button id="langRU" class="seg" data-lang="ru">RU</button>
+        </div>
+        <button id="btnExport" class="seg">Export</button>
+      </div>
+    </header>
     <div id="page-content">
       <div id="global-caption"></div>
       <span id="site-badge" class="pill" aria-live="polite"></span>
-
-      <section id="demo-hero" class="demo-hero" aria-live="polite"></section>
 
       <section id="demo-overview" class="grid grid-4 demo-info-grid" aria-live="polite">
         <div id="card-site" class="tile card"></div>
