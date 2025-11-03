@@ -125,8 +125,18 @@
 
     try {
       const data = await getKpiData();
-      // Force variant from body (already set to demo)
-      mountKpiCards('#kpi', data, KPI_CONFIG);
+
+      function bindExternalRange(cb) {
+        document.addEventListener('toolbar:range', e => {
+          const r = e?.detail?.range;
+          cb(r);
+        });
+      }
+
+      mountKpiCards('#kpi', data, KPI_CONFIG, {
+        initialRange: '1d',
+        bindExternalRange
+      });
     } catch (e) {
       console.error('KPI mount failed:', e);
     }
