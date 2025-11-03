@@ -25,6 +25,22 @@
 <link rel="stylesheet" href="./components/kpi-cards/kpi-cards.css">
 <style>
   body[data-kpi="new"] [data-legacy-kpi] { display: none !important; }
+  #demo-range {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 8px 0 4px;
+  }
+  #demo-range .seg-btn {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--panel-bg, #0f2630);
+    color: var(--text-color, #e6f3f7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  #demo-range .seg-btn.is-active {
+    outline: 2px solid var(--success, #3fe6a0);
+  }
 </style>
 <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 <script type="module" src="./assets/js/utils/env.js?v=2025-11-02-1"></script>
