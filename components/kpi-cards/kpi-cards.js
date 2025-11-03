@@ -2,6 +2,14 @@ const TEMPLATE_URL = new URL('./kpi-cards.html', import.meta.url);
 let templatePromise = null;
 let cardIdCounter = 0;
 
+/**
+ * @typedef {'1d'|'7d'|'30d'|'mtd'|'qtd'|'ytd'} RangeKey
+ * @typedef {{ value?: number, delta?: number, trend?: number }} MetricDatum
+ * @typedef {{ defaultRange: RangeKey, metrics: Record<string, Record<RangeKey, MetricDatum>> }} KpiData
+ */
+
+const VALID_RANGE_IDS = new Set(['1d', '7d', '30d', 'mtd', 'qtd', 'ytd']);
+
 const ICONS = {
   up: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 3l5.5 7.5H2.5L8 3z"/></svg>',
   down: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 13L2.5 5.5h11L8 13z"/></svg>',
@@ -294,7 +302,10 @@ export async function mountKpiCards(target, data, config = KPI_CONFIG, opts = {}
   let currentData = data;
   const availableRanges = config.ranges?.map?.(r => r.id) || [];
 
-  const normalizeRange = range => (range === '1d' || range === '7d' || range === '30d') ? range : null;
+  const normalizeRange = range => {
+    if (typeof range !== 'string') return null;
+    return VALID_RANGE_IDS.has(range) ? /** @type {RangeKey} */ (range) : null;
+  };
 
   const fallbackRange = normalizeRange(currentData?.defaultRange)
     || normalizeRange(config.defaultRange)

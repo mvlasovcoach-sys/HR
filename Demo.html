@@ -69,6 +69,15 @@
       <span id="site-badge" class="pill" aria-live="polite"></span>
 
       <!-- KPI BLOCK START -->
+      <!-- DEMO range switch -->
+      <div id="demo-range" class="seg">
+        <button data-r="1d" class="seg-btn is-active">Today</button>
+        <button data-r="7d" class="seg-btn">7 days</button>
+        <button data-r="30d" class="seg-btn">30 days</button>
+        <button data-r="mtd" class="seg-btn">Month to date</button>
+        <button data-r="qtd" class="seg-btn">Quarter to date</button>
+        <button data-r="ytd" class="seg-btn">Year to date</button>
+      </div>
       <section class="kpi-cards" id="kpi"></section>
       <!-- KPI BLOCK END -->
 
@@ -151,9 +160,35 @@
   const isNew = new URLSearchParams(location.search).get('kpi') === 'new';
   if (isNew) document.body.setAttribute('data-kpi', 'new');
 
+  const rangeSwitch = document.getElementById('demo-range');
+
   if (document.body.dataset.kpi === 'new') {
     const data = await getKpiData();
-    mountKpiCards('#kpi', data, KPI_CONFIG);
+    mountKpiCards('#kpi', data, KPI_CONFIG, {
+      initialRange: '1d',
+      bindExternalRange(cb) {
+        document.addEventListener('demo:range', event => {
+          const range = event.detail?.range;
+          if (typeof range === 'string') cb(range);
+        });
+      }
+    });
+
+    if (rangeSwitch) {
+      rangeSwitch.addEventListener('click', event => {
+        const target = event.target;
+        if (!(target instanceof Element)) return;
+        const button = target.closest('[data-r]');
+        if (!(button instanceof Element)) return;
+        const range = button.getAttribute('data-r');
+        if (!range) return;
+        rangeSwitch.querySelectorAll('.seg-btn').forEach(el => el.classList.remove('is-active'));
+        button.classList.add('is-active');
+        document.dispatchEvent(new CustomEvent('demo:range', { detail: { range } }));
+      });
+    }
+  } else if (rangeSwitch) {
+    rangeSwitch.setAttribute('hidden', '');
   }
 </script>
   <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
