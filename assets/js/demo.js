@@ -35,6 +35,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
     toolbar: '',
     empty: 'No data to export'
   };
+  const DEMO_LANGS = ['EN', 'NL', 'RU'];
   const DEMO_CHARTS = {};
   const utils = window.DEMO_UTILS || {};
   const DEMO_SOURCE_ID = 'demo-synth-2025';
@@ -76,7 +77,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
     shiftGrid: document.getElementById('shift-grid'),
     toast: document.getElementById('demo-toast'),
     exportBtn: document.getElementById('btn-export-brief'),
-    toolbarExport: document.querySelector('[data-demo-export]')
+    toolbar: document.querySelector('demo-toolbar')
   };
 
   function mountChart(selector, drawFn, data, opts={}){
@@ -149,18 +150,27 @@ if (typeof window !== 'undefined' && !window.appStore) {
       els.exportBtn.setAttribute('title', baseLabel);
       els.exportBtn.addEventListener('click', handleExport);
     }
-    if (els.toolbarExport) {
-      const baseLabel = els.toolbarExport.getAttribute('data-label') || els.toolbarExport.textContent?.trim?.() || 'Export';
-      const emptyLabel = els.toolbarExport.getAttribute('data-empty-label') || EXPORT_LABELS.empty;
-      EXPORT_LABELS.toolbar = baseLabel;
+    if (els.toolbar) {
+      const toolbar = els.toolbar;
+      const baseLabel = toolbar.getAttribute('export-label') || EXPORT_LABELS.toolbar || 'Export';
+      const emptyLabel = toolbar.getAttribute('export-empty-label') || EXPORT_LABELS.empty;
+      EXPORT_LABELS.toolbar = baseLabel || 'Export';
       EXPORT_LABELS.empty = emptyLabel || EXPORT_LABELS.empty;
-      els.toolbarExport.setAttribute('title', emptyLabel || baseLabel);
-      els.toolbarExport.setAttribute('aria-disabled', 'true');
-      els.toolbarExport.disabled = true;
-      els.toolbarExport.addEventListener('click', event => {
-        event.preventDefault();
+      toolbar.setAttribute('export-disabled', '');
+      toolbar.addEventListener('demo:export', event => {
+        if (event?.preventDefault) event.preventDefault();
         exportDemo();
       });
+      toolbar.addEventListener('demo:langChanged', event => {
+        const detail = event?.detail;
+        const resolved = normaliseDemoLang(typeof detail === 'string' ? detail : detail?.lang);
+        if (!resolved) return;
+        applyToolbarLang(resolved);
+      });
+      const initialLang = normaliseDemoLang(toolbar.getAttribute('lang') || toolbar.lang);
+      if (initialLang) {
+        applyToolbarLang(initialLang);
+      }
     }
     document.addEventListener('app:periodChanged', handlePeriodChanged);
     document.addEventListener('app:thresholdChanged', handleThresholdChanged);
@@ -174,7 +184,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
   }
 
   function exportDemo(){
-    performExport(els.toolbarExport || els.exportBtn);
+    performExport(els.exportBtn);
   }
 
   function performExport(targetButton){
@@ -182,7 +192,10 @@ if (typeof window !== 'undefined' && !window.appStore) {
       showToast(getText('demo.loading', 'Loading demo data…'));
       return;
     }
-    if (!targetButton || targetButton.disabled) {
+    if (targetButton && targetButton.disabled) {
+      return;
+    }
+    if (!targetButton && els.toolbar?.hasAttribute('export-disabled')) {
       return;
     }
     const exporter = window.EXPORTER || window.exporter;
@@ -190,7 +203,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
       showToast(getText('demo.exportUnavailable', 'Export not available.'));
       return;
     }
-    window.exporter?.notifyStart?.(targetButton, targetButton?.dataset?.exportKey);
+    window.exporter?.notifyStart?.(targetButton || undefined, targetButton?.dataset?.exportKey);
     exporter.exportSiteBriefPDF({
       badgeText: els.badge?.textContent?.trim?.() || '',
       version: state.version || ''
@@ -216,16 +229,17 @@ if (typeof window !== 'undefined' && !window.appStore) {
         els.exportBtn.setAttribute('aria-label', unavailable);
       }
     }
-    if (els.toolbarExport) {
-      const activeLabel = EXPORT_LABELS.toolbar || els.toolbarExport.getAttribute('data-label') || 'Export';
-      const emptyLabel = EXPORT_LABELS.empty || 'No data to export';
-      els.toolbarExport.disabled = !hasData;
+    if (els.toolbar) {
+      if (EXPORT_LABELS.toolbar) {
+        els.toolbar.setAttribute('export-label', EXPORT_LABELS.toolbar);
+      }
+      if (EXPORT_LABELS.empty) {
+        els.toolbar.setAttribute('export-empty-label', EXPORT_LABELS.empty);
+      }
       if (hasData) {
-        els.toolbarExport.removeAttribute('aria-disabled');
-        els.toolbarExport.setAttribute('title', activeLabel);
+        els.toolbar.removeAttribute('export-disabled');
       } else {
-        els.toolbarExport.setAttribute('aria-disabled', 'true');
-        els.toolbarExport.setAttribute('title', emptyLabel);
+        els.toolbar.setAttribute('export-disabled', '');
       }
     }
     window.dispatchEvent(new CustomEvent('demo:dataState', {
@@ -234,6 +248,46 @@ if (typeof window !== 'undefined' && !window.appStore) {
         headcount: Number(state.headcount) || 0
       }
     }));
+  }
+
+  function normaliseDemoLang(value){
+    if (!value) return null;
+    const upper = String(value).trim().toUpperCase();
+    return DEMO_LANGS.includes(upper) ? upper : null;
+  }
+
+  function applyToolbarLang(lang){
+    const resolved = normaliseDemoLang(lang) || 'EN';
+    const lower = resolved.toLowerCase();
+    try {
+      localStorage.setItem('demo-lang', resolved);
+      localStorage.setItem('hr:lang', lower);
+    } catch (err) {
+      /* storage optional */
+    }
+    if (typeof document !== 'undefined') {
+      document.documentElement?.setAttribute('lang', lower);
+    }
+    if (typeof window.switchLocale === 'function') {
+      window.switchLocale(resolved);
+      return;
+    }
+    if (typeof window.I18N?.setLang === 'function') {
+      window.I18N.setLang(lower);
+    } else if (typeof window.I18N?.set === 'function') {
+      try {
+        window.I18N.set(lower);
+      } catch (err) {
+        /* noop */
+      }
+    }
+    if (els.toolbar && normaliseDemoLang(els.toolbar.lang) !== resolved) {
+      try {
+        els.toolbar.lang = resolved;
+      } catch (err) {
+        /* noop */
+      }
+    }
   }
 
   window.exportDemo = exportDemo;

@@ -60,6 +60,8 @@
 
   function storeLang(lang){
     try {
+      const upperLang = typeof lang === 'string' ? lang.toUpperCase() : 'EN';
+      localStorage.setItem('demo-lang', upperLang);
       localStorage.setItem('lang', lang);
       localStorage.setItem('hr:lang', lang);
     } catch (err) {

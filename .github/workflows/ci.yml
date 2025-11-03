@@ -4,16 +4,36 @@ on:
   pull_request:
     paths:
       - 'shared/**'
+      - 'src/**'
+      - 'assets/js/**'
+      - 'assets/css/**'
       - '**/*.html'
       - 'scripts/**'
-      - '!assets/css/**'
+      - '.storybook/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.ts'
+      - 'tsconfig.json'
+      - 'vitest.config.ts'
+      - 'vitest.setup.ts'
   push:
     branches: [ main ]
     paths:
       - 'shared/**'
+      - 'src/**'
+      - 'assets/js/**'
+      - 'assets/css/**'
       - '**/*.html'
       - 'scripts/**'
-      - '!assets/css/**'
+      - '.storybook/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.ts'
+      - 'tsconfig.json'
+      - 'vitest.config.ts'
+      - 'vitest.setup.ts'
 
 jobs:
   lint-and-test:
@@ -23,11 +43,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Brand check
-        run: |
-          npm ci
-          npm run brand-check
+      - name: Install dependencies
+        run: npm ci
       - name: Stylelint
         run: npm run lint:css
       - name: HTMLHint
         run: npm run lint:html
+      - name: Brand check
+        run: npm run brand-check
+      - name: TypeScript build
+        run: npm run build:ts
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Storybook build
+        run: npm run storybook:build
+      - name: Visual regression tests
+        run: npm run test

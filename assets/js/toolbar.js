@@ -248,6 +248,8 @@
       };
 
       try {
+        const upperTarget = target.toUpperCase();
+        localStorage.setItem('demo-lang', upperTarget);
         localStorage.setItem('lang', target);
         localStorage.setItem('hr:lang', target);
       } catch (err) {
@@ -272,7 +274,12 @@
 
     const saved = (() => {
       try {
-        return normalise(localStorage.getItem('lang') || localStorage.getItem('hr:lang') || window.I18N?.getLang?.());
+        return normalise(
+          localStorage.getItem('demo-lang')
+          || localStorage.getItem('lang')
+          || localStorage.getItem('hr:lang')
+          || window.I18N?.getLang?.()
+        );
       } catch (err) {
         return normalise(window.I18N?.getLang?.());
       }
