@@ -72,21 +72,17 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     : [];
 
   const optionIndex = new Map(safeOptions.map(option => [option.id, option.label]));
-  let selected = new Set(
+  const allIds = safeOptions.map(option => option.id);
+  const totalCount = allIds.length;
+  const optionById = new Map(safeOptions.map(option => [option.id, option]));
+
+  const state = new Set(
     Array.isArray(value)
       ? value
           .map(item => String(item ?? ''))
           .filter(id => optionIndex.has(id))
       : []
   );
-  const allIds = safeOptions.map(option => option.id);
-  const totalCount = allIds.length;
-
-  const usingAllInitially = selected.size === 0 || selected.size === totalCount;
-  if (usingAllInitially) {
-    selected = new Set(allIds);
-  }
-  let usingAll = usingAllInitially;
 
   host.innerHTML = `
   <div class="team-filter">
@@ -114,23 +110,28 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   const selectAllButton = host.querySelector(`#${selectAllId}`);
   const clearButton = host.querySelector(`#${clearId}`);
 
-  function getSelectedCount() {
-    if (usingAll) return totalCount;
-    return selected.size;
+  if (selectAllButton) {
+    selectAllButton.textContent = 'Select all';
+  }
+  if (clearButton) {
+    clearButton.textContent = 'Clear';
+  }
+  if (search) {
+    search.placeholder = 'Search teams…';
+    search.setAttribute('aria-label', 'Search teams…');
   }
 
   function applyLabel() {
-    const count = getSelectedCount();
-    const displayCount = usingAll ? totalCount : count;
-    if (!totalCount || displayCount === 0 || displayCount === totalCount) {
+    const count = state.size;
+    if (!totalCount || count === 0 || count === totalCount) {
       btn.textContent = allTeamsLabel;
       return;
     }
-    btn.textContent = `${teamButtonLabel} · ${displayCount}/${totalCount}`;
+    btn.textContent = `${teamButtonLabel} · ${count}/${totalCount}`;
   }
 
   function applyChips() {
-    const ids = usingAll ? [] : Array.from(selected);
+    const ids = state.size === 0 || state.size === totalCount ? [] : Array.from(state);
     if (!ids.length) {
       chips.innerHTML = '';
       return;
@@ -138,8 +139,9 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     const visible = ids.slice(0, 4);
     chips.innerHTML = visible
       .map(id => {
-        const label = optionIndex.get(id) ?? id;
-        const labelHtml = escapeHtml(label);
+        const option = optionById.get(id);
+        const label = option?.label ?? id;
+        const labelHtml = option?.labelHtml ?? escapeHtml(label);
         const ariaLabel = escapeHtml(removeChipLabel(label));
         const dataId = escapeHtml(id);
         return `<span class="chip">${labelHtml}<button data-id="${dataId}" class="chip-x" type="button" aria-label="${ariaLabel}">×</button></span>`;
@@ -152,15 +154,7 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
       button.addEventListener('click', () => {
         const id = button.dataset.id;
         if (!id) return;
-        if (usingAll) {
-          usingAll = false;
-          selected = new Set(allIds);
-        }
-        selected.delete(id);
-        if (selected.size === 0) {
-          usingAll = true;
-          selected = new Set(allIds);
-        }
+        state.delete(id);
         sync({ notify: true, refreshList: false });
       });
     });
@@ -187,24 +181,15 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
         const id = checkbox.value;
         if (!optionIndex.has(id)) return;
         if (checkbox.checked) {
-          if (usingAll && selected.size === allIds.length) {
-            usingAll = false;
-            selected = new Set(allIds);
-          }
-          selected.add(id);
+          state.add(id);
         } else {
-          if (usingAll) {
-            usingAll = false;
-            selected = new Set(allIds);
+          if (state.size === 0) {
+            allIds.forEach(item => state.add(item));
           }
-          selected.delete(id);
+          state.delete(id);
         }
-        if (selected.size === allIds.length) {
-          usingAll = true;
-          selected = new Set(allIds);
-        } else if (selected.size === 0) {
-          usingAll = true;
-          selected = new Set(allIds);
+        if (state.size === totalCount) {
+          state.clear();
         }
         sync({ notify: true, refreshList: false });
       });
@@ -216,7 +201,7 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   function applySelections() {
     list.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
       const id = checkbox.value;
-      const isChecked = usingAll ? true : selected.has(id);
+      const isChecked = state.size === 0 || state.size === totalCount ? true : state.has(id);
       checkbox.checked = isChecked;
       checkbox.setAttribute('aria-selected', isChecked.toString());
       checkbox.closest('li')?.setAttribute('aria-selected', isChecked.toString());
@@ -225,7 +210,7 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
 
   function notifySelection() {
     if (typeof onChange === 'function') {
-      const ids = usingAll ? [] : Array.from(selected);
+      const ids = state.size === 0 || state.size === totalCount ? [] : Array.from(state);
       onChange(ids);
     }
   }
@@ -293,14 +278,13 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   };
 
   selectAllButton?.addEventListener('click', () => {
-    usingAll = true;
-    selected = new Set(allIds);
+    state.clear();
+    allIds.forEach(id => state.add(id));
     sync({ notify: true, refreshList: false });
   });
 
   clearButton?.addEventListener('click', () => {
-    usingAll = true;
-    selected = new Set(allIds);
+    state.clear();
     sync({ notify: true, refreshList: false });
   });
 
