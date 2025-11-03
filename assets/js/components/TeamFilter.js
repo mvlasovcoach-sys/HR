@@ -24,14 +24,20 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
       const fn = window.I18N?.t;
       if (typeof fn === 'function') {
         const result = fn.call(window.I18N, key);
-        if (typeof result === 'string' && result.trim()) {
-          return result;
+        if (typeof result === 'string') {
+          const trimmed = result.trim();
+          if (trimmed && trimmed !== key) {
+            return result;
+          }
         }
       }
     } catch (err) {
       /* noop */
     }
-    return fallback;
+    if (typeof fallback === 'string' && fallback.trim()) {
+      return fallback;
+    }
+    return key;
   };
 
   const teamLabel = translate('label.teamFilter', 'Team');
@@ -242,6 +248,27 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     panel.hidden = false;
     control?.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-expanded', 'true');
+    // позиция
+    panel.style.left = '0px';
+    panel.style.top = '36px';
+    panel.style.bottom = 'auto';
+    panel.style.maxHeight = '280px';
+    const r = panel.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (r.right > vw - 8) {
+      panel.style.left = `${Math.max(0, vw - 8 - r.width)}px`;
+    }
+    const btnRect = btn.getBoundingClientRect();
+    if (r.bottom > vh - 8) {
+      panel.style.top = 'auto';
+      panel.style.bottom = `${btnRect.height + 8}px`;
+      panel.style.maxHeight = `${Math.min(280, btnRect.top - 16)}px`;
+    } else {
+      panel.style.top = '36px';
+      panel.style.bottom = 'auto';
+      panel.style.maxHeight = '280px';
+    }
     search.value = '';
     renderList('');
     search.focus();
