@@ -30,6 +30,11 @@ if (typeof window !== 'undefined' && !window.appStore) {
   const heroEl = document.getElementById('demo-hero');
 
   const state = { data: null, version: null, headcount: 0 };
+  const EXPORT_LABELS = {
+    page: '',
+    toolbar: '',
+    empty: 'No data to export'
+  };
   const DEMO_CHARTS = {};
   const utils = window.DEMO_UTILS || {};
   const DEMO_SOURCE_ID = 'demo-synth-2025';
@@ -70,7 +75,8 @@ if (typeof window !== 'undefined' && !window.appStore) {
     byDept: document.getElementById('chart-by-dept'),
     shiftGrid: document.getElementById('shift-grid'),
     toast: document.getElementById('demo-toast'),
-    exportBtn: document.getElementById('btn-export-brief')
+    exportBtn: document.getElementById('btn-export-brief'),
+    toolbarExport: document.querySelector('[data-demo-export]')
   };
 
   function mountChart(selector, drawFn, data, opts={}){
@@ -131,36 +137,60 @@ if (typeof window !== 'undefined' && !window.appStore) {
         heroEl.classList.remove('is-loading');
         heroEl.removeAttribute('aria-busy');
       }
+      setExportAvailability(false);
     });
   }
 
   function bindEvents(){
     if (els.exportBtn) {
-      els.exportBtn.disabled = true;
-      els.exportBtn.setAttribute('aria-disabled', 'true');
       const baseLabel = els.exportBtn.getAttribute('data-export-label') || getText('demo.exportBrief', 'Export Site Brief (PDF)');
+      EXPORT_LABELS.page = baseLabel;
       els.exportBtn.setAttribute('aria-label', baseLabel);
       els.exportBtn.setAttribute('title', baseLabel);
       els.exportBtn.addEventListener('click', handleExport);
+    }
+    if (els.toolbarExport) {
+      const baseLabel = els.toolbarExport.getAttribute('data-label') || els.toolbarExport.textContent?.trim?.() || 'Export';
+      const emptyLabel = els.toolbarExport.getAttribute('data-empty-label') || EXPORT_LABELS.empty;
+      EXPORT_LABELS.toolbar = baseLabel;
+      EXPORT_LABELS.empty = emptyLabel || EXPORT_LABELS.empty;
+      els.toolbarExport.setAttribute('title', emptyLabel || baseLabel);
+      els.toolbarExport.setAttribute('aria-disabled', 'true');
+      els.toolbarExport.disabled = true;
+      els.toolbarExport.addEventListener('click', event => {
+        event.preventDefault();
+        exportDemo();
+      });
     }
     document.addEventListener('app:periodChanged', handlePeriodChanged);
     document.addEventListener('app:thresholdChanged', handleThresholdChanged);
     document.addEventListener('app:scenarioChanged', handleScenarioChanged);
     window.addEventListener('storage', handleStorageChanged);
+    setExportAvailability(false);
   }
 
   function handleExport(){
+    performExport(els.exportBtn);
+  }
+
+  function exportDemo(){
+    performExport(els.toolbarExport || els.exportBtn);
+  }
+
+  function performExport(targetButton){
     if (!state.data) {
       showToast(getText('demo.loading', 'Loading demo data…'));
       return;
     }
-    if (els.exportBtn?.disabled) return;
+    if (!targetButton || targetButton.disabled) {
+      return;
+    }
     const exporter = window.EXPORTER || window.exporter;
     if (!exporter || typeof exporter.exportSiteBriefPDF !== 'function') {
       showToast(getText('demo.exportUnavailable', 'Export not available.'));
       return;
     }
-    window.exporter?.notifyStart?.(els.exportBtn, els.exportBtn?.dataset?.exportKey);
+    window.exporter?.notifyStart?.(targetButton, targetButton?.dataset?.exportKey);
     exporter.exportSiteBriefPDF({
       badgeText: els.badge?.textContent?.trim?.() || '',
       version: state.version || ''
@@ -169,6 +199,44 @@ if (typeof window !== 'undefined' && !window.appStore) {
       showToast(getText('demo.exportError', 'Unable to export PDF'));
     });
   }
+
+  function setExportAvailability(enabled){
+    const hasData = Boolean(enabled && state.data);
+    if (els.exportBtn) {
+      const baseLabel = EXPORT_LABELS.page || els.exportBtn.getAttribute('data-export-label') || getText('demo.exportBrief', 'Export Site Brief (PDF)');
+      const unavailable = getText('demo.exportUnavailable', 'Export not available.');
+      els.exportBtn.disabled = !hasData;
+      if (hasData) {
+        els.exportBtn.removeAttribute('aria-disabled');
+        els.exportBtn.setAttribute('title', baseLabel);
+        els.exportBtn.setAttribute('aria-label', baseLabel);
+      } else {
+        els.exportBtn.setAttribute('aria-disabled', 'true');
+        els.exportBtn.setAttribute('title', unavailable);
+        els.exportBtn.setAttribute('aria-label', unavailable);
+      }
+    }
+    if (els.toolbarExport) {
+      const activeLabel = EXPORT_LABELS.toolbar || els.toolbarExport.getAttribute('data-label') || 'Export';
+      const emptyLabel = EXPORT_LABELS.empty || 'No data to export';
+      els.toolbarExport.disabled = !hasData;
+      if (hasData) {
+        els.toolbarExport.removeAttribute('aria-disabled');
+        els.toolbarExport.setAttribute('title', activeLabel);
+      } else {
+        els.toolbarExport.setAttribute('aria-disabled', 'true');
+        els.toolbarExport.setAttribute('title', emptyLabel);
+      }
+    }
+    window.dispatchEvent(new CustomEvent('demo:dataState', {
+      detail: {
+        hasData,
+        headcount: Number(state.headcount) || 0
+      }
+    }));
+  }
+
+  window.exportDemo = exportDemo;
 
   async function loadData(){
     const version = await resolveVersion();
@@ -196,13 +264,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
     }
     renderOverview(payload);
     renderCharts(payload);
-    if (els.exportBtn) {
-      els.exportBtn.disabled = false;
-      els.exportBtn.removeAttribute('aria-disabled');
-      const baseLabel = els.exportBtn.getAttribute('data-export-label') || getText('demo.exportBrief', 'Export Site Brief (PDF)');
-      els.exportBtn.setAttribute('aria-label', baseLabel);
-      els.exportBtn.setAttribute('title', baseLabel);
-    }
   }
 
   function combineDemoDatasets(datasets){
@@ -250,13 +311,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
       els.badge.textContent = '';
       els.badge.removeAttribute('aria-label');
     }
-    if (els.exportBtn) {
-      els.exportBtn.disabled = true;
-      els.exportBtn.setAttribute('aria-disabled', 'true');
-      const unavailable = getText('demo.exportUnavailable', 'Export not available.');
-      els.exportBtn.setAttribute('title', unavailable);
-      els.exportBtn.setAttribute('aria-label', unavailable);
-    }
+    setExportAvailability(false);
     Object.keys(DEMO_CHARTS).forEach(key => {
       const chart = DEMO_CHARTS[key];
       if (chart && typeof chart.destroy === 'function') {
@@ -328,6 +383,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
     }
     renderOverviewSections(data, departments, headcount);
     renderChartSections(data, departments, headcount);
+    setExportAvailability(headcount > 0);
   }
 
   function renderOverview(datasets){
@@ -344,6 +400,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
       window.DEMO_TOTAL = headcount;
     }
     renderOverviewSections(data, departments, headcount);
+    setExportAvailability(headcount > 0);
   }
 
   function renderCharts(datasets){
@@ -358,6 +415,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
       window.DEMO_TOTAL = headcount;
     }
     renderChartSections(data, departments, headcount);
+    setExportAvailability(headcount > 0);
   }
 
   function getDepartments(data){
