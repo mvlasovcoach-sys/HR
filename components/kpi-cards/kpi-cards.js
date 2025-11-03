@@ -143,17 +143,11 @@ function deltaDirection(metricKey, delta, config) {
 
 function formatDeltaValue(delta, metricKey, config) {
   if (typeof delta !== 'number' || Number.isNaN(delta) || Math.abs(delta) < 0.05) {
-    return translate('kpi.delta.naShort', 'N/A');
+    return null;
   }
   const unit = config.metrics?.[metricKey]?.unit || '';
   const precision = Math.abs(delta) >= 10 ? 0 : 1;
   return `${delta > 0 ? '+' : ''}${delta.toFixed(precision)}${unit}`;
-}
-
-function setRangeButtonState(container, activeRange) {
-  container.querySelectorAll('[data-range]').forEach(btn => {
-    btn.setAttribute('aria-pressed', btn.dataset.range === activeRange ? 'true' : 'false');
-  });
 }
 
 function resolveBadge(tone) {
@@ -184,10 +178,14 @@ function renderCard(card, metricKey, metricConfig, value, delta, config, variant
   element.dataset.state = metricConfig.inverse ? 'inverse' : 'normal';
   element.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
 
+  let hasTrend = false;
+
   if (isDisabled) {
     numberEl.textContent = '—';
     unitEl.textContent = metricConfig.unit || '';
-    deltaValueEl.textContent = translate('kpi.delta.naShort', 'N/A');
+    deltaValueEl.textContent = 'N/A';
+    deltaValueEl.removeAttribute('data-dir');
+    deltaValueEl.setAttribute('data-good', 'true');
     deltaIconEl.innerHTML = ICONS.flat;
     if (deltaEl) deltaEl.dataset.direction = 'flat';
     assistiveEl.textContent = translate('kpi.assistive.na', 'Data not available for this range.');
@@ -206,18 +204,32 @@ function renderCard(card, metricKey, metricConfig, value, delta, config, variant
     } else {
       deltaIconEl.innerHTML = ICONS.flat;
     }
-    deltaValueEl.textContent = formatDeltaValue(delta, metricKey, config);
+    const formattedDelta = formatDeltaValue(delta, metricKey, config);
+    if (formattedDelta) {
+      deltaValueEl.textContent = formattedDelta;
+      deltaValueEl.setAttribute('data-dir', direction);
+      const polarity = config.polarity?.[metricKey] || 'higher_is_better';
+      const goodDirection = polarity === 'lower_is_better' ? 'down' : 'up';
+      const isGood = direction === 'flat' ? true : direction === goodDirection;
+      deltaValueEl.setAttribute('data-good', isGood ? 'true' : 'false');
+      hasTrend = true;
+    } else {
+      deltaValueEl.textContent = 'N/A';
+      deltaValueEl.removeAttribute('data-dir');
+      deltaValueEl.setAttribute('data-good', 'true');
+    }
     assistiveEl.textContent = describeDelta(metricKey, delta, config);
   }
 
   hintEl.textContent = metricConfig.description || '';
 
-  const fillValue = metricConfig.inverse && typeof value === 'number'
-    ? clampPercent(100 - value)
-    : clampPercent(value);
-  if (isDisabled) {
+  const hasValue = !isDisabled && typeof value === 'number' && Number.isFinite(value);
+  if (!hasValue || !hasTrend) {
     miniFillEl.style.width = '0%';
   } else {
+    const fillValue = metricConfig.inverse
+      ? clampPercent(100 - value)
+      : clampPercent(value);
     miniFillEl.style.width = `${fillValue}%`;
   }
 }
@@ -262,13 +274,12 @@ function resolveRangeData(data, range, metricKey) {
   return data?.metrics?.[metricKey]?.[range] || {};
 }
 
-export async function mountKpiCards(target, data, config = KPI_CONFIG) {
-  const host = typeof target === 'string' ? document.querySelector(target) : target;
-  if (!host) return null;
+export async function mountKpiCards(target, data, config = KPI_CONFIG, opts = {}) {
+  const el = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!el) throw new Error('mountKpiCards: target not found');
   const { cardsTemplate, cardTemplate } = await ensureTemplates();
-  host.innerHTML = '';
+  el.innerHTML = '';
   const wrapperFragment = cardsTemplate.content.cloneNode(true);
-  const rangeContainer = wrapperFragment.querySelector('.kpi-cards__ranges');
   const grid = wrapperFragment.querySelector('.kpi-cards__grid');
   const variant = document.body?.dataset?.variant || 'demo';
 
@@ -280,54 +291,49 @@ export async function mountKpiCards(target, data, config = KPI_CONFIG) {
     return { key: metricKey, config: metricConfig, ...card };
   });
 
-  const state = {
-    range: data?.defaultRange || config.defaultRange || config.ranges[0]?.id,
-    variant,
-    data,
-    config,
-    cards
-  };
+  let currentData = data;
+  const availableRanges = config.ranges?.map?.(r => r.id) || [];
 
-  function render() {
+  const normalizeRange = range => (range === '1d' || range === '7d' || range === '30d') ? range : null;
+
+  const fallbackRange = normalizeRange(currentData?.defaultRange)
+    || normalizeRange(config.defaultRange)
+    || normalizeRange(availableRanges[0])
+    || '1d';
+
+  let activeRange = normalizeRange(opts.initialRange) || fallbackRange;
+
+  function renderRange() {
     cards.forEach(card => {
-      const metricData = resolveRangeData(state.data, state.range, card.key);
-      const value = state.variant === 'life' ? undefined : metricData?.value;
-      const delta = state.variant === 'life' ? undefined : metricData?.delta;
-      renderCard(card, card.key, card.config, value, delta, state.config, state.variant);
+      const metricData = resolveRangeData(currentData, activeRange, card.key);
+      const value = variant === 'life' ? undefined : metricData?.value;
+      const delta = variant === 'life' ? undefined : metricData?.delta;
+      renderCard(card, card.key, card.config, value, delta, config, variant);
     });
-    host.dataset.range = state.range;
+    el.dataset.range = activeRange;
   }
 
-  if (rangeContainer) {
-    rangeContainer.querySelectorAll('[data-range]').forEach(button => {
-      button.addEventListener('click', () => {
-        const nextRange = button.dataset.range;
-        if (!nextRange || nextRange === state.range) return;
-        state.range = nextRange;
-        setRangeButtonState(rangeContainer, state.range);
-        render();
-      });
-    });
-    setRangeButtonState(rangeContainer, state.range);
+  function setRange(r) {
+    const next = normalizeRange(r);
+    if (!next || next === activeRange) return;
+    activeRange = next;
+    renderRange();
   }
 
-  render();
+  if (typeof opts.bindExternalRange === 'function') {
+    opts.bindExternalRange(setRange);
+  }
 
-  host.classList.add('kpi-cards');
-  host.appendChild(wrapperFragment);
-  host.dataset.range = state.range;
+  renderRange();
+
+  el.classList.add('kpi-cards');
+  el.appendChild(wrapperFragment);
 
   return {
     update(newData) {
-      state.data = newData;
-      render();
+      currentData = newData;
+      renderRange();
     },
-    setRange(range) {
-      if (config.ranges.some(r => r.id === range)) {
-        state.range = range;
-        if (rangeContainer) setRangeButtonState(rangeContainer, state.range);
-        render();
-      }
-    }
+    setRange
   };
 }

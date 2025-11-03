@@ -24,11 +24,40 @@
     return fallback != null ? fallback : key;
   }
 
+  function mapPresetToKpiRange(range){
+    const preset = normalizePreset(range?.preset);
+    if (preset === 'today') return '1d';
+    if (preset === '7d') return '7d';
+    if (preset === 'mtd' || preset === 'qtd' || preset === 'ytd') return '30d';
+    if (range?.start && range?.end) return '30d';
+    return '7d';
+  }
+
+  function emitToolbarRange(range){
+    if (typeof document?.dispatchEvent !== 'function') return;
+    const resolved = mapPresetToKpiRange(range);
+    if (!resolved) return;
+    document.dispatchEvent(new CustomEvent('toolbar:range', { detail: { range: resolved } }));
+  }
+
+  function parseRangeString(raw){
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (err) {
+      return null;
+    }
+    return null;
+  }
+
   function readRange(){
     try {
       const raw = localStorage.getItem(RANGE_KEY);
       if (!raw) return null;
-      const parsed = JSON.parse(raw);
+      const parsed = parseRangeString(raw);
       if (!parsed) return null;
       if (parsed.preset) return {preset: parsed.preset};
       if (parsed.start && parsed.end) {
@@ -52,12 +81,25 @@
   }
 
   function saveRange(value){
+    const payload = value && typeof value === 'object' ? value : null;
+    if (!payload) return;
     try {
-      localStorage.setItem(RANGE_KEY, JSON.stringify(value));
+      localStorage.setItem(RANGE_KEY, JSON.stringify(payload));
     } catch (err) {
       /* ignore quota errors */
     }
-    dispatchEvent(new StorageEvent('storage', {key: RANGE_KEY}));
+    emitToolbarRange(payload);
+    const evt = new StorageEvent('storage', {key: RANGE_KEY});
+    try {
+      Object.defineProperty(evt, 'synthetic', { value: true });
+    } catch (err) {
+      try {
+        evt.synthetic = true;
+      } catch (err2) {
+        /* ignore */
+      }
+    }
+    dispatchEvent(evt);
   }
 
   function saveCompare(enabled){
@@ -178,10 +220,11 @@
     updateActive();
     updateCompareState();
 
-    if (!readRange()) {
+    const initialRange = readRange();
+    if (!initialRange) {
       saveRange({preset: DEFAULT_PRESET});
     } else {
-      updateActive();
+      emitToolbarRange(initialRange);
     }
 
     if (config.compare && !localStorage.getItem(COMPARE_KEY)) {
@@ -192,6 +235,10 @@
       if (!evt) return;
       if (evt.key === RANGE_KEY) {
         updateActive();
+        if (!evt.synthetic) {
+          const nextRange = evt.newValue ? parseRangeString(evt.newValue) : readRange();
+          emitToolbarRange(nextRange || readRange());
+        }
       } else if (evt.key === COMPARE_KEY) {
         updateCompareState();
       }
