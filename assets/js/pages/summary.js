@@ -99,9 +99,12 @@ async function initPage(){
   if (typeof window.renderSideNav === 'function') {
     window.renderSideNav('summary');
   }
-  window.DateControls?.mount('#rangeSwitch', {
+  window.DateControls?.mount('#tb-quick', {
     presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
-    compare: true
+    compare: false,
+    startSlot: '#tb-dates [data-date-slot="start"]',
+    endSlot: '#tb-dates [data-date-slot="end"]',
+    compareSlot: '#tb-compare'
   });
   window.Caption?.render('#global-caption', {
     asOf: new Date(),

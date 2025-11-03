@@ -38,7 +38,7 @@ function decorateToolbar(){
     infoBtn.setAttribute('aria-haspopup', 'dialog');
     infoBtn.setAttribute('aria-expanded', 'false');
   }
-  const exportBtn = root.querySelector('#btnExport');
+  const exportBtn = root.querySelector('#tb-export');
   if (exportBtn) {
     exportBtn.remove();
   }
