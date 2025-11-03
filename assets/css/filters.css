@@ -1,4 +1,5 @@
-#filters-bar, .team-filter{ border:none !important; outline:none !important; box-shadow:none !important; }
+/* снести неоновые обводки, если где-то остались */
+.team-filter, #filters-bar { border:none !important; outline:none !important; box-shadow:none !important; background:transparent; }
 
 #filters-bar{
   display:flex;
@@ -78,6 +79,20 @@
   z-index:1000;
   top:36px;
   left:0;
+  min-width:260px;
+  max-width:520px;
+  max-height:280px;
+  overflow:auto;
+  background:var(--surface, #0b161a);
+  border:1px solid var(--outline, #14323b);
+  border-radius:10px;
+  box-shadow:0 16px 40px rgba(0,0,0,.45);
+}
+
+/* панель в портале — всегда поверх */
+.tf-panel.portal {
+  position:fixed;
+  z-index:9999;
   min-width:260px;
   max-width:520px;
   max-height:280px;
