@@ -154,19 +154,25 @@ export function mountKpi(host, options = {}){
   const arrowUp = t('kpi.delta.arrowUp', '▲');
   const arrowDown = t('kpi.delta.arrowDown', '▼');
   const hasDelta = Number.isFinite(delta) && Math.abs(delta) > 0;
+  const polarity = options.polarity === 'lower_is_better' ? 'lower_is_better' : 'higher_is_better';
   if (deltaEl && deltaTextEl && arrowPath) {
     deltaEl.classList.remove('up', 'down', 'same');
     if (hasDelta) {
       const rounded = Math.round(delta);
-      if (delta > 0) {
-        deltaEl.classList.add('up');
-        deltaTextEl.textContent = `${arrowUp} ${Math.abs(rounded)}`.trim();
-        arrowPath.setAttribute('d', 'M1 6 L5 2 L9 6');
+      const isUp = delta > 0;
+      // invert for 'lower_is_better'
+      const goodWhenUp = (polarity === 'higher_is_better');
+      const isGood = (isUp && goodWhenUp) || (!isUp && !goodWhenUp);
+
+      if (isGood) {
+        deltaEl.classList.add('up'); // зелёный чип
       } else {
-        deltaEl.classList.add('down');
-        deltaTextEl.textContent = `${arrowDown} ${Math.abs(rounded)}`.trim();
-        arrowPath.setAttribute('d', 'M1 4 L5 8 L9 4');
+        deltaEl.classList.add('down'); // красный чип
       }
+
+      const arrowSymbol = isUp ? arrowUp : arrowDown;
+      deltaTextEl.textContent = `${arrowSymbol} ${Math.abs(rounded)}`.trim();
+      arrowPath.setAttribute('d', isUp ? 'M1 6 L5 2 L9 6' : 'M1 4 L5 8 L9 4');
     } else {
       deltaEl.classList.add('same');
       deltaTextEl.textContent = t('kpi.delta.noChange', 'No change');

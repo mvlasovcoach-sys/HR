@@ -13,3 +13,14 @@
 .kpi--brand .delta.down{background:rgba(242,61,92,.18);border:1px solid rgba(242,61,92,.35)}
 .kpi--brand .delta.same{background:rgba(231,241,245,.10);border:1px solid rgba(231,241,245,.20);color:#AAC0CB}
 .kpi--brand .delta svg{width:10px;height:10px}
+
+/* Polarity badge */
+.kpi--brand .badge{font-size:10px;font-weight:800;letter-spacing:.08em;padding:3px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.12);opacity:.9;margin-left:8px}
+.kpi--brand .badge.good-up{color:#3fe6a0;background:rgba(63,230,160,.08);border-color:rgba(63,230,160,.35)}
+.kpi--brand .badge.good-down{color:#3fe6a0;background:rgba(63,230,160,.08);border-color:rgba(63,230,160,.35)}
+
+/* Mini-bar under value */
+.kpi--brand .mini{position:relative;height:6px;border-radius:5px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}
+.kpi--brand .mini .fill{position:absolute;left:0;top:0;height:100%;width:0%;background:linear-gradient(90deg,#ff5d73 0%,#ffb545 50%,#3fe6a0 100%);transition:width .3s ease}
+.kpi--brand .mini.inverse .fill{background:linear-gradient(90deg,#3fe6a0 0%,#ffb545 50%,#ff5d73 100%)}
+.kpi--brand .mini.disabled{opacity:.35;background:rgba(255,255,255,.04)}
