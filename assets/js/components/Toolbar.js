@@ -28,21 +28,7 @@ export function renderToolbar(options = {}) {
   const showTeam = controls?.showTeam !== false;
   const showDates = controls?.showDates !== false;
   host.innerHTML = `
-  <div class="toolbar-head">
-    <div class="title">
-      <h1 class="page-title">${title || ''}</h1>
-      <button class="info" type="button" aria-label="About this page">i</button>
-    </div>
-  </div>
   <div class="toolbar">
-    <div id="tb-lang" class="lang-stack">
-      <div class="lang-switch" role="group" aria-label="Language">
-        <button type="button" data-lang="en">EN</button>
-        <button type="button" data-lang="nl">NL</button>
-        <button type="button" data-lang="ru">RU</button>
-      </div>
-    </div>
-    <button id="tb-export" class="btn-export" type="button">Export</button>
     <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
       ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
     </div>
@@ -58,11 +44,31 @@ export function renderToolbar(options = {}) {
     <div id="tb-compare" data-compare-slot></div>
   </div>`;
 
+  const pageHeader = document.querySelector('.page-header');
+  const headerTitle = pageHeader?.querySelector('.page-title');
+  if (headerTitle && title) {
+    headerTitle.textContent = title;
+  }
+
+  const infoBtn = document.getElementById('page-info');
+  if (infoBtn) {
+    infoBtn.type = 'button';
+    infoBtn.setAttribute('aria-label', 'About this page');
+    infoBtn.hidden = false;
+    infoBtn.onclick = typeof onInfo === 'function' ? onInfo : null;
+  }
+
+  const headerLangSwitch = document.querySelector('#header-actions .lang-switch');
+  setupLangSwitch(headerLangSwitch);
+
+  const exportBtn = document.getElementById('tb-export');
+  if (exportBtn && exportBtn.dataset.bound !== 'true') {
+    exportBtn.dataset.bound = 'true';
+    exportBtn.addEventListener('click', exportCurrentView);
+  }
+
   const demo = host.querySelector('#btnModeDemo');
   const live = host.querySelector('#btnModeLive');
-  const exportBtn = host.querySelector('#tb-export');
-  const infoBtn = host.querySelector('.title .info');
-  const langSwitch = host.querySelector('#tb-lang .lang-switch');
   const quickHost = host.querySelector('#tb-quick');
   if (quickHost && !showRanges) {
     quickHost.hidden = true;
@@ -93,8 +99,6 @@ export function renderToolbar(options = {}) {
     if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
   };
 
-  setupLangSwitch(langSwitch);
-
   if (demo) {
     demo.addEventListener('click', () => {
       updateSelected('DEMO');
@@ -106,12 +110,6 @@ export function renderToolbar(options = {}) {
       updateSelected('LIVE');
       onModeChange?.('LIVE');
     });
-  }
-  if (exportBtn) {
-    exportBtn.addEventListener('click', exportCurrentView);
-  }
-  if (infoBtn && typeof onInfo === 'function') {
-    infoBtn.addEventListener('click', onInfo);
   }
 }
 
