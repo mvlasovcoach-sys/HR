@@ -112,6 +112,20 @@
   align-items: center;
 }
 
+.toolbar .tb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  width: 100%;
+}
+
+.toolbar .tb-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .seg-group {
   display: flex;
   align-items: center;
@@ -120,9 +134,9 @@
 }
 
 .toolbar .seg {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 16px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
   font-size: 14px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: transparent;
@@ -145,6 +159,65 @@
   border-color: var(--accent, #19e1c0);
   color: #fff;
   box-shadow: 0 0 0 1px rgba(25, 225, 192, 0.18);
+}
+
+.toolbar .seg-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  min-height: 40px;
+  background: rgba(11, 31, 41, 0.35);
+  backdrop-filter: blur(14px);
+}
+
+.toolbar .seg-input span {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
+.toolbar .seg-input input,
+.toolbar .seg-input select {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  height: 100%;
+  padding: 0;
+}
+
+.toolbar .seg-input input::placeholder {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.toolbar .seg-input input:focus,
+.toolbar .seg-input select:focus {
+  outline: none;
+}
+
+.toolbar .seg-input select {
+  appearance: none;
+  padding-right: 18px;
+  min-width: 160px;
+}
+
+.toolbar .seg-input input {
+  min-width: 140px;
+}
+
+.toolbar .seg-input .ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 #tb-mode .seg + .seg {
@@ -228,6 +301,24 @@
 .team-slot {
   display: flex;
   align-items: center;
+}
+
+.scenario-badge {
+  display: inline-block;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: 1px solid var(--outline, #174447);
+  color: #8cece1;
+  background: #0d2a2c;
+}
+
+.scenario-badge.is-live {
+  color: #cfe8ee;
+  background: #13232a;
+  border-color: #38545a;
 }
 
 @media (max-width: 900px) {

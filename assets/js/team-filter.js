@@ -21,22 +21,51 @@
   let selectEl = null;
   let mount = null;
   let teams = [];
+  let useNativeMarkup = false;
+  let labelNode = null;
 
   async function init(){
-    mount = document.getElementById('teamSelect') || document.getElementById('team-filter');
+    const direct = document.getElementById('teamSelect');
+    const fallback = document.getElementById('team-filter');
+
+    if (direct && direct.tagName === 'SELECT') {
+      useNativeMarkup = true;
+      selectEl = direct;
+      labelNode = direct.closest('label')?.querySelector('span') || null;
+      mount = direct.closest('.tb-group') || direct.closest('.seg-input') || direct.parentElement || direct;
+    } else {
+      mount = direct || fallback;
+      selectEl = null;
+      labelNode = null;
+      useNativeMarkup = false;
+    }
+
     if (!mount) return;
 
-    mount.classList.add('team-filter');
+    if (!useNativeMarkup) {
+      mount.classList.add('team-filter');
+    }
     mount.classList.add('team-filter--loading');
     await loadTeams();
-    render();
+    if (useNativeMarkup) {
+      renderNative();
+    } else {
+      renderLegacy();
+    }
     mount.classList.remove('team-filter--loading');
 
     window.addEventListener('storage', evt => {
       if (!evt || evt.key !== STORAGE_KEY) return;
       syncFromStorage();
     });
-    document.addEventListener('i18n:change', render);
+
+    document.addEventListener('i18n:change', () => {
+      if (useNativeMarkup) {
+        renderNative();
+      } else {
+        renderLegacy();
+      }
+    });
   }
 
   function readTeam(){
@@ -80,10 +109,12 @@
   function syncFromStorage(){
     if (!selectEl) return;
     const current = readTeam();
-    selectEl.value = current;
+    const options = Array.from(selectEl.options || []);
+    const hasValue = options.some(option => option.value === current);
+    selectEl.value = hasValue ? current : 'all';
   }
 
-  function render(){
+  function renderLegacy(){
     if (!mount) return;
     const current = readTeam();
     mount.innerHTML = '';
@@ -110,14 +141,50 @@
     });
 
     selectEl.value = current;
-    selectEl.addEventListener('change', () => {
-      const value = selectEl.value || 'all';
+    mount.appendChild(label);
+    mount.appendChild(selectEl);
+    attachChangeHandler(selectEl);
+  }
+
+  function renderNative(){
+    if (!selectEl) return;
+    const current = readTeam();
+    const labelText = window.I18N?.t('label.teamFilter') || 'Team';
+    const allLabel = window.I18N?.t('label.team.all') || 'All teams';
+
+    if (labelNode) {
+      labelNode.textContent = labelText;
+    }
+
+    selectEl.setAttribute('aria-label', labelText);
+
+    const fragment = document.createDocumentFragment();
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = allLabel;
+    fragment.appendChild(allOption);
+
+    teams.forEach(team => {
+      const option = document.createElement('option');
+      option.value = team.id;
+      option.textContent = team.name;
+      fragment.appendChild(option);
+    });
+
+    selectEl.innerHTML = '';
+    selectEl.appendChild(fragment);
+    selectEl.value = current;
+    attachChangeHandler(selectEl);
+  }
+
+  function attachChangeHandler(select){
+    if (!select || select.dataset.bound === 'true') return;
+    select.addEventListener('change', () => {
+      const value = select.value || 'all';
       writeTeam(value);
       dispatchEvent(new StorageEvent('storage', {key: STORAGE_KEY}));
     });
-
-    mount.appendChild(label);
-    mount.appendChild(selectEl);
+    select.dataset.bound = 'true';
   }
 
   function boot(){
