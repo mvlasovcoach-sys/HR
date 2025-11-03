@@ -30,6 +30,9 @@
   border:1px solid var(--outline);
 }
 
+/* контейнер не должен прятать всплывашку */
+#page-content, .cards-wrap, .kpis-wrap{ overflow:visible !important; }
+
 .team-filter{
   display:flex;
   align-items:center;
@@ -39,18 +42,20 @@
   max-width:540px;
 }
 
+/* кнопка + панель */
 .tf-control{
   position:relative;
   flex:1;
+  z-index:5;
 }
 
 .tf-button{
   height:32px;
   padding:0 12px;
   border-radius:10px;
-  background:#0f1f24;
-  border:1px solid var(--outline);
-  opacity:.95;
+  background:var(--surface-2, #0f1f24);
+  border:1px solid var(--outline, #14323b);
+  color:var(--text, #cfe8ee);
   font-size:14px;
   line-height:32px;
   width:100%;
@@ -69,16 +74,17 @@
 
 .tf-panel{
   position:absolute;
-  z-index:20;
+  z-index:1000;
   top:36px;
   left:0;
   min-width:260px;
-  max-height:240px;
+  max-width:520px;
+  max-height:280px;
   overflow:auto;
-  background:#0b161a;
+  background:var(--surface, #0b161a);
   border:1px solid var(--outline);
   border-radius:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  box-shadow:0 16px 40px rgba(0,0,0,.45);
 }
 
 .tf-panel[hidden]{
@@ -97,8 +103,9 @@
   height:28px;
   border-radius:8px;
   padding:0 10px;
-  background:#081216;
-  border:1px solid #14323b;
+  background:var(--surface-3, #081216);
+  border:1px solid var(--outline);
+  color:var(--text);
   font-size:13px;
 }
 
@@ -106,6 +113,9 @@
   height:28px;
   padding:0 8px;
   border-radius:8px;
+  background:var(--surface-2);
+  border:1px solid var(--outline);
+  color:var(--text-muted, #9dc2ca);
   font-size:12px;
 }
 
@@ -135,6 +145,10 @@
 .tf-item input{
   width:16px;
   height:16px;
+}
+
+.tf-item input:checked + span{
+  color:var(--accent, #6ff0e7);
 }
 
 .tf-chips{
