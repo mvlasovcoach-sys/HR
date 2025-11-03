@@ -31,39 +31,41 @@ export async function loadDevices(){
   return data ?? [];
 }
 
-export async function loadDataset(kind){
+export async function loadDataset(kind, ctx = {}){
   const key = normaliseKind(kind);
   if (!key) return null;
-  const mode = getMode();
+
+  const mode = ctx.mode || (typeof getMode === 'function' ? getMode() : 'demo') || 'demo';
   const cacheKey = `${mode}:${key}`;
   if (datasetCache.has(cacheKey)) {
     return datasetCache.get(cacheKey);
   }
 
-  const demoUrl = buildDemoUrl(key);
-  if (mode === 'demo') {
+  const demoUrl = buildDemoUrl(key, ctx);
+  const loadDemo = async (targetMode = mode) => {
     const demoData = await safeFetchJson(demoUrl);
-    cacheDataset('demo', key, demoData);
+    if (demoData !== null) {
+      cacheDataset('demo', key, demoData);
+      cacheDataset(targetMode, key, demoData);
+    }
     return demoData;
+  };
+
+  if (mode === 'demo') {
+    return loadDemo('demo');
   }
 
-  const liveUrl = buildLiveUrl(key);
   try {
-    const response = await fetch(liveUrl, { cache: 'no-store' });
+    const liveUrl = buildLiveUrl(key, ctx);
+    const response = await fetch(liveUrl, { credentials: 'omit', cache: 'no-store' });
     if (!response.ok) {
-      const fallback = await safeFetchJson(demoUrl);
-      cacheDataset('demo', key, fallback);
-      cacheDataset('live', key, fallback);
-      return fallback;
+      throw new Error(`live ${response.status}`);
     }
     const payload = await response.json();
     cacheDataset('live', key, payload);
     return payload;
   } catch (err) {
-    const fallback = await safeFetchJson(demoUrl);
-    cacheDataset('demo', key, fallback);
-    cacheDataset('live', key, fallback);
-    return fallback;
+    return loadDemo('live');
   }
 }
 
