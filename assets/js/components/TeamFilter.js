@@ -231,33 +231,33 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     }
   }
 
-  function placePanelAt(btnRect, preferUp = false) {
+  function placePanel(btnRect) {
+    const pad = 8;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const pad = 8;
-    if (portal) {
-      panel.classList.add('portal');
+    const ph = panel.offsetHeight || 280;
+    const pw = panel.offsetWidth || 320;
+
+    let left = Math.min(Math.max(pad, btnRect.left), vw - pad - pw);
+    let top = btnRect.bottom + 6;
+
+    if (top + ph > vh - pad) {
+      top = Math.max(pad, btnRect.top - ph - 6);
     }
 
-    let top = Math.min(vh - pad - 100, btnRect.bottom + 6);
-    let left = Math.max(pad, Math.min(btnRect.left, vw - pad - panel.offsetWidth));
-
-    if (preferUp || top + panel.offsetHeight > vh - pad) {
-      top = Math.max(pad, btnRect.top - panel.offsetHeight - 6);
-    }
-
-    panel.style.top = `${top}px`;
     panel.style.left = `${left}px`;
+    panel.style.top = `${top}px`;
   }
 
   function openPanel() {
     if (!panel) return;
 
-    if (portal && !inPortal) {
+    if (!inPortal && portal) {
       portal.appendChild(panel);
       inPortal = true;
     }
 
+    panel.classList.add('portal');
     panel.hidden = false;
     control?.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-expanded', 'true');
@@ -269,7 +269,7 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
 
     requestAnimationFrame(() => {
       const br = btn.getBoundingClientRect();
-      placePanelAt(br, false);
+      placePanel(br);
       search?.focus();
     });
   }
@@ -321,18 +321,24 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   });
 
   document.addEventListener('click', event => {
-    if (!host.contains(event.target) && !panel.contains(event.target)) {
+    if (!panel.hidden && !panel.contains(event.target) && !btn.contains(event.target)) {
       closePanel();
     }
   });
 
-  ['resize', 'scroll'].forEach(ev => {
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !panel.hidden) {
+      closePanel({ focusButton: true });
+    }
+  });
+
+  ['scroll', 'resize'].forEach(ev => {
     window.addEventListener(
       ev,
       () => {
         if (!panel.hidden) {
           const br = btn.getBoundingClientRect();
-          placePanelAt(br);
+          placePanel(br);
         }
       },
       { passive: true }

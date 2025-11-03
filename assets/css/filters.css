@@ -1,5 +1,16 @@
-/* снести неоновые обводки, если где-то остались */
-.team-filter, #filters-bar { border:none !important; outline:none !important; box-shadow:none !important; background:transparent; }
+#filters-bar, .team-filter { border: none!important; outline: none!important; box-shadow: none!important; background: transparent; }
+
+/* верхний слой — всегда над всем, без вмешательства в потоки */
+#ui-portal{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+/* чтобы локальные контейнеры не резали попап — перестраховка */
+html, body { overflow: auto; }
+#page-content, .cards-wrap, .kpis-wrap, .grid { overflow: visible !important; }
 
 #filters-bar{
   display:flex;
@@ -33,9 +44,6 @@
   border:1px solid var(--outline, #14323b);
 }
 
-/* контейнер не должен прятать всплывашку */
-#page-content, .cards-wrap, .kpis-wrap, .grid{ overflow:visible !important; }
-
 .team-filter{
   display:flex;
   align-items:center;
@@ -45,26 +53,20 @@
   max-width:560px;
 }
 
-/* кнопка */
-.tf-control{
-  position:relative;
-  z-index:5;
-}
+/* компактный триггер оставляем */
+.tf-control{ position: relative; z-index: 1; }
 
 .tf-button{
-  height:32px;
-  padding:0 12px;
-  border-radius:10px;
-  background:var(--surface-2, #0f1f24);
-  border:1px solid var(--outline, #14323b);
-  color:var(--text, #cfe8ee);
-  font-size:14px;
-  line-height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  text-align:left;
+  height: 32px; padding: 0 12px; border-radius: 10px;
+  background: var(--surface-2,#0f1f24);
+  border: 1px solid var(--outline,#14323b);
+  color: var(--text,#cfe8ee);
+  font-size: 14px; line-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
 }
 
 .tf-button::after{
@@ -73,34 +75,30 @@
   font-size:.9em;
 }
 
-/* панель поверх всего */
+/* базовый стиль панели */
 .tf-panel{
-  position:absolute;
-  z-index:1000;
-  top:36px;
-  left:0;
-  min-width:260px;
-  max-width:520px;
-  max-height:280px;
-  overflow:auto;
-  background:var(--surface, #0b161a);
-  border:1px solid var(--outline, #14323b);
-  border-radius:10px;
-  box-shadow:0 16px 40px rgba(0,0,0,.45);
+  position: absolute;
+  z-index: 1000;
+  min-width: 260px;
+  max-width: 520px;
+  max-height: 280px;
+  overflow: auto;
+  background: var(--surface, #0b161a);
+  border: 1px solid var(--outline, #14323b);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
 }
 
-/* панель в портале — всегда поверх */
-.tf-panel.portal {
-  position:fixed;
-  z-index:9999;
-  min-width:260px;
-  max-width:520px;
-  max-height:280px;
-  overflow:auto;
-  background:var(--surface, #0b161a);
-  border:1px solid var(--outline, #14323b);
-  border-radius:10px;
-  box-shadow:0 16px 40px rgba(0,0,0,.45);
+/* попап в портале */
+.tf-panel.portal{
+  position: absolute;
+  min-width: 260px; max-width: 520px;
+  max-height: 280px; overflow: auto;
+  background: var(--surface, #0b161a);
+  border: 1px solid var(--outline, #14323b);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+  pointer-events: auto;
 }
 
 .tf-panel[hidden]{
@@ -108,33 +106,13 @@
 }
 
 /* поиск и кнопки внутри */
-.tf-search{
-  display:flex;
-  gap:8px;
-  padding:8px;
-  border-bottom:1px solid var(--outline, #14323b);
-}
-
+.tf-search{ display: flex; gap: 8px; padding: 8px; border-bottom: 1px solid var(--outline); }
 .tf-search input{
-  flex:1;
-  height:28px;
-  border-radius:8px;
-  padding:0 10px;
-  background:#081216;
-  border:1px solid #14323b;
-  color:var(--text);
-  font-size:13px;
+  flex: 1; height: 28px; border-radius: 8px; padding: 0 10px;
+  background: #081216; border: 1px solid #14323b; color: var(--text); font-size: 13px;
 }
-
-.tf-search button{
-  height:28px;
-  padding:0 8px;
-  border-radius:8px;
-  font-size:12px;
-  background:var(--surface-2, #0f1f24);
-  border:1px solid var(--outline, #14323b);
-  color:var(--text-muted, #9dc2ca);
-}
+.tf-search button{ height: 28px; padding: 0 8px; border-radius: 8px; font-size: 12px;
+  background: var(--surface-2); border: 1px solid var(--outline); color: var(--text-muted,#9dc2ca); }
 
 .tf-list{
   list-style:none;
