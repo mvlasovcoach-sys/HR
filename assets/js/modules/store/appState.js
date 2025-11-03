@@ -62,3 +62,7 @@ export class AppStore {
 }
 
 export const appStore = new AppStore();
+
+if (typeof window !== 'undefined' && !window.appStore) {
+  window.appStore = appStore;
+}

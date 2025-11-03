@@ -5,6 +5,22 @@
   margin-bottom: var(--space-4);
 }
 
+body[data-page="demo"] .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+}
+
+body[data-page="demo"] .scenario-badge {
+  margin: 8px 0 16px;
+}
+
+body[data-page="demo"] .badge--demo {
+  background: var(--teal-950);
+  border: 1px solid var(--teal-500);
+}
+
 .scenario-badge {
   display: inline-block;
   padding: 10px 14px;
