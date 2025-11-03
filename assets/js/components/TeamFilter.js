@@ -110,6 +110,9 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   const selectAllButton = host.querySelector(`#${selectAllId}`);
   const clearButton = host.querySelector(`#${clearId}`);
 
+  const portal = document.getElementById('ui-portal');
+  let inPortal = false;
+
   if (selectAllButton) {
     selectAllButton.textContent = 'Select all';
   }
@@ -228,34 +231,47 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     }
   }
 
+  function placePanelAt(btnRect, preferUp = false) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const pad = 8;
+    if (portal) {
+      panel.classList.add('portal');
+    }
+
+    let top = Math.min(vh - pad - 100, btnRect.bottom + 6);
+    let left = Math.max(pad, Math.min(btnRect.left, vw - pad - panel.offsetWidth));
+
+    if (preferUp || top + panel.offsetHeight > vh - pad) {
+      top = Math.max(pad, btnRect.top - panel.offsetHeight - 6);
+    }
+
+    panel.style.top = `${top}px`;
+    panel.style.left = `${left}px`;
+  }
+
   function openPanel() {
+    if (!panel) return;
+
+    if (portal && !inPortal) {
+      portal.appendChild(panel);
+      inPortal = true;
+    }
+
     panel.hidden = false;
     control?.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-expanded', 'true');
 
-    panel.style.left = '0px';
-    panel.style.top = '36px';
-    panel.style.bottom = 'auto';
-    panel.style.maxHeight = '280px';
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const pr = panel.getBoundingClientRect();
-    const br = btn.getBoundingClientRect();
-
-    if (pr.right > vw - 8) {
-      const left = Math.max(0, vw - 8 - pr.width);
-      panel.style.left = left + 'px';
+    if (search) {
+      search.value = '';
     }
-    if (pr.bottom > vh - 8) {
-      panel.style.top = 'auto';
-      panel.style.bottom = (br.height + 8) + 'px';
-      panel.style.maxHeight = Math.min(280, br.top - 16) + 'px';
-    }
-
-    search.value = '';
     renderList('');
-    search.focus();
+
+    requestAnimationFrame(() => {
+      const br = btn.getBoundingClientRect();
+      placePanelAt(br, false);
+      search?.focus();
+    });
   }
 
   function closePanel({ focusButton = false } = {}) {
@@ -305,9 +321,22 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   });
 
   document.addEventListener('click', event => {
-    if (!host.contains(event.target)) {
+    if (!host.contains(event.target) && !panel.contains(event.target)) {
       closePanel();
     }
+  });
+
+  ['resize', 'scroll'].forEach(ev => {
+    window.addEventListener(
+      ev,
+      () => {
+        if (!panel.hidden) {
+          const br = btn.getBoundingClientRect();
+          placePanelAt(br);
+        }
+      },
+      { passive: true }
+    );
   });
 
   sync({ notify: false, refreshList: true });
