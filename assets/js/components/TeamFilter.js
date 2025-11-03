@@ -242,6 +242,27 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
     panel.hidden = false;
     control?.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-expanded', 'true');
+    // позиция
+    panel.style.left = '0px';
+    panel.style.top = '36px';
+    panel.style.bottom = 'auto';
+    panel.style.maxHeight = '280px';
+    const r = panel.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    if (r.right > vw - 8) {
+      panel.style.left = `${Math.max(0, vw - 8 - r.width)}px`;
+    }
+    const btnRect = btn.getBoundingClientRect();
+    if (r.bottom > vh - 8) {
+      panel.style.top = 'auto';
+      panel.style.bottom = `${btnRect.height + 8}px`;
+      panel.style.maxHeight = `${Math.min(280, btnRect.top - 16)}px`;
+    } else {
+      panel.style.top = '36px';
+      panel.style.bottom = 'auto';
+      panel.style.maxHeight = '280px';
+    }
     search.value = '';
     renderList('');
     search.focus();
