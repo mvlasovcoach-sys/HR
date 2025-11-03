@@ -96,6 +96,19 @@
   init();
 
   function init(){
+    // Всегда demo
+    appStore?.setMode && appStore.setMode('demo');
+
+    // Обёртки от отсутствующих контролов дат/compare/team
+    const byId = (id) => document.getElementById(id);
+    const safe = (el, fn) => el && fn(el);
+
+    // Ничего не делаем, если элементов нет
+    safe(byId('startDate'), el => {/* no-op */});
+    safe(byId('endDate'),   el => {/* no-op */});
+    safe(byId('compare'),   el => {/* no-op */});
+    safe(byId('teamSelect'),el => {/* no-op */});
+
     applySkeletons();
     bindEvents();
     if (window.I18N?.onReady) {
