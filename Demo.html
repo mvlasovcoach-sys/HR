@@ -30,6 +30,8 @@
 <script defer src="./assets/js/sources.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/source-badge.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/toolbar.js?v=2025-11-02-01"></script>
+<script defer src="./assets/js/scenario.badge.js?v=2025-11-02-01"></script>
 <script defer src="./assets/js/version.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
@@ -52,7 +54,47 @@
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main main--demo page-wrap">
-    <div id="toolbar"></div>
+    <div class="toolbar" id="toolbar">
+      <div class="tb-row">
+        <div class="tb-group tb-quick">
+          <button class="seg" data-range="today">Today</button>
+          <button class="seg" data-range="7d">7 Days</button>
+          <button class="seg" data-range="mtd">Month to date</button>
+          <button class="seg" data-range="qtd">Quarter to date</button>
+          <button class="seg" data-range="ytd">Year to date</button>
+        </div>
+
+        <div class="tb-group tb-mode">
+          <button class="seg" id="btn-demo" data-mode="demo">Demo</button>
+          <button class="seg" id="btn-live" data-mode="live">Live</button>
+        </div>
+
+        <div class="tb-group tb-dates">
+          <label class="seg seg-input">
+            <span>Start date</span>
+            <input id="startDate" type="text" placeholder="mm / dd / yyyy">
+            <i class="ico cal"></i>
+          </label>
+          <label class="seg seg-input">
+            <span>End date</span>
+            <input id="endDate" type="text" placeholder="mm / dd / yyyy">
+            <i class="ico cal"></i>
+          </label>
+        </div>
+
+        <div class="tb-group tb-team">
+          <label class="seg seg-input">
+            <span>Team</span>
+            <select id="teamSelect">
+              <option value="all">All Teams</option>
+              <!-- опции ниже -->
+            </select>
+            <i class="ico chevron"></i>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div id="scenarioBadge" class="scenario-badge"></div>
     <div id="page-content">
       <div id="global-caption"></div>
       <span id="site-badge" class="pill" aria-live="polite"></span>
@@ -130,7 +172,7 @@
     </div>
   </main>
 </div>
-  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.DateControls?.mount('#tb-quick',{presets:['Today','7D','MTD','QTD','YTD'],compare:false,startSlot:'#tb-dates [data-date-slot="start"]',endSlot:'#tb-dates [data-date-slot="end"]',compareSlot:'#tb-compare'});window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{renderSideNav('demo');window.Caption?.render('#global-caption',{asOf:new Date(),insight:window.PageInsight||''});});</script>
 <!-- UI portal for floating panels -->
 <div id="ui-portal"></div>
 
