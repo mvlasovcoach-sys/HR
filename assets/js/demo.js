@@ -1,4 +1,5 @@
 import { getMode, getSelectedTeams, getDateRange } from './filters/state.js';
+import { appStore } from './modules/store/appState.js';
 import { loadDataset } from './services/dataSource.js';
 
 (function(){
