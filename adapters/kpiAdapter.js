@@ -7,6 +7,26 @@ const FATIGUE_THRESHOLD = 60;
 
 let datasetPromise = null;
 
+// Helpers
+const clamp0_100 = v => Math.max(0, Math.min(100, v));
+
+function safeAvg(arr, key) {
+  if (!Array.isArray(arr)) return undefined;
+  const vals = arr
+    .map(item => {
+      if (key == null) return Number(item);
+      if (item == null) return NaN;
+      return Number(item[key]);
+    })
+    .filter(Number.isFinite);
+  return vals.length ? vals.reduce((sum, value) => sum + value, 0) / vals.length : undefined;
+}
+
+function safePct(numer, denom) {
+  if (!Number.isFinite(numer) || !Number.isFinite(denom) || denom <= 0) return undefined;
+  return clamp0_100((numer / denom) * 100);
+}
+
 function blankMetric() {
   return RANGE_KEYS.reduce((acc, range) => {
     acc[range] = { value: undefined, delta: undefined };
@@ -47,23 +67,31 @@ async function loadSamples() {
   return datasetPromise;
 }
 
-function average(values) {
-  const filtered = values.filter(value => typeof value === 'number' && Number.isFinite(value));
-  if (!filtered.length) return undefined;
-  const total = filtered.reduce((sum, value) => sum + value, 0);
-  return total / filtered.length;
-}
-
-function percentage(numerator, denominator) {
-  if (!denominator) return undefined;
-  return (numerator / denominator) * 100;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function startOfDayUTC(date) {
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return new Date(NaN);
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function startOfLocalDay(d = new Date()) {
+  const t = new Date(d);
+  t.setHours(0, 0, 0, 0);
+  return t;
+}
+
+function endOfLocalDay(d = new Date()) {
+  const t = new Date(d);
+  t.setHours(23, 59, 59, 999);
+  return t;
+}
+
+function windowForRange(range) {
+  const now = new Date();
+  if (range === '1d') {
+    return { from: startOfLocalDay(now), to: endOfLocalDay(now) };
+  }
+  return { from: null, to: null };
 }
 
 function formatDateKey(date) {
@@ -143,67 +171,129 @@ async function fetchDaily() {
     const people = perDay.get(key);
     const entries = Array.from(people?.values() || []);
     if (!entries.length) {
-      return { date: key };
+      return { date: key, rows: [] };
     }
 
-    const wellbeingValues = [];
-    const stressValues = [];
-    let burnoutValid = 0;
-    let burnoutRisk = 0;
-    let fatigueValid = 0;
-    let fatigueElevated = 0;
-
-    entries.forEach(({ scores }) => {
+    const rows = entries.map(sample => {
+      const scores = sample?.scores || {};
       const wellbeing = Number(scores?.wellbeing);
-      if (Number.isFinite(wellbeing)) wellbeingValues.push(wellbeing);
-
       const stress = Number(scores?.stress);
-      if (Number.isFinite(stress)) stressValues.push(stress);
-
       const burnout = Number(scores?.burnout);
-      if (Number.isFinite(burnout)) {
-        burnoutValid += 1;
-        if (burnout >= BURNOUT_THRESHOLD) burnoutRisk += 1;
-      }
-
       const fatigue = Number(scores?.fatigue);
-      if (Number.isFinite(fatigue)) {
-        fatigueValid += 1;
-        if (fatigue >= FATIGUE_THRESHOLD) fatigueElevated += 1;
-      }
+      return {
+        date: sample.ts,
+        userId: sample.person_id,
+        wellbeing: Number.isFinite(wellbeing) ? wellbeing : undefined,
+        stressAvg: Number.isFinite(stress) ? stress : undefined,
+        burnoutRisk: Number.isFinite(burnout) && burnout >= BURNOUT_THRESHOLD,
+        fatigueElevated: Number.isFinite(fatigue) && fatigue >= FATIGUE_THRESHOLD
+      };
     });
 
-    return {
-      date: key,
-      wellbeing: average(wellbeingValues),
-      stressAvg: average(stressValues),
-      burnoutPct: percentage(burnoutRisk, burnoutValid),
-      fatiguePct: percentage(fatigueElevated, fatigueValid)
-    };
+    return { date: key, rows };
   });
 }
 
-function aggregate(days) {
-  const result = METRICS.reduce((acc, metric) => {
-    acc[metric] = { value: undefined, delta: undefined };
-    return acc;
-  }, {});
+function aggregateWindow(rows) {
+  const out = {
+    wellbeing: { value: safeAvg(rows, 'wellbeing'), delta: undefined },
+    stressAvg: { value: safeAvg(rows, 'stressAvg'), delta: undefined },
+    burnoutPct: { value: undefined, delta: undefined },
+    fatiguePct: { value: undefined, delta: undefined }
+  };
 
-  if (!Array.isArray(days) || !days.length) {
-    return result;
+  if (!Array.isArray(rows) || !rows.length) {
+    return out;
   }
 
-  METRICS.forEach(metric => {
-    const values = days
-      .map(day => day?.[metric])
-      .filter(value => typeof value === 'number' && Number.isFinite(value));
-    if (values.length) {
-      const total = values.reduce((sum, value) => sum + value, 0);
-      result[metric].value = total / values.length;
-    }
-  });
+  const users = new Set(rows.map(r => r?.userId).filter(Boolean));
+  const denom = users.size;
+  const is1d = isSameLocalDayRange(rows);
 
-  return result;
+  if (is1d) {
+    const sortedRows = [...rows].sort((a, b) => {
+      const aTime = new Date(a?.date).getTime();
+      const bTime = new Date(b?.date).getTime();
+      return (Number.isFinite(aTime) ? aTime : 0) - (Number.isFinite(bTime) ? bTime : 0);
+    });
+    const lastByUser = new Map();
+    sortedRows.forEach(entry => {
+      if (!entry?.userId) return;
+      lastByUser.set(entry.userId, entry);
+    });
+    const arr = Array.from(lastByUser.values());
+    const burnNum = arr.filter(r => !!r?.burnoutRisk).length;
+    const fatNum = arr.filter(r => !!r?.fatigueElevated).length;
+    out.burnoutPct.value = safePct(burnNum, denom);
+    out.fatiguePct.value = safePct(fatNum, denom);
+  } else {
+    const byDay = groupByLocalDay(rows);
+    const dayBurnout = [];
+    const dayFatigue = [];
+    byDay.forEach(rlist => {
+      const usersD = new Set(rlist.map(r => r?.userId).filter(Boolean));
+      const denomD = usersD.size;
+      const sortedDayRows = [...rlist].sort((a, b) => {
+        const aTime = new Date(a?.date).getTime();
+        const bTime = new Date(b?.date).getTime();
+        return (Number.isFinite(aTime) ? aTime : 0) - (Number.isFinite(bTime) ? bTime : 0);
+      });
+      const lastByUserD = new Map();
+      sortedDayRows.forEach(entry => {
+        if (!entry?.userId) return;
+        lastByUserD.set(entry.userId, entry);
+      });
+      const arrD = Array.from(lastByUserD.values());
+      const burnNumD = arrD.filter(r => !!r?.burnoutRisk).length;
+      const fatNumD = arrD.filter(r => !!r?.fatigueElevated).length;
+      dayBurnout.push(safePct(burnNumD, denomD));
+      dayFatigue.push(safePct(fatNumD, denomD));
+    });
+
+    const avg = values => {
+      if (!Array.isArray(values)) return undefined;
+      const filtered = values.filter(Number.isFinite);
+      if (!filtered.length) return undefined;
+      const total = filtered.reduce((sum, value) => sum + value, 0);
+      return total / filtered.length;
+    };
+
+    out.burnoutPct.value = avg(dayBurnout);
+    out.fatiguePct.value = avg(dayFatigue);
+  }
+
+  return out;
+}
+
+function isSameLocalDayRange(rows) {
+  if (!Array.isArray(rows) || !rows.length) return false;
+  const first = new Date(rows[0]?.date);
+  if (!Number.isFinite(first.valueOf())) return false;
+  const year = first.getFullYear();
+  const month = first.getMonth();
+  const date = first.getDate();
+  return rows.every(item => {
+    const current = new Date(item?.date);
+    if (!Number.isFinite(current.valueOf())) return false;
+    return current.getFullYear() === year
+      && current.getMonth() === month
+      && current.getDate() === date;
+  });
+}
+
+function groupByLocalDay(rows) {
+  const map = new Map();
+  if (!Array.isArray(rows)) return map;
+  rows.forEach(entry => {
+    const current = new Date(entry?.date);
+    if (!Number.isFinite(current.valueOf())) return;
+    const key = `${current.getFullYear()}-${current.getMonth() + 1}-${current.getDate()}`;
+    if (!map.has(key)) {
+      map.set(key, []);
+    }
+    map.get(key).push(entry);
+  });
+  return map;
 }
 
 function withTrend(curr, prev) {
@@ -232,10 +322,10 @@ export async function getKpiData() {
     };
   }
 
-  const dayMap = new Map(byDay.map(day => [day.date, day]));
+  const dayMap = new Map(byDay.map(day => [day.date, Array.isArray(day?.rows) ? day.rows : []]));
   const anchor = startOfDayUTC(parseDateKey(byDay[byDay.length - 1]?.date) || new Date());
 
-  function collectDays(start, end) {
+  function collectRows(start, end) {
     if (!(start instanceof Date) || !(end instanceof Date)) return [];
     if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) return [];
     if (start.getTime() > end.getTime()) return [];
@@ -243,8 +333,10 @@ export async function getKpiData() {
     const collected = [];
     for (let cursor = start; cursor.getTime() <= end.getTime(); cursor = addDays(cursor, 1)) {
       const key = formatDateKey(cursor);
-      const entry = dayMap.get(key);
-      if (entry) collected.push(entry);
+      const rows = dayMap.get(key);
+      if (Array.isArray(rows) && rows.length) {
+        collected.push(...rows);
+      }
     }
     return collected;
   }
@@ -252,10 +344,16 @@ export async function getKpiData() {
   function rangeDays(kind) {
     switch (kind) {
       case '1d': {
-        const prevDay = addDays(anchor, -1);
+        const { from } = windowForRange('1d');
+        const currentBase = from instanceof Date && !Number.isNaN(from.valueOf()) ? from : new Date();
+        const currentKey = formatDateKey(currentBase);
+        const prevStart = startOfLocalDay(new Date(currentBase.getTime() - DAY_MS));
+        const prevKey = formatDateKey(prevStart);
+        const currentRows = dayMap.get(currentKey) || [];
+        const previousRows = dayMap.get(prevKey) || [];
         return {
-          currDays: collectDays(anchor, anchor),
-          prevDays: collectDays(prevDay, prevDay)
+          currRows: currentRows,
+          prevRows: previousRows
         };
       }
       case '7d':
@@ -265,8 +363,8 @@ export async function getKpiData() {
         const prevEnd = addDays(currStart, -1);
         const prevStart = addDays(prevEnd, -(length - 1));
         return {
-          currDays: collectDays(currStart, anchor),
-          prevDays: collectDays(prevStart, prevEnd)
+          currRows: collectRows(currStart, anchor),
+          prevRows: collectRows(prevStart, prevEnd)
         };
       }
       case 'mtd': {
@@ -275,8 +373,8 @@ export async function getKpiData() {
         const prevEndDay = Math.min(anchor.getUTCDate(), daysInMonth(prevMonthStart.getUTCFullYear(), prevMonthStart.getUTCMonth()));
         const prevEnd = new Date(Date.UTC(prevMonthStart.getUTCFullYear(), prevMonthStart.getUTCMonth(), prevEndDay));
         return {
-          currDays: collectDays(currStart, anchor),
-          prevDays: collectDays(prevMonthStart, prevEnd)
+          currRows: collectRows(currStart, anchor),
+          prevRows: collectRows(prevMonthStart, prevEnd)
         };
       }
       case 'qtd': {
@@ -287,8 +385,8 @@ export async function getKpiData() {
         const prevEndCandidate = addDays(prevQuarterStart, daysIntoQuarter);
         const prevEnd = prevEndCandidate.getTime() > prevQuarterEnd.getTime() ? prevQuarterEnd : prevEndCandidate;
         return {
-          currDays: collectDays(quarterStart, anchor),
-          prevDays: collectDays(prevQuarterStart, prevEnd)
+          currRows: collectRows(quarterStart, anchor),
+          prevRows: collectRows(prevQuarterStart, prevEnd)
         };
       }
       case 'ytd': {
@@ -298,12 +396,12 @@ export async function getKpiData() {
         const prevEndDay = Math.min(anchor.getUTCDate(), daysInMonth(prevYear, anchor.getUTCMonth()));
         const prevEnd = new Date(Date.UTC(prevYear, anchor.getUTCMonth(), prevEndDay));
         return {
-          currDays: collectDays(yearStart, anchor),
-          prevDays: collectDays(prevYearStart, prevEnd)
+          currRows: collectRows(yearStart, anchor),
+          prevRows: collectRows(prevYearStart, prevEnd)
         };
       }
       default:
-        return { currDays: [], prevDays: [] };
+        return { currRows: [], prevRows: [] };
     }
   }
 
@@ -313,9 +411,9 @@ export async function getKpiData() {
   }, {});
 
   RANGE_KEYS.forEach(rangeKey => {
-    const { currDays, prevDays } = rangeDays(rangeKey);
-    const current = aggregate(currDays);
-    const previous = aggregate(prevDays);
+    const { currRows, prevRows } = rangeDays(rangeKey);
+    const current = aggregateWindow(currRows);
+    const previous = aggregateWindow(prevRows);
     const payload = withTrend(current, previous);
     METRICS.forEach(metric => {
       metrics[metric][rangeKey] = payload[metric];
