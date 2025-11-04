@@ -279,10 +279,12 @@ export async function getKpiData() {
   function rangeDays(kind) {
     switch (kind) {
       case '1d': {
-        const { from } = windowForRange('1d');
-        const currentBase = from instanceof Date && !Number.isNaN(from.valueOf()) ? from : new Date();
+        // Use dataset anchor (last available day) — not system "today".
+        // Anchor is already defined above as the last day from byDay[]:
+        //   const anchor = startOfDayUTC(parseDateKey(byDay[byDay.length - 1]?.date) || new Date());
+        const currentBase = anchor;
         const currentKey = formatDateKey(currentBase);
-        const prevStart = startOfLocalDay(new Date(currentBase.getTime() - DAY_MS));
+        const prevStart = addDays(currentBase, -1);
         const prevKey = formatDateKey(prevStart);
         const currentEntry = dayMap.get(currentKey);
         const previousEntry = dayMap.get(prevKey);
