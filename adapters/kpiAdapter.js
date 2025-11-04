@@ -7,6 +7,26 @@ const FATIGUE_THRESHOLD = 60;
 
 let datasetPromise = null;
 
+// Helpers
+const clamp0_100 = v => Math.max(0, Math.min(100, v));
+
+function safeAvg(arr, key) {
+  if (!Array.isArray(arr)) return undefined;
+  const vals = arr
+    .map(item => {
+      if (key == null) return Number(item);
+      if (item == null) return NaN;
+      return Number(item[key]);
+    })
+    .filter(Number.isFinite);
+  return vals.length ? vals.reduce((sum, value) => sum + value, 0) / vals.length : undefined;
+}
+
+function safePct(numer, denom) {
+  if (!Number.isFinite(numer) || !Number.isFinite(denom) || denom <= 0) return undefined;
+  return clamp0_100((numer / denom) * 100);
+}
+
 function blankMetric() {
   return RANGE_KEYS.reduce((acc, range) => {
     acc[range] = { value: undefined, delta: undefined };
@@ -47,23 +67,31 @@ async function loadSamples() {
   return datasetPromise;
 }
 
-function average(values) {
-  const filtered = values.filter(value => typeof value === 'number' && Number.isFinite(value));
-  if (!filtered.length) return undefined;
-  const total = filtered.reduce((sum, value) => sum + value, 0);
-  return total / filtered.length;
-}
-
-function percentage(numerator, denominator) {
-  if (!denominator) return undefined;
-  return (numerator / denominator) * 100;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function startOfDayUTC(date) {
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return new Date(NaN);
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+function startOfLocalDay(d = new Date()) {
+  const t = new Date(d);
+  t.setHours(0, 0, 0, 0);
+  return t;
+}
+
+function endOfLocalDay(d = new Date()) {
+  const t = new Date(d);
+  t.setHours(23, 59, 59, 999);
+  return t;
+}
+
+function windowForRange(range) {
+  const now = new Date();
+  if (range === '1d') {
+    return { from: startOfLocalDay(now), to: endOfLocalDay(now) };
+  }
+  return { from: null, to: null };
 }
 
 function formatDateKey(date) {
@@ -146,39 +174,38 @@ async function fetchDaily() {
       return { date: key };
     }
 
-    const wellbeingValues = [];
-    const stressValues = [];
+    const normalized = entries.map(({ scores }) => ({
+      wellbeing: scores?.wellbeing,
+      stress: scores?.stress,
+      burnout: scores?.burnout,
+      fatigue: scores?.fatigue
+    }));
+
     let burnoutValid = 0;
     let burnoutRisk = 0;
     let fatigueValid = 0;
     let fatigueElevated = 0;
 
-    entries.forEach(({ scores }) => {
-      const wellbeing = Number(scores?.wellbeing);
-      if (Number.isFinite(wellbeing)) wellbeingValues.push(wellbeing);
-
-      const stress = Number(scores?.stress);
-      if (Number.isFinite(stress)) stressValues.push(stress);
-
-      const burnout = Number(scores?.burnout);
-      if (Number.isFinite(burnout)) {
+    normalized.forEach(({ burnout, fatigue }) => {
+      const burnoutValue = Number(burnout);
+      if (Number.isFinite(burnoutValue)) {
         burnoutValid += 1;
-        if (burnout >= BURNOUT_THRESHOLD) burnoutRisk += 1;
+        if (burnoutValue >= BURNOUT_THRESHOLD) burnoutRisk += 1;
       }
 
-      const fatigue = Number(scores?.fatigue);
-      if (Number.isFinite(fatigue)) {
+      const fatigueValue = Number(fatigue);
+      if (Number.isFinite(fatigueValue)) {
         fatigueValid += 1;
-        if (fatigue >= FATIGUE_THRESHOLD) fatigueElevated += 1;
+        if (fatigueValue >= FATIGUE_THRESHOLD) fatigueElevated += 1;
       }
     });
 
     return {
       date: key,
-      wellbeing: average(wellbeingValues),
-      stressAvg: average(stressValues),
-      burnoutPct: percentage(burnoutRisk, burnoutValid),
-      fatiguePct: percentage(fatigueElevated, fatigueValid)
+      wellbeing: safeAvg(normalized, 'wellbeing'),
+      stressAvg: safeAvg(normalized, 'stress'),
+      burnoutPct: safePct(burnoutRisk, burnoutValid),
+      fatiguePct: safePct(fatigueElevated, fatigueValid)
     };
   });
 }
@@ -252,10 +279,16 @@ export async function getKpiData() {
   function rangeDays(kind) {
     switch (kind) {
       case '1d': {
-        const prevDay = addDays(anchor, -1);
+        const { from } = windowForRange('1d');
+        const currentBase = from instanceof Date && !Number.isNaN(from.valueOf()) ? from : new Date();
+        const currentKey = formatDateKey(currentBase);
+        const prevStart = startOfLocalDay(new Date(currentBase.getTime() - DAY_MS));
+        const prevKey = formatDateKey(prevStart);
+        const currentEntry = dayMap.get(currentKey);
+        const previousEntry = dayMap.get(prevKey);
         return {
-          currDays: collectDays(anchor, anchor),
-          prevDays: collectDays(prevDay, prevDay)
+          currDays: currentEntry ? [currentEntry] : [],
+          prevDays: previousEntry ? [previousEntry] : []
         };
       }
       case '7d':
