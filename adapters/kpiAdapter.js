@@ -221,11 +221,15 @@ function aggregateWindow(rows) {
       if (!entry?.userId) return;
       lastByUser.set(entry.userId, entry);
     });
-    const arr = Array.from(lastByUser.values());
-    const burnNum = arr.filter(r => !!r?.burnoutRisk).length;
-    const fatNum = arr.filter(r => !!r?.fatigueElevated).length;
+    const rows1d = Array.from(lastByUser.values());
+    const burnNum = rows1d.filter(r => !!r?.burnoutRisk).length;
+    const fatNum = rows1d.filter(r => !!r?.fatigueElevated).length;
     out.burnoutPct.value = safePct(burnNum, denom);
     out.fatiguePct.value = safePct(fatNum, denom);
+    console.debug('[KPI] 1d rows:', rows1d.length, 'users:', denom, {
+      burnout: out.burnoutPct.value,
+      fatigue: out.fatiguePct.value
+    });
   } else {
     const byDay = groupByLocalDay(rows);
     const dayBurnout = [];
@@ -296,17 +300,16 @@ function groupByLocalDay(rows) {
   return map;
 }
 
-function withTrend(curr, prev) {
-  METRICS.forEach(metric => {
-    const currentValue = curr[metric]?.value;
-    const previousValue = prev[metric]?.value;
-    if (typeof currentValue === 'number' && Number.isFinite(currentValue)
-      && typeof previousValue === 'number' && Number.isFinite(previousValue)) {
+function addTrend(curr, prev) {
+  for (const key of ['wellbeing', 'stressAvg', 'burnoutPct', 'fatiguePct']) {
+    const currentValue = curr[key]?.value;
+    const previousValue = prev[key]?.value;
+    if (Number.isFinite(currentValue) && Number.isFinite(previousValue)) {
       const delta = +(currentValue - previousValue).toFixed(1);
-      curr[metric].delta = delta;
-      curr[metric].trend = delta;
+      curr[key].delta = delta;
+      curr[key].trend = delta;
     }
-  });
+  }
   return curr;
 }
 
@@ -414,7 +417,7 @@ export async function getKpiData() {
     const { currRows, prevRows } = rangeDays(rangeKey);
     const current = aggregateWindow(currRows);
     const previous = aggregateWindow(prevRows);
-    const payload = withTrend(current, previous);
+    const payload = addTrend(current, previous);
     METRICS.forEach(metric => {
       metrics[metric][rangeKey] = payload[metric];
     });
