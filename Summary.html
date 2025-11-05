@@ -57,10 +57,19 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
+<script defer src="./assets/js/meta-asof.js?v=2025-11-05-1"></script>
 <script defer src="./assets/js/hr-board.neon.js?v=2025.10.19-05"></script>
 </head><body data-variant="life">
 <main class="page-wrap">
   <div id="toolbar"></div>
+  <div id="meta-row" class="mt-1 flex items-center justify-end">
+    <div id="meta-asof" class="h-9 flex items-center text-xs text-muted-foreground/80" role="note" aria-label="Data time">
+      <span class="inline-flex items-center gap-2">
+        <span aria-hidden>🗓</span>
+        <time id="meta-asof-time" datetime="2025-11-05T20:25:00+01:00">05 Nov 2025 · 20:25 CET</time>
+      </span>
+    </div>
+  </div>
   <div id="page-content">
     <!-- KPI BLOCK START -->
     <section class="kpi-cards" id="kpi"></section>

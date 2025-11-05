@@ -1,40 +1,6 @@
 const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
 const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
 
-// BEGIN corporate-meta-asof
-(function(){
-  const host = document.querySelector('body[data-page="corporate"] #meta-asof-time');
-  if (!host) return;
-
-  // Базовая TZ для DEMO
-  const tz = 'Europe/Amsterdam';
-  const now = new Date();
-
-  // День и месяц (EN, короткий)
-  const dd = new Intl.DateTimeFormat('en-GB', { day:'2-digit', timeZone: tz }).format(now);
-  const mon = new Intl.DateTimeFormat('en-GB', { month:'short', timeZone: tz }).format(now);
-  const yyyy = new Intl.DateTimeFormat('en-GB', { year:'numeric', timeZone: tz }).format(now);
-  const hhmm = new Intl.DateTimeFormat('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone: tz }).format(now);
-
-  // Простая метка сезона для стабильности кросс-браузер: лето — CEST, иначе CET
-  // (лето в ЕС — с последнего воскресенья марта по последнее воскресенье октября)
-  function lastSunday(year, month){ // month: 0-11
-    const d = new Date(Date.UTC(year, month + 1, 0)); // последний день месяца (UTC)
-    const dow = d.getUTCDay();
-    d.setUTCDate(d.getUTCDate() - dow);
-    return d;
-  }
-  const y = now.getUTCFullYear();
-  const dstStart = new Date(Date.UTC(y, 2, lastSunday(y,2).getUTCDate(), 1));  // март, 01:00 UTC
-  const dstEnd   = new Date(Date.UTC(y, 9, lastSunday(y,9).getUTCDate(), 1));  // октябрь, 01:00 UTC
-  const isDST = now >= dstStart && now < dstEnd;
-  const tzLabel = isDST ? 'CEST' : 'CET';
-
-  host.textContent = `${dd} ${mon} ${yyyy} · ${hhmm} ${tzLabel}`;
-  host.setAttribute('datetime', now.toISOString());
-})();
-// END corporate-meta-asof
-
 (function(){
   const root = document.querySelector('body[data-page="corporate"]');
   if (!root) return;
