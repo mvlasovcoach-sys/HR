@@ -5,7 +5,19 @@ const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'func
   const root = document.querySelector('body[data-page="corporate"]');
   if (!root) return;
 
-  const slot = root.querySelector('#meta-team-slot');
+  const ensureSlot = () => {
+    const row = root.querySelector('.toolbar-meta-row');
+    if (!row) return null;
+    let slot = row.querySelector('[data-team-slot]');
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.setAttribute('data-team-slot', '');
+      row.insertBefore(slot, row.firstElementChild);
+    }
+    return slot;
+  };
+
+  const slot = ensureSlot();
   if (!slot) return;
 
   let attempts = 0;
@@ -17,7 +29,7 @@ const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'func
       slot.appendChild(team);
     }
 
-    const metaRow = root.querySelector('#meta-row');
+    const metaRow = root.querySelector('.toolbar-meta-row');
     if (metaRow) {
       metaRow.querySelectorAll('ul,ol').forEach(node => {
         node.style.listStyle = 'none';
