@@ -343,6 +343,21 @@
   align-items: center;
 }
 
+#tb-team {
+  margin-left: auto;
+}
+
+#tb-dates {
+  margin-left: 12px;
+}
+
+@media (max-width: 900px) {
+  #tb-team,
+  #tb-dates {
+    margin-left: 0;
+  }
+}
+
 .scenario-badge {
   margin: 8px 0 16px;
 }
