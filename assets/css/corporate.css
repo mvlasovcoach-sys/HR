@@ -153,19 +153,32 @@
   box-shadow: 0 0 12px rgba(15, 247, 177, 0.45);
 }
 
-/* BEGIN corporate-meta-asof */
-body[data-page="corporate"] #meta-asof.meta-asof {
+/* BEGIN corporate-meta-row */
+body[data-page="corporate"] #meta-row {
   margin-top: 4px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+body[data-page="corporate"] #meta-team-slot {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+body[data-page="corporate"] #meta-asof {
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
   font-size: 12px;
   line-height: 18px;
   color: rgba(255,255,255,0.64);
-  /* если светлая тема — при необходимости заменить цвет на #556 */
 }
-body[data-page="corporate"] #meta-asof .meta-asof__icon { opacity: .85 }
-/* END corporate-meta-asof */
+body[data-page="corporate"] #meta-asof [aria-hidden] {
+  opacity: 0.85;
+}
+/* END corporate-meta-row */
 
 #heatmap-grid {
   --heatmap-cols: 1;

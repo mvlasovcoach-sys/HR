@@ -84,12 +84,18 @@
         </div>
       </header>
       <div id="toolbar"></div>
-      <!-- BEGIN corporate-meta-asof -->
-      <div id="meta-asof" class="meta-asof" role="note" aria-label="Data time">
-        <span class="meta-asof__icon" aria-hidden="true">🗓</span>
-        <time id="meta-asof-time" datetime="">05 Nov 2025 · 19:00 CET</time>
+      <!-- BEGIN meta-row under toolbar -->
+      <div id="meta-row" class="mt-1 flex items-center justify-between">
+        <div id="meta-team-slot"><div id="team-filter"></div></div>
+
+        <div id="meta-asof" class="h-9 flex items-center text-xs text-muted-foreground/80" role="note" aria-label="Data time">
+          <span class="inline-flex items-center gap-2">
+            <span aria-hidden>🗓</span>
+            <time id="meta-asof-time" datetime="">05 Nov 2025 · 19:00 CET</time>
+          </span>
+        </div>
       </div>
-      <!-- END corporate-meta-asof -->
+      <!-- END meta-row under toolbar -->
       <div id="filters-bar"></div>
       <div id="page-content">
         <div id="global-caption"></div>
