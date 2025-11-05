@@ -153,6 +153,20 @@
   box-shadow: 0 0 12px rgba(15, 247, 177, 0.45);
 }
 
+/* BEGIN corporate-meta-asof */
+body[data-page="corporate"] #meta-asof.meta-asof {
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(255,255,255,0.64);
+  /* если светлая тема — при необходимости заменить цвет на #556 */
+}
+body[data-page="corporate"] #meta-asof .meta-asof__icon { opacity: .85 }
+/* END corporate-meta-asof */
+
 #heatmap-grid {
   --heatmap-cols: 1;
   display: grid;
