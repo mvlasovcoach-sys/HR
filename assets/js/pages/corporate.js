@@ -15,6 +15,9 @@ async function refreshPage(){
 
 async function initPage(){
   ModeStore.init();
+  const params = new URLSearchParams(window.location.search);
+  const queryMode = params.get('mode');
+  const showTeamFilter = String(queryMode || ModeStore.mode || '').toLowerCase() === 'demo';
   renderToolbar({
     mount: document.getElementById('toolbar'),
     title: 'Corporate',
@@ -22,7 +25,7 @@ async function initPage(){
     onModeChange: m => applyMode(m),
     controls: {
       ranges: ['Today','7 Days','Month to date','Quarter to date','Year to date'],
-      showTeam: false,
+      showTeam: showTeamFilter,
       showDates: true,
       showCompare: true
     }

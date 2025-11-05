@@ -27,20 +27,20 @@ async function freezeTime(page, isoTimestamp: string) {
 
 async function mountDemo(page, iso: string) {
   await freezeTime(page, iso);
-  await page.goto('/Demo.html', { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#tb-on-duty');
+  await page.goto('/Corporate.html?mode=demo', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#onDutyBadge');
 }
 
 test.describe('On duty badge (demo)', () => {
   test('shows expected totals during day shift', async ({ page }) => {
     await mountDemo(page, '2024-01-01T09:00:00Z');
-    const badge = page.locator('#tb-on-duty');
+    const badge = page.locator('#onDutyBadge');
     await expect(badge).toContainText('On duty: 57 • Sample: 43 (75%)');
   });
 
   test('shows expected totals during night shift', async ({ page }) => {
     await mountDemo(page, '2024-01-01T21:00:00Z');
-    const badge = page.locator('#tb-on-duty');
+    const badge = page.locator('#onDutyBadge');
     await expect(badge).toContainText('On duty: 22 • Sample: 17 (75%)');
   });
 });
