@@ -120,6 +120,15 @@
   font-size: var(--font-body, 16px);
 }
 
+.toolbar .pill {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
 .toolbar > * {
   display: flex;
   align-items: center;

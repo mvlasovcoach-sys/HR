@@ -1,8 +1,6 @@
-import { DEMO_ORG, SHIFT_BOUNDARIES, TEAM_KEYS } from './onDuty.constants';
+import { DEMO_ORG, SHIFT_BOUNDARIES, TEAM_KEYS } from './onDuty.constants.js';
 
-export type TeamKey = typeof TEAM_KEYS[keyof typeof TEAM_KEYS];
-
-const TEAM_KEY_ALIASES: Record<string, TeamKey> = {
+const TEAM_KEY_ALIASES = {
   all: TEAM_KEYS.ALL,
   '*': TEAM_KEYS.ALL,
   'team.all': TEAM_KEYS.ALL,
@@ -22,13 +20,13 @@ const TEAM_KEY_ALIASES: Record<string, TeamKey> = {
   'team:lab': TEAM_KEYS.LAB,
   cs: TEAM_KEYS.DAY_SUPPORT,
   support: TEAM_KEYS.DAY_SUPPORT,
-  'day_support': TEAM_KEYS.DAY_SUPPORT,
+  day_support: TEAM_KEYS.DAY_SUPPORT,
   'day-support': TEAM_KEYS.DAY_SUPPORT,
   'team.day_support': TEAM_KEYS.DAY_SUPPORT,
   'team:day_support': TEAM_KEYS.DAY_SUPPORT,
 };
 
-export function resolveTeamKey(value: string | null | undefined): TeamKey {
+export function resolveTeamKey(value) {
   if (!value) {
     return TEAM_KEYS.ALL;
   }
@@ -36,39 +34,37 @@ export function resolveTeamKey(value: string | null | undefined): TeamKey {
   return TEAM_KEY_ALIASES[key] ?? TEAM_KEYS.ALL;
 }
 
-export function isNightCET(d: Date): boolean {
-  const h = new Intl.DateTimeFormat('en-GB', {
+export function isNightCET(d) {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Amsterdam',
     hour: '2-digit',
     hour12: false,
-  })
-    .formatToParts(d)
-    .find((p) => p.type === 'hour')!.value;
-  const hh = Number(h);
+  });
+  const parts = formatter.formatToParts(d);
+  const hourPart = parts.find(part => part.type === 'hour');
+  const hh = Number(hourPart?.value ?? '0');
   return hh >= SHIFT_BOUNDARIES.nightStart || hh < SHIFT_BOUNDARIES.dayStart;
 }
 
-function split3(n: number): [number, number, number] {
-  // even split, higher remainders go first (e.g., 32 -> 11,11,10)
+function split3(n) {
   const q = Math.floor(n / 3);
   const r = n % 3;
   return [q + (r > 0 ? 1 : 0), q + (r > 1 ? 1 : 0), q];
 }
 
-export function expectedMap(now: Date): Map<TeamKey, number> {
+export function expectedMap(now) {
   const night = isNightCET(now);
-  const [prodDay, prodNight] = split3(DEMO_ORG.production); // -> 11,11
-  const [maintDay, maintNight] = split3(DEMO_ORG.maintenance); // -> 6,6
-  const [labDay, labNight] = split3(DEMO_ORG.lab); // -> 6,5
-  // day: one brigade on Day, night: one brigade on Night (others Off)
-  const prod = night ? prodNight : prodDay; // 11/11
-  const maint = night ? maintNight : maintDay; // 6/6
-  const lab = night ? labNight : labDay; // 5/6
-  const daySupport = night ? 0 : DEMO_ORG.daySupport; // day-only 34
+  const [prodDay, prodNight] = split3(DEMO_ORG.production);
+  const [maintDay, maintNight] = split3(DEMO_ORG.maintenance);
+  const [labDay, labNight] = split3(DEMO_ORG.lab);
+  const daySupport = night ? 0 : DEMO_ORG.daySupport;
 
+  const prod = night ? prodNight : prodDay;
+  const maint = night ? maintNight : maintDay;
+  const lab = night ? labNight : labDay;
   const overall = prod + maint + lab + daySupport;
 
-  return new Map<TeamKey, number>([
+  return new Map([
     [TEAM_KEYS.ALL, overall],
     [TEAM_KEYS.PROD, prod],
     [TEAM_KEYS.MAINT, maint],
@@ -77,6 +73,6 @@ export function expectedMap(now: Date): Map<TeamKey, number> {
   ]);
 }
 
-export function expectedOnDuty(team: TeamKey, at: Date): number {
+export function expectedOnDuty(team, at) {
   return expectedMap(at).get(team) ?? 0;
 }
