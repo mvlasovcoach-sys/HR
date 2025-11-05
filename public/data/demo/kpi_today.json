@@ -1,0 +1,15 @@
+{
+  "wellbeing": 68,
+  "wellbeing_delta": -2,
+  "wellbeing_trend": "down",
+  "stress": 54,
+  "stress_delta": 3,
+  "stress_trend": "up",
+  "burnout": 46,
+  "burnout_delta": 1,
+  "burnout_trend": "up",
+  "fatigue": 58,
+  "fatigue_delta": 4,
+  "fatigue_trend": "up",
+  "updatedAt": "2024-10-04T08:30:00.000Z"
+}

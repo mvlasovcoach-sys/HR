@@ -42,7 +42,8 @@ function initCorporatePage(){
     activityTable: document.getElementById('activity-table'),
     activityCards: document.getElementById('activity-cards'),
     exportBtn: document.getElementById('export-activity'),
-    scenarioButtons: Array.from(document.querySelectorAll('.scenario-controls [data-scenario]'))
+    scenarioButtons: Array.from(document.querySelectorAll('.scenario-controls [data-scenario]')),
+    fatigueCard: document.getElementById('fatigue-today-card')
   };
 
   ensureToolbarFilters();
@@ -91,6 +92,33 @@ function initCorporatePage(){
     return;
   }
 
+  function readMode(){
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const query = params.get('mode');
+      if (query && typeof query === 'string') {
+        const lower = query.toLowerCase();
+        if (lower === 'demo') return 'demo';
+        if (lower === 'live') return 'live';
+      }
+    } catch (err) {
+      /* ignore malformed query */
+    }
+    try {
+      const stored = localStorage.getItem('spa2099_mode')
+        || localStorage.getItem('mode')
+        || localStorage.getItem('hr:mode');
+      if (stored && typeof stored === 'string') {
+        const lower = stored.toLowerCase();
+        if (lower === 'demo') return 'demo';
+        if (lower === 'live') return 'live';
+      }
+    } catch (err) {
+      /* storage optional */
+    }
+    return 'live';
+  }
+
   const state = {
     teams: [],
     teamMap: new Map(),
@@ -112,7 +140,9 @@ function initCorporatePage(){
     selectedColumn: null,
     activityCsvRows: [],
     activitySort: {key: 'date', dir: 'desc'},
-    insufficient: false
+    insufficient: false,
+    todayKpi: null,
+    todayMode: readMode()
   };
 
   const SEVERITIES = ['critical', 'warning', 'info'];
@@ -130,6 +160,135 @@ function initCorporatePage(){
     if (typeof fallback === 'string') return fallback;
     return key.replace(/^label\.|^range\./, '');
   };
+
+  const FATIGUE_KEYS = ['fatigue', 'tiredness', 'kpi_fatigue'];
+
+  async function safeJson(response){
+    try {
+      return await response.json();
+    } catch (err) {
+      devWarn('KPI payload parse failed', err);
+      return {};
+    }
+  }
+
+  async function fetchKpiToday(mode){
+    const target = mode === 'demo' ? 'data/demo/kpi_today.json' : '/api/kpi?period=today';
+    const response = await fetch(target, {cache: 'no-store'});
+    if (!response.ok) {
+      if (mode === 'demo') {
+        throw new Error(`Demo KPI dataset missing (${response.status})`);
+      }
+      return {};
+    }
+    return await safeJson(response);
+  }
+
+  function pickFirstMetric(raw, keys){
+    if (!raw || typeof raw !== 'object') return null;
+    for (const key of keys) {
+      if (!key) continue;
+      const value = raw[key];
+      if (value === 0) return 0;
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  function mapFatigueBundle(raw, source){
+    const safeRaw = raw && typeof raw === 'object' ? raw : {};
+    const updatedAt = typeof safeRaw.updatedAt === 'string' && safeRaw.updatedAt
+      ? safeRaw.updatedAt
+      : new Date().toISOString();
+    const value = pickFirstMetric(safeRaw, FATIGUE_KEYS);
+    const delta = pickFirstMetric(safeRaw, FATIGUE_KEYS.map(key => `${key}_delta`));
+    let trend;
+    if (typeof safeRaw.fatigue_trend === 'string' && safeRaw.fatigue_trend.trim()) {
+      trend = safeRaw.fatigue_trend;
+    } else if (typeof safeRaw.tiredness_trend === 'string' && safeRaw.tiredness_trend.trim()) {
+      trend = safeRaw.tiredness_trend;
+    }
+    return {
+      fatigue: {
+        value: value == null ? null : Math.round(value),
+        delta: delta == null ? null : Math.round(delta),
+        trend,
+        updatedAt,
+        source,
+      },
+      raw: safeRaw,
+      source,
+      updatedAt,
+    };
+  }
+
+  async function loadKpiTodayData(){
+    const mode = readMode();
+    state.todayMode = mode;
+    try {
+      const raw = await fetchKpiToday(mode);
+      state.todayKpi = mapFatigueBundle(raw, mode);
+    } catch (err) {
+      devWarn('Today KPI load failed', err);
+      state.todayKpi = mapFatigueBundle({}, mode);
+    }
+  }
+
+  function fatigueSeverity(value){
+    if (value == null || Number.isNaN(value)) return 'neutral';
+    if (value <= 55) return 'green';
+    if (value <= 69) return 'amber';
+    return 'red';
+  }
+
+  function fatigueBadge(severity, hasValue){
+    if (!hasValue) return t('status.noData', 'No data');
+    if (severity === 'green') return t('status.low', 'Low');
+    if (severity === 'amber') return t('status.monitor', 'Monitor');
+    if (severity === 'red') return t('status.critical', 'High');
+    return t('status.monitor', 'Monitor');
+  }
+
+  function fatigueBadgeClass(severity, hasValue){
+    if (!hasValue) return 'pill--neutral';
+    if (severity === 'green') return 'pill--strong';
+    if (severity === 'amber') return 'pill--caution';
+    if (severity === 'red') return 'pill--critical';
+    return 'pill--neutral';
+  }
+
+  function trendArrow(direction){
+    if (direction === 'up') return '↑';
+    if (direction === 'down') return '↓';
+    if (direction === 'flat') return '→';
+    return '→';
+  }
+
+  function formatTrendText(value){
+    if (!value) {
+      return `${t('trend.label', 'Trend')}: ${t('trend.na', '—')}`;
+    }
+    const dir = value === 'down' ? 'down' : value === 'up' ? 'up' : 'flat';
+    const label = dir === 'up'
+      ? t('trend.up', 'Up')
+      : dir === 'down'
+        ? t('trend.down', 'Down')
+        : t('trend.flat', 'Stable');
+    return `${t('trend.label', 'Trend')}: ${trendArrow(dir)} ${label}`;
+  }
+
+  function formatUpdatedText(iso){
+    if (!iso || typeof iso !== 'string') {
+      return `${t('status.updated', 'Updated')}: —`;
+    }
+    const label = formatDateTime(iso);
+    if (!label) {
+      return `${t('status.updated', 'Updated')}: —`;
+    }
+    return `${t('status.updated', 'Updated')}: ${label}`;
+  }
 
   boot().catch(err => devError('Corporate init failed', err));
 
@@ -287,6 +446,11 @@ function initCorporatePage(){
         state.eventsDateFilter = null;
       }
       state.rangeWindow = resolveRangeWindow(metrics);
+      if (state.rangeKey === 'today') {
+        await loadKpiTodayData();
+      } else {
+        state.todayKpi = null;
+      }
       mapEventsToColumns();
       buildEventTypeOptions();
     } catch (err) {
@@ -299,6 +463,7 @@ function initCorporatePage(){
       state.activityCsvRows = [];
       state.selectedColumn = null;
       state.eventsDateFilter = null;
+      state.todayKpi = null;
     }
   }
 
@@ -357,10 +522,52 @@ function initCorporatePage(){
   function renderAll(){
     toggleInsufficientOverlays();
     try { renderKpis(state.metrics?.kpi, state.metrics?.delta, state.metrics?.n); } catch (err) { devError('KPI', err); }
+    try { renderFatigueTodayCard(); } catch (err) { devError('KPI:Fatigue', err); }
     try { renderHeatmap(state.metrics?.heatmap); } catch (err) { devError('Heatmap', err); }
     try { renderEvents(state.events); } catch (err) { devError('Events', err); }
     try { renderActivity(state.metrics?.activity); } catch (err) { devError('Activity', err); }
     updateCaption();
+  }
+
+  function renderFatigueTodayCard(){
+    const host = els.fatigueCard;
+    if (!host) return;
+    const isToday = state.rangeKey === 'today';
+    host.classList.toggle('is-hidden', !isToday);
+    if (!isToday) {
+      host.innerHTML = '';
+      return;
+    }
+    const metric = state.todayKpi?.fatigue || null;
+    const rawValue = metric?.value;
+    const hasValue = typeof rawValue === 'number' && Number.isFinite(rawValue);
+    const value = hasValue ? Math.max(0, Math.min(100, Math.round(rawValue))) : null;
+    const severity = fatigueSeverity(value);
+    const badge = fatigueBadge(severity, hasValue);
+    const badgeClass = fatigueBadgeClass(severity, hasValue);
+    const valueText = value == null ? '—' : `${value}%`;
+    const rawDelta = metric?.delta;
+    const hasDelta = typeof rawDelta === 'number' && Number.isFinite(rawDelta);
+    const deltaValue = hasDelta ? Math.round(rawDelta) : null;
+    const deltaText = deltaValue == null ? 'Δ —' : `Δ ${deltaValue > 0 ? '+' : ''}${deltaValue} pts`;
+    const trendText = formatTrendText(metric?.trend);
+    const updatedText = formatUpdatedText(metric?.updatedAt);
+    host.innerHTML = `
+      <div class="tile tile--compact trend-card" data-fatigue-card data-tone="${severity}">
+        <header class="tile__head">
+          <span class="tile__title">${t('metric.fatigue', 'Fatigue')}</span>
+          <span class="tile__badge pill ${badgeClass}">${badge}</span>
+        </header>
+        <div class="tile__foot trend-footer">
+          <span class="trend-score">${valueText}</span>
+          <span class="trend-count">${deltaText}</span>
+        </div>
+        <div class="tile__meta trend-meta">
+          <span>${trendText}</span>
+          <span>${updatedText}</span>
+        </div>
+      </div>
+    `;
   }
 
   function toggleInsufficientOverlays(){
@@ -1018,6 +1225,18 @@ function initCorporatePage(){
         renderAll();
       });
     }
+    if (evt.key === 'spa2099_mode' || evt.key === 'mode' || evt.key === 'hr:mode') {
+      state.todayMode = readMode();
+      if (state.rangeKey === 'today') {
+        loadKpiTodayData().then(() => {
+          try {
+            renderFatigueTodayCard();
+          } catch (err) {
+            devError('KPI:Fatigue render failed', err);
+          }
+        });
+      }
+    }
   }
 
   function syncEventTeamSelection(){
@@ -1234,6 +1453,15 @@ function initCorporatePage(){
       btn.setAttribute('aria-pressed', String(active));
     });
   }
+
+  window.refreshCorporatePage = async function refreshCorporatePage(){
+    try {
+      await loadMetrics();
+      renderAll();
+    } catch (err) {
+      devError('Corporate refresh failed', err);
+    }
+  };
 }
 
 function renderKpis(kpi, delta={}, n){
