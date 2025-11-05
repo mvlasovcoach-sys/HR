@@ -1,7 +1,8 @@
-/* Единый вид на всех страницах */
 .toolbar-meta-row{margin-top:4px;display:flex;align-items:center;justify-content:flex-end}
-.toolbar-meta-row .asof{height:36px;display:flex;align-items:center;gap:8px;
+.toolbar-meta-row .asof{
+  height:36px;display:flex;align-items:center;gap:8px;
   font-family:var(--font-ui, inherit);font-variant-numeric:tabular-nums;
   font-size:12px;line-height:18px;color:rgba(255,255,255,.64);
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale
+}
 .toolbar-meta-row .asof [aria-hidden]{opacity:.85}
