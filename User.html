@@ -9,7 +9,7 @@
 <!-- Unified tokens / toolbar baseline -->
 <link rel="stylesheet" href="./assets/css/tokens/base.css?v=2025-10-26">
 <link rel="stylesheet" href="./assets/css/toolbar.css?v=2025-11-02-01">
-<link rel="stylesheet" href="assets/css/ui-meta.css">
+<link rel="stylesheet" href="assets/css/ui-subtoolbar.css">
 
 <!-- Brand tokens & shared accents -->
 <link rel="stylesheet" href="./shared/brand.tokens.css?v=2025-10-26">
@@ -41,7 +41,7 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
-<script src="assets/js/ui-asof-live.js" defer></script>
+<script src="assets/js/asof.js" defer></script>
 <script type="module" src="./assets/js/stores/modeStore.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/components/Toolbar.js?v=2025-11-02-01"></script>
 <script type="module" src="./assets/js/pages/user.js?v=2025.10.19-05"></script>
@@ -50,11 +50,14 @@
     <nav id="side-nav" class="sidebar"></nav>
   <main class="main page-wrap">
     <div id="toolbar" data-toolbar-root></div>
-    <!-- BEGIN toolbar-meta -->
-    <div class="toolbar-meta-row">
-      <div class="asof"><span aria-hidden>🗓</span><time data-asof datetime=""></time></div>
+    <!-- BEGIN subtoolbar -->
+    <div class="subtoolbar mt-1">
+      <div class="subtoolbar__left"><!-- page slot (например, Team на Corporate) --></div>
+      <div class="subtoolbar__right">
+        <time class="subtoolbar__asof" data-asof datetime=""></time>
+      </div>
     </div>
-    <!-- END toolbar-meta -->
+    <!-- END subtoolbar -->
     <div id="page-content">
       <div id="global-caption"></div>
       <section id="wellness-root" class="wellness-grid" aria-live="polite">
