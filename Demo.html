@@ -8,6 +8,7 @@
 
 <!-- Unified tokens / toolbar baseline -->
 <link rel="stylesheet" href="./assets/css/tokens/base.css?v=2025-10-26">
+<link rel="stylesheet" href="assets/css/ui-meta.css">
 <!-- Google Fonts: Inter Variable -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,6 +67,7 @@
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/exporter.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/demo.utils.js?v=2025.10.19-05"></script>
+<script src="assets/js/ui-asof-live.js" defer></script>
 <script type="module" src="./assets/js/modules/components/DemoToolbar/index.js"></script>
 <script type="module" src="./assets/js/stores/modeStore.js?v=2025.10.19-05"></script>
 <script type="module" src="./assets/js/demo.js?v=2025.10.19-05"></script>
@@ -76,6 +78,11 @@
     <header class="page-header">
       <demo-toolbar id="demo-toolbar"></demo-toolbar>
     </header>
+    <!-- BEGIN toolbar-meta -->
+    <div class="toolbar-meta-row">
+      <div class="asof"><span aria-hidden>🗓</span><time data-asof datetime=""></time></div>
+    </div>
+    <!-- END toolbar-meta -->
 
     <section class="scenario-badge">
       <span class="badge badge--demo">DEMO • AURORA DEEPWATER PLATFORM • 100 STAFF • 24/7</span>

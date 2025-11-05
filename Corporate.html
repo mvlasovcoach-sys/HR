@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/toolbar.css?v=2025-11-02-1">
 <link rel="stylesheet" href="assets/css/filters.css?v=2025-11-02-4">
+<link rel="stylesheet" href="assets/css/ui-meta.css">
 
 <!-- Brand tokens & shared accents -->
 <link rel="stylesheet" href="./shared/brand.tokens.css?v=2025-10-26">
@@ -65,7 +66,7 @@
 <script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
 <script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/meta-asof.js?v=2025-11-05-1"></script>
+<script src="assets/js/ui-asof-live.js" defer></script>
 </head><body data-variant="demo" data-page="corporate">
 <div class="page">
     <nav id="side-nav" class="sidebar"></nav>
@@ -85,18 +86,12 @@
         </div>
       </header>
       <div id="toolbar"></div>
-      <!-- BEGIN meta-row under toolbar -->
-      <div id="meta-row" class="mt-1 flex items-center justify-between">
-        <div id="meta-team-slot"></div>
-
-        <div id="meta-asof" class="h-9 flex items-center text-xs text-muted-foreground/80" role="note" aria-label="Data time">
-          <span class="inline-flex items-center gap-2">
-            <span aria-hidden>🗓</span>
-            <time id="meta-asof-time" datetime="2025-11-05T20:25:00+01:00">05 Nov 2025 · 20:25 CET</time>
-          </span>
-        </div>
+      <!-- BEGIN toolbar-meta -->
+      <div class="toolbar-meta-row">
+        <div data-team-slot></div>
+        <div class="asof"><span aria-hidden>🗓</span><time data-asof datetime=""></time></div>
       </div>
-      <!-- END meta-row under toolbar -->
+      <!-- END toolbar-meta -->
       <div id="filters-bar"></div>
       <div id="page-content">
         <div id="global-caption"></div>
