@@ -59,9 +59,12 @@ export function exportCurrentView(){
   });
 }
 
-export function renderToolbar(options = {}) {
-  const { mount, title, mode, onModeChange, onInfo } = options;
-  const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
+function resolveHost(mount) {
+  if (!mount) return null;
+  return typeof mount === 'string' ? document.querySelector(mount) : mount;
+}
+
+function cleanupHost(host) {
   if (!host) return;
   if (host.__onDutyBadgeController) {
     host.__onDutyBadgeController.destroy?.();
@@ -71,32 +74,38 @@ export function renderToolbar(options = {}) {
     host.__cetClockController.destroy?.();
     host.__cetClockController = null;
   }
-  const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
-  const controls = options?.controls || {};
+}
+
+function normaliseOptions(options = {}) {
+  const host = resolveHost(options.mount);
+  if (!host) return null;
+
+  cleanupHost(host);
+
+  const resolvedMode = (options.mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+  const controls = options.controls || {};
   const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
     ? controls.ranges
     : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
   const showRanges = controls?.showRanges !== false;
   const showTeam = controls?.showTeam !== false;
   const showDates = controls?.showDates !== false;
+  const showCompare = controls?.showCompare !== false;
   const showOnDutyBadge = showTeam && FF_DEMO_ONDUTY_BADGE;
-  host.innerHTML = `
-  <div class="toolbar">
-    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
-      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
-    </div>
-    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
-      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
-      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
-    </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div><span id="onDutyBadge" class="pill" aria-live="polite"></span><span id="clockCET" class="pill" aria-live="polite"></span>` : ''}</div>
-    <div id="tb-dates"${showDates ? '' : ' hidden'}>
-      <div class="field" data-date-slot="start"></div>
-      <div class="field" data-date-slot="end"></div>
-    </div>
-    <div id="tb-compare" data-compare-slot></div>
-  </div>`;
 
+  return {
+    host,
+    resolvedMode,
+    ranges,
+    showRanges,
+    showTeam,
+    showDates,
+    showCompare,
+    showOnDutyBadge
+  };
+}
+
+function applyHeader({ title, onInfo }) {
   const pageHeader = document.querySelector('.page-header');
   const headerTitle = pageHeader?.querySelector('.page-title');
   if (headerTitle && title) {
@@ -119,6 +128,54 @@ export function renderToolbar(options = {}) {
     exportBtn.dataset.bound = 'true';
     exportBtn.addEventListener('click', exportCurrentView);
   }
+}
+
+export function renderToolbar(options = {}) {
+  const variant = String(options?.variant || '').toLowerCase();
+  if (variant === 'corporate') {
+    renderCorporateToolbar(options);
+  } else {
+    renderLegacyToolbar(options);
+  }
+}
+
+function renderLegacyToolbar(options = {}) {
+  const normalised = normaliseOptions(options);
+  if (!normalised) return;
+
+  const {
+    host,
+    resolvedMode,
+    ranges,
+    showRanges,
+    showTeam,
+    showDates,
+    showCompare,
+    showOnDutyBadge
+  } = normalised;
+
+  const teamContent = showTeam
+    ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}`
+    : '';
+
+  host.innerHTML = `
+  <div class="toolbar">
+    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
+      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
+    </div>
+    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
+      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'DEMO'}">Demo</button>
+      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'LIVE'}">Live</button>
+    </div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${teamContent}</div>
+    <div id="tb-dates"${showDates ? '' : ' hidden'}>
+      <div class="field" data-date-slot="start"></div>
+      <div class="field" data-date-slot="end"></div>
+    </div>
+    <div id="tb-compare"${showCompare ? '' : ' hidden'} data-compare-slot></div>
+  </div>`;
+
+  applyHeader(options);
 
   const demo = host.querySelector('#btnModeDemo');
   const live = host.querySelector('#btnModeLive');
@@ -127,10 +184,113 @@ export function renderToolbar(options = {}) {
     quickHost.hidden = true;
     quickHost.setAttribute('aria-hidden', 'true');
   }
+
   const teamHost = host.querySelector('#tb-team');
   if (teamHost && !showTeam) {
     teamHost.setAttribute('aria-hidden', 'true');
   }
+
+  const datesHost = host.querySelector('#tb-dates');
+  if (datesHost && !showDates) {
+    datesHost.setAttribute('aria-hidden', 'true');
+  }
+
+  const toolbarEl = host.querySelector('.toolbar');
+  if (toolbarEl && datesHost) {
+    toolbarEl.appendChild(datesHost);
+  }
+
+  const badgeElement = showOnDutyBadge ? host.querySelector('#tb-on-duty') : null;
+  const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
+  host.__onDutyBadgeController = badgeController;
+  host.__cetClockController = null;
+
+  const compareSlot = host.querySelector('#tb-compare');
+  if (compareSlot) {
+    if (!showCompare) {
+      compareSlot.hidden = true;
+      compareSlot.setAttribute('aria-hidden', 'true');
+    } else {
+      compareSlot.hidden = false;
+      compareSlot.removeAttribute('aria-hidden');
+      compareSlot.innerHTML = '';
+    }
+  }
+
+  const updateSelected = value => {
+    const next = value === 'LIVE' ? 'LIVE' : 'DEMO';
+    if (demo) demo.setAttribute('aria-selected', String(next === 'DEMO'));
+    if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
+  };
+
+  if (demo) {
+    demo.addEventListener('click', () => {
+      updateSelected('DEMO');
+      badgeController?.setMode?.('DEMO');
+      options?.onModeChange?.('DEMO');
+    });
+  }
+
+  if (live) {
+    live.addEventListener('click', () => {
+      updateSelected('LIVE');
+      badgeController?.setMode?.('LIVE');
+      options?.onModeChange?.('LIVE');
+    });
+  }
+}
+
+function renderCorporateToolbar(options = {}) {
+  const normalised = normaliseOptions(options);
+  if (!normalised) return;
+
+  const {
+    host,
+    resolvedMode,
+    ranges,
+    showRanges,
+    showTeam,
+    showDates,
+    showCompare,
+    showOnDutyBadge
+  } = normalised;
+
+  const teamContent = showTeam
+    ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="onDutyBadge" class="pill" aria-live="polite"></span>' : ''}<span id="clockCET" class="pill" aria-live="polite"></span>`
+    : '';
+
+  host.innerHTML = `
+  <div class="toolbar toolbar--corporate">
+    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
+      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
+    </div>
+    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
+      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'DEMO'}">Demo</button>
+      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'LIVE'}">Live</button>
+    </div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${teamContent}</div>
+    <div id="tb-dates"${showDates ? '' : ' hidden'}>
+      <div class="field" data-date-slot="start"></div>
+      <div class="field" data-date-slot="end"></div>
+    </div>
+    <div id="tb-compare"${showCompare ? '' : ' hidden'} data-compare-slot></div>
+  </div>`;
+
+  applyHeader(options);
+
+  const demo = host.querySelector('#btnModeDemo');
+  const live = host.querySelector('#btnModeLive');
+  const quickHost = host.querySelector('#tb-quick');
+  if (quickHost && !showRanges) {
+    quickHost.hidden = true;
+    quickHost.setAttribute('aria-hidden', 'true');
+  }
+
+  const teamHost = host.querySelector('#tb-team');
+  if (teamHost && !showTeam) {
+    teamHost.setAttribute('aria-hidden', 'true');
+  }
+
   const datesHost = host.querySelector('#tb-dates');
   if (datesHost && !showDates) {
     datesHost.setAttribute('aria-hidden', 'true');
@@ -145,14 +305,19 @@ export function renderToolbar(options = {}) {
   const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
   const clockElement = host.querySelector('#clockCET');
   const clockController = clockElement ? mountCETClock(clockElement) : null;
-  if (host) {
-    host.__onDutyBadgeController = badgeController;
-    host.__cetClockController = clockController;
-  }
+  host.__onDutyBadgeController = badgeController;
+  host.__cetClockController = clockController;
 
   const compareSlot = host.querySelector('#tb-compare');
   if (compareSlot) {
-    compareSlot.innerHTML = '';
+    if (!showCompare) {
+      compareSlot.hidden = true;
+      compareSlot.setAttribute('aria-hidden', 'true');
+    } else {
+      compareSlot.hidden = false;
+      compareSlot.removeAttribute('aria-hidden');
+      compareSlot.innerHTML = '';
+    }
   }
 
   const updateSelected = value => {
@@ -165,14 +330,15 @@ export function renderToolbar(options = {}) {
     demo.addEventListener('click', () => {
       updateSelected('DEMO');
       badgeController?.setMode?.('DEMO');
-      onModeChange?.('DEMO');
+      options?.onModeChange?.('DEMO');
     });
   }
+
   if (live) {
     live.addEventListener('click', () => {
       updateSelected('LIVE');
       badgeController?.setMode?.('LIVE');
-      onModeChange?.('LIVE');
+      options?.onModeChange?.('LIVE');
     });
   }
 }

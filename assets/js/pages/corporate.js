@@ -22,6 +22,7 @@ async function initPage(){
     mount: document.getElementById('toolbar'),
     title: 'Corporate',
     mode: ModeStore.mode,
+    variant: 'corporate',
     onModeChange: m => applyMode(m),
     controls: {
       ranges: ['Today','7 Days','Month to date','Quarter to date','Year to date'],
