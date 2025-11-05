@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { resolveTeamKey, type TeamKey } from '@/demo/onDuty.utils';
 import { sampleSize, demoCoverage } from '@/demo/sample.utils';
 import { FF_DEMO_ONDUTY_BADGE } from '@/config/flags';
+import CETClock from './CETClock';
 import '@/styles/pill.css';
 
 const STORAGE_KEY = 'hr:team';
@@ -27,7 +28,7 @@ function resolveActiveTeam(teamKey?: string | null): TeamKey {
 
 export default function OnDutyBadge({ teamKey }: { teamKey?: string | null }) {
   if (!FF_DEMO_ONDUTY_BADGE) {
-    return null;
+    return <CETClock />;
   }
 
   const [text, setText] = useState('—');
@@ -68,5 +69,10 @@ export default function OnDutyBadge({ teamKey }: { teamKey?: string | null }) {
     };
   }, [teamKey]);
 
-  return <div className="pill ml-2">{text}</div>;
+  return (
+    <>
+      <div className="pill ml-2">{text}</div>
+      <CETClock />
+    </>
+  );
 }
