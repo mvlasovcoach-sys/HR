@@ -45,6 +45,18 @@
   #corp-kpis .panel__meta,
   #corp-kpis .subhead,
   #corp-kpis [data-role="panel-meta"] { display: none !important; }
+
+  /* Today fatigue card host */
+  #fatigue-today-card { margin-top: 16px; }
+  #fatigue-today-card.is-hidden { display: none !important; }
+  #fatigue-today-card .trend-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: #62707f;
+    margin-top: 0.5rem;
+  }
 </style>
 <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 <script type="module" src="./assets/js/utils/env.js?v=2025-11-02-1"></script>
@@ -103,6 +115,7 @@
       <div class="panel__head" data-i18n="section.corporateOverview">Overview KPIs</div>
       <!-- KPI BLOCK START -->
       <section class="kpi-cards kpi-cards--compact" id="kpi"></section>
+      <div id="fatigue-today-card" class="trend-card-host is-hidden" aria-live="polite"></div>
       <!-- KPI BLOCK END -->
       <div id="corp-kpi-grid" class="grid grid-4" data-legacy-kpi></div>
     </section>
