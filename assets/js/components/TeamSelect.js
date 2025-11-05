@@ -4,8 +4,8 @@ export function renderTeamSelect({ mount, options = [], value = [], onChange }){
   const selected = Array.isArray(value) ? value : [];
   host.innerHTML = `
     <div class="filters-row">
-      <label class="filters-label" for="teamFilter">Team</label>
-      <select id="teamFilter" class="filters-select" multiple>
+      <label class="filters-label" for="teamSelect">Team</label>
+      <select id="teamSelect" class="filters-select" multiple>
         ${options.map(option => {
           const id = String(option?.id ?? '');
           const label = option?.label ?? id;
@@ -14,7 +14,7 @@ export function renderTeamSelect({ mount, options = [], value = [], onChange }){
         }).join('')}
       </select>
     </div>`;
-  const el = host.querySelector('#teamFilter');
+  const el = host.querySelector('#teamSelect');
   if (!el) return;
   el.addEventListener('change', () => {
     const vals = Array.from(el.selectedOptions || []).map(option => option.value);

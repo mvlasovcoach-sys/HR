@@ -25,7 +25,7 @@
   let labelNode = null;
 
   async function init(){
-    const direct = document.getElementById('teamFilter') || document.getElementById('teamSelect');
+    const direct = document.getElementById('teamSelect');
     const fallback = document.getElementById('team-filter');
 
     if (direct && direct.tagName === 'SELECT') {
@@ -120,11 +120,11 @@
     mount.innerHTML = '';
     const label = document.createElement('label');
     label.className = 'team-filter__label';
-    label.setAttribute('for', 'teamFilter');
+    label.setAttribute('for', 'team-filter-select');
     label.textContent = window.I18N?.t('label.teamFilter') || 'Team';
 
     selectEl = document.createElement('select');
-    selectEl.id = 'teamFilter';
+    selectEl.id = 'team-filter-select';
     selectEl.className = 'team-filter__select';
     selectEl.innerHTML = '';
 
@@ -156,7 +156,6 @@
       labelNode.textContent = labelText;
     }
 
-    selectEl.id = 'teamFilter';
     selectEl.setAttribute('aria-label', labelText);
 
     const fragment = document.createDocumentFragment();

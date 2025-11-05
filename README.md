@@ -13,12 +13,6 @@ Static prototype for the SPA2099 HR Health experience, including leadership summ
 
 The mock stream and dashboards will load automatically once served from a local web server.
 
-## Feature flags
-
-The project ships with a minimal set of boolean flags that are compiled into the `assets/js/modules/config/` bundle during the TypeScript build step.
-
-* `FF_DEMO_ONDUTY_BADGE` — controls rendering of the DEMO toolbar badge that shows the expected on-duty headcount, sample size and the accompanying CET clock. Set to `false` to revert to the legacy toolbar without the pill indicators.
-
 ## Corporate overview demo
 
 The Corporate leadership experience reuses the shared UI token + component system introduced for Wellness.

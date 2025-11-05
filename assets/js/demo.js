@@ -1,7 +1,6 @@
 import { getMode, getSelectedTeams, getDateRange } from './filters/state.js';
 import { loadDataset } from './services/dataSource.js';
 import { appStore as moduleAppStore } from './modules/store/appState.js';
-import { expectedOnDuty, TEAM_KEYS, isNightCET } from './modules/demo/onDuty.utils.js';
 
 const globalStore = typeof window !== 'undefined' ? window.appStore : undefined;
 let fallbackStoreState = { mode: 'DEMO', teams: ['*'], range: { preset: '7d' } };
@@ -30,7 +29,7 @@ if (typeof window !== 'undefined' && !window.appStore) {
   const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
   const heroEl = document.getElementById('demo-hero');
 
-  const state = { data: null, version: null, headcount: 0, rangePreset: '1d' };
+  const state = { data: null, version: null, headcount: 0 };
   const EXPORT_LABELS = {
     page: '',
     toolbar: '',
@@ -69,11 +68,9 @@ if (typeof window !== 'undefined' && !window.appStore) {
       site: document.getElementById('card-site'),
       headcount: document.getElementById('card-headcount'),
       rotation: document.getElementById('card-rotation'),
-    shifts: document.getElementById('card-shifts')
+      shifts: document.getElementById('card-shifts')
     },
     orgTable: document.getElementById('org-table'),
-    headcount: document.getElementById('headcount-table'),
-    headcountSection: document.getElementById('demo-headcount'),
     genderOverall: document.getElementById('chart-gender-overall'),
     ageOverall: document.getElementById('chart-age-overall'),
     byDept: document.getElementById('chart-by-dept'),
@@ -100,27 +97,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
 
   const HERO_SRC = './assets/img/demo-hero-offshore.svg';
 
-  const HEADCOUNT_DAY_REF = new Date('2024-01-01T09:00:00Z'); // 10:00 CET
-  const HEADCOUNT_NIGHT_REF = new Date('2024-01-01T21:00:00Z'); // 22:00 CET
-
-  const HEADCOUNT_COLUMNS = [
-    { key: 'overall', labelKey: 'demo.headcountTable.overall', fallback: 'Overall', team: TEAM_KEYS.ALL },
-    { key: 'production', labelKey: 'demo.headcountTable.production', fallback: 'Production', team: TEAM_KEYS.PROD },
-    { key: 'maintenance', labelKey: 'demo.headcountTable.maintenance', fallback: 'Maintenance', team: TEAM_KEYS.MAINT },
-    { key: 'lab', labelKey: 'demo.headcountTable.lab', fallback: 'Lab', team: TEAM_KEYS.LAB },
-    { key: 'daySupport', labelKey: 'demo.headcountTable.daySupport', fallback: 'Day support', team: TEAM_KEYS.DAY_SUPPORT }
-  ];
-
-  const HEADCOUNT_ROWS = [
-    { key: 'morning', labelKey: 'demo.headcountTable.morning', fallback: 'Morning', type: 'day' },
-    { key: 'day', labelKey: 'demo.headcountTable.day', fallback: 'Day', type: 'day' },
-    { key: 'evening', labelKey: 'demo.headcountTable.evening', fallback: 'Evening', type: 'day' },
-    { key: 'night', labelKey: 'demo.headcountTable.night', fallback: 'Night', type: 'night' }
-  ];
-
-  const HEADCOUNT_DAY_COUNTS = computeHeadcountValues(HEADCOUNT_DAY_REF);
-  const HEADCOUNT_NIGHT_COUNTS = computeHeadcountValues(HEADCOUNT_NIGHT_REF);
-
   const getLang = () => window.I18N?.getLang?.() || 'en';
 
   function formatInteger(value){
@@ -134,29 +110,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
     if (!Number.isFinite(num)) return '–';
     const ratio = num / 100;
     return new Intl.NumberFormat(getLang(), {style: 'percent', maximumFractionDigits: fractionDigits}).format(ratio);
-  }
-
-  function computeHeadcountValues(at){
-    return {
-      overall: expectedOnDuty(TEAM_KEYS.ALL, at),
-      production: expectedOnDuty(TEAM_KEYS.PROD, at),
-      maintenance: expectedOnDuty(TEAM_KEYS.MAINT, at),
-      lab: expectedOnDuty(TEAM_KEYS.LAB, at),
-      daySupport: expectedOnDuty(TEAM_KEYS.DAY_SUPPORT, at)
-    };
-  }
-
-  function resolveHeadcountSlot(now){
-    if (isNightCET(now)) {
-      return 'night';
-    }
-    const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', hour: '2-digit', hour12: false });
-    const parts = formatter.formatToParts(now);
-    const hourPart = parts.find(part => part.type === 'hour');
-    const hour = Number(hourPart?.value || '0');
-    if (hour < 12) return 'morning';
-    if (hour < 16) return 'day';
-    return 'evening';
   }
 
   init();
@@ -219,11 +172,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
         applyToolbarLang(initialLang);
       }
     }
-    document.addEventListener('demo:range', event => {
-      const range = String(event?.detail?.range || '').toLowerCase();
-      state.rangePreset = range || '1d';
-      renderHeadcountTable();
-    });
     document.addEventListener('app:periodChanged', handlePeriodChanged);
     document.addEventListener('app:thresholdChanged', handleThresholdChanged);
     document.addEventListener('app:scenarioChanged', handleScenarioChanged);
@@ -351,7 +299,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
     const mode = getMode();
     const teams = getSelectedTeams();
     const range = getDateRange();
-    state.rangePreset = String(range?.preset || '').toLowerCase() || (range?.start ? 'custom' : '1d');
 
     const [org, engagement, stress, fatigue] = await Promise.all([
       loadDataset('org', { mode, teams, range }),
@@ -409,13 +356,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
     if (els.orgTable) {
       els.orgTable.removeAttribute('aria-busy');
       els.orgTable.innerHTML = `<p class="demo-empty">${escapeHtml(message)}</p>`;
-    }
-    if (els.headcountSection) {
-      els.headcountSection.hidden = true;
-      els.headcountSection.setAttribute('aria-hidden', 'true');
-    }
-    if (els.headcount) {
-      els.headcount.innerHTML = '';
     }
     if (els.shiftGrid) {
       els.shiftGrid.removeAttribute('aria-busy');
@@ -547,7 +487,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
     renderBadge(data.site, headcount);
     renderHero(data.site);
     renderOverviewCards(data, headcount, departments);
-    renderHeadcountTable();
     renderOrgTable(departments);
     renderShiftGrid(departments);
     updateSourceMeta(headcount);
@@ -669,39 +608,6 @@ if (typeof window !== 'undefined' && !window.appStore) {
       meta: shiftMetaParts.join(' · '),
       aria: `${getText('demo.shifts', 'Shifts')}: ${shiftLabel}${shiftMeta ? `. ${shiftMeta}` : ''}`
     });
-  }
-
-  function renderHeadcountTable(){
-    const container = els.headcount;
-    const section = els.headcountSection;
-    if (!container || !section) return;
-
-    const preset = String(state.rangePreset || '').toLowerCase();
-    const isToday = !preset || preset === '1d' || preset === 'today';
-    if (!isToday) {
-      section.hidden = true;
-      section.setAttribute('aria-hidden', 'true');
-      container.innerHTML = '';
-      return;
-    }
-
-    section.hidden = false;
-    section.removeAttribute('aria-hidden');
-
-    const currentSlot = resolveHeadcountSlot(new Date());
-    const headerCells = HEADCOUNT_COLUMNS.map(column => `<th scope="col">${escapeHtml(getText(column.labelKey, column.fallback))}</th>`).join('');
-    const rows = HEADCOUNT_ROWS.map(row => {
-      const counts = row.type === 'night' ? HEADCOUNT_NIGHT_COUNTS : HEADCOUNT_DAY_COUNTS;
-      const label = getText(row.labelKey, row.fallback);
-      const isActive = row.key === currentSlot;
-      const cells = HEADCOUNT_COLUMNS.map(column => {
-        const value = counts[column.key] ?? 0;
-        return `<td>${escapeHtml(formatInteger(value))}</td>`;
-      }).join('');
-      return `<tr class="${isActive ? 'is-current' : ''}"><th scope="row">${escapeHtml(label)}</th>${cells}</tr>`;
-    }).join('');
-
-    container.innerHTML = `<table class="demo-headcount-table"><thead><tr><th scope="col">${escapeHtml(getText('demo.headcountTable.shift', 'Shift'))}</th>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function renderCard(card, config, options={}){
