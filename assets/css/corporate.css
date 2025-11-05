@@ -180,8 +180,8 @@ body[data-page="corporate"] #meta-asof {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  font-size: 12px;
-  line-height: 18px;
+  font-size: var(--font-body-sm, 14px);
+  line-height: 20px;
   color: rgba(255,255,255,0.64);
 }
 body[data-page="corporate"] #meta-asof [aria-hidden] {
