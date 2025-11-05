@@ -1,47 +1,3 @@
-import { FF_DEMO_ONDUTY_BADGE } from '../modules/config/flags.js';
-import { sampleSize, demoCoverage, coverageFromData } from '../modules/demo/sample.utils.js';
-import { resolveTeamKey } from '../modules/demo/onDuty.utils.js';
-import { appStore } from '../modules/store/appState.js';
-
-const TEAM_STORAGE_KEY = 'hr:team';
-const TEAM_LIST_STORAGE_KEY = 'hr:teams';
-const BADGE_REFRESH_MS = 60_000;
-const BADGE_PLACEHOLDER = '—';
-const CLOCK_REFRESH_MS = 60_000;
-const CET_FORMATTER = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'Europe/Amsterdam',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-});
-
-function formatTemplate(template, vars = {}) {
-  return template.replace(/\{(\w+)\}/g, (_, key) => {
-    if (Object.prototype.hasOwnProperty.call(vars, key)) {
-      const value = vars[key];
-      return value === undefined || value === null ? `{${key}}` : String(value);
-    }
-    return `{${key}}`;
-  });
-}
-
-function translate(key, fallback, vars = {}) {
-  try {
-    if (typeof window !== 'undefined' && window.I18N && typeof window.I18N.t === 'function') {
-      const translated = window.I18N.t(key, vars);
-      if (translated && translated !== key) {
-        return translated;
-      }
-    }
-  } catch (err) {
-    /* ignore translation failures */
-  }
-  return formatTemplate(fallback, vars);
-}
-
 export function exportCurrentView(){
   const payload = window.__currentView || {};
   const json = JSON.stringify(payload, null, 2);
@@ -59,163 +15,64 @@ export function exportCurrentView(){
   });
 }
 
-function resolveHost(mount) {
-  if (!mount) return null;
-  return typeof mount === 'string' ? document.querySelector(mount) : mount;
-}
-
-function cleanupHost(host) {
-  if (!host) return;
-  if (host.__onDutyBadgeController) {
-    host.__onDutyBadgeController.destroy?.();
-    host.__onDutyBadgeController = null;
-  }
-  if (host.__cetClockController) {
-    host.__cetClockController.destroy?.();
-    host.__cetClockController = null;
-  }
-}
-
-function normaliseOptions(options = {}) {
-  const host = resolveHost(options.mount);
-  if (!host) return null;
-
-  cleanupHost(host);
-
-  const resolvedMode = (options.mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
-  const controls = options.controls || {};
-  const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
-    ? controls.ranges
-    : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
-  const showRanges = controls?.showRanges !== false;
-  const showTeam = controls?.showTeam !== false;
-  const showDates = controls?.showDates !== false;
-  const showCompare = controls?.showCompare !== false;
-  const showOnDutyBadge = showTeam && FF_DEMO_ONDUTY_BADGE;
-
-  return {
-    host,
-    resolvedMode,
-    ranges,
-    showRanges,
-    showTeam,
-    showDates,
-    showCompare,
-    showOnDutyBadge
-  };
-}
-
-function applyHeader({ title, onInfo }) {
-  const pageHeader = document.querySelector('.page-header');
-  const headerTitle = pageHeader?.querySelector('.page-title');
-  if (headerTitle && title) {
-    headerTitle.textContent = title;
-  }
-
-  const infoBtn = document.getElementById('page-info');
-  if (infoBtn) {
-    infoBtn.type = 'button';
-    infoBtn.setAttribute('aria-label', 'About this page');
-    infoBtn.hidden = false;
-    infoBtn.onclick = typeof onInfo === 'function' ? onInfo : null;
-  }
-
-  const headerLangSwitch = document.querySelector('#header-actions .lang-switch');
-  setupLangSwitch(headerLangSwitch);
-
-  const exportBtn = document.getElementById('tb-export');
-  if (exportBtn && exportBtn.dataset.bound !== 'true') {
-    exportBtn.dataset.bound = 'true';
-    exportBtn.addEventListener('click', exportCurrentView);
-  }
-}
-
 export function renderToolbar(options = {}) {
-  const variant = String(options?.variant || '').toLowerCase();
-  if (variant === 'corporate') {
-    renderCorporateToolbar(options);
-  } else {
-    renderLegacyToolbar(options);
-  }
-}
-
-function renderLegacyToolbar(options = {}) {
-  const normalised = normaliseOptions(options);
-  if (!normalised) return;
-
-  const {
-    host,
-    resolvedMode,
-    ranges,
-    showRanges,
-    showTeam,
-    showDates,
-    showCompare,
-    showOnDutyBadge
-  } = normalised;
-
-  const teamContent = showTeam
-    ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}`
-    : '';
-
+  const { mount, title, mode, onModeChange, onInfo } = options;
+  const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
+  if (!host) return;
+  const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+  const ranges = (Array.isArray(options?.controls?.ranges) && options.controls.ranges.length)
+    ? options.controls.ranges
+    : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
+  const htmlRanges = ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('');
   host.innerHTML = `
   <div class="toolbar">
-    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
-      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
+    <div class="toolbar-row">
+      <div class="toolbar-left">
+        <div class="title">
+          <h1 class="page-title">${title || ''}</h1>
+          <button class="info" type="button" aria-label="About this page">i</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="lang-stack">
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" data-lang="en">EN</button>
+            <button type="button" data-lang="nl">NL</button>
+            <button type="button" data-lang="ru">RU</button>
+          </div>
+          <button id="btnExport" class="export" type="button">Export</button>
+        </div>
+      </div>
     </div>
-    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
-      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'DEMO'}">Demo</button>
-      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'LIVE'}">Live</button>
+    <div class="toolbar-row">
+      <div class="toolbar-left">
+        <div class="seg-group" id="rangeSwitch">${htmlRanges}</div>
+        <div id="modeSwitch" class="seg-group" role="tablist" aria-label="Mode">
+          <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
+          <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
+        </div>
+        <div id="teamSelect" class="team-slot"></div>
+        <div id="dateStart" class="toolbar-date-slot" data-date-slot="start">
+          <span class="toolbar-date-slot__label" id="dc-start-label">Start</span>
+          <input id="dc-start" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-start-label">
+        </div>
+        <div id="dateEnd" class="toolbar-date-slot" data-date-slot="end">
+          <span class="toolbar-date-slot__label" id="dc-end-label">End</span>
+          <input id="dc-end" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-end-label">
+        </div>
+        <label class="compare" data-compare-slot>
+          <input type="checkbox" id="compareChk">
+          <span class="compare__label">Compare</span>
+        </label>
+      </div>
     </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${teamContent}</div>
-    <div id="tb-dates"${showDates ? '' : ' hidden'}>
-      <div class="field" data-date-slot="start"></div>
-      <div class="field" data-date-slot="end"></div>
-    </div>
-    <div id="tb-compare"${showCompare ? '' : ' hidden'} data-compare-slot></div>
   </div>`;
-
-  applyHeader(options);
 
   const demo = host.querySelector('#btnModeDemo');
   const live = host.querySelector('#btnModeLive');
-  const quickHost = host.querySelector('#tb-quick');
-  if (quickHost && !showRanges) {
-    quickHost.hidden = true;
-    quickHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const teamHost = host.querySelector('#tb-team');
-  if (teamHost && !showTeam) {
-    teamHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const datesHost = host.querySelector('#tb-dates');
-  if (datesHost && !showDates) {
-    datesHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const toolbarEl = host.querySelector('.toolbar');
-  if (toolbarEl && datesHost) {
-    toolbarEl.appendChild(datesHost);
-  }
-
-  const badgeElement = showOnDutyBadge ? host.querySelector('#tb-on-duty') : null;
-  const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
-  host.__onDutyBadgeController = badgeController;
-  host.__cetClockController = null;
-
-  const compareSlot = host.querySelector('#tb-compare');
-  if (compareSlot) {
-    if (!showCompare) {
-      compareSlot.hidden = true;
-      compareSlot.setAttribute('aria-hidden', 'true');
-    } else {
-      compareSlot.hidden = false;
-      compareSlot.removeAttribute('aria-hidden');
-      compareSlot.innerHTML = '';
-    }
-  }
+  const exportBtn = host.querySelector('#btnExport');
+  const infoBtn = host.querySelector('.title .info');
+  const langSwitch = host.querySelector('.lang-switch');
 
   const updateSelected = value => {
     const next = value === 'LIVE' ? 'LIVE' : 'DEMO';
@@ -223,123 +80,25 @@ function renderLegacyToolbar(options = {}) {
     if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
   };
 
-  if (demo) {
-    demo.addEventListener('click', () => {
-      updateSelected('DEMO');
-      badgeController?.setMode?.('DEMO');
-      options?.onModeChange?.('DEMO');
-    });
-  }
-
-  if (live) {
-    live.addEventListener('click', () => {
-      updateSelected('LIVE');
-      badgeController?.setMode?.('LIVE');
-      options?.onModeChange?.('LIVE');
-    });
-  }
-}
-
-function renderCorporateToolbar(options = {}) {
-  const normalised = normaliseOptions(options);
-  if (!normalised) return;
-
-  const {
-    host,
-    resolvedMode,
-    ranges,
-    showRanges,
-    showTeam,
-    showDates,
-    showCompare,
-    showOnDutyBadge
-  } = normalised;
-
-  const teamContent = showTeam
-    ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="onDutyBadge" class="pill" aria-live="polite"></span>' : ''}<span id="clockCET" class="pill" aria-live="polite"></span>`
-    : '';
-
-  host.innerHTML = `
-  <div class="toolbar toolbar--corporate">
-    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
-      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
-    </div>
-    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
-      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'DEMO'}">Demo</button>
-      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode === 'LIVE'}">Live</button>
-    </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${teamContent}</div>
-    <div id="tb-dates"${showDates ? '' : ' hidden'}>
-      <div class="field" data-date-slot="start"></div>
-      <div class="field" data-date-slot="end"></div>
-    </div>
-    <div id="tb-compare"${showCompare ? '' : ' hidden'} data-compare-slot></div>
-  </div>`;
-
-  applyHeader(options);
-
-  const demo = host.querySelector('#btnModeDemo');
-  const live = host.querySelector('#btnModeLive');
-  const quickHost = host.querySelector('#tb-quick');
-  if (quickHost && !showRanges) {
-    quickHost.hidden = true;
-    quickHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const teamHost = host.querySelector('#tb-team');
-  if (teamHost && !showTeam) {
-    teamHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const datesHost = host.querySelector('#tb-dates');
-  if (datesHost && !showDates) {
-    datesHost.setAttribute('aria-hidden', 'true');
-  }
-
-  const toolbarEl = host.querySelector('.toolbar');
-  if (toolbarEl && datesHost) {
-    toolbarEl.appendChild(datesHost);
-  }
-
-  const badgeElement = showOnDutyBadge ? host.querySelector('#onDutyBadge') : null;
-  const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
-  const clockElement = host.querySelector('#clockCET');
-  const clockController = clockElement ? mountCETClock(clockElement) : null;
-  host.__onDutyBadgeController = badgeController;
-  host.__cetClockController = clockController;
-
-  const compareSlot = host.querySelector('#tb-compare');
-  if (compareSlot) {
-    if (!showCompare) {
-      compareSlot.hidden = true;
-      compareSlot.setAttribute('aria-hidden', 'true');
-    } else {
-      compareSlot.hidden = false;
-      compareSlot.removeAttribute('aria-hidden');
-      compareSlot.innerHTML = '';
-    }
-  }
-
-  const updateSelected = value => {
-    const next = value === 'LIVE' ? 'LIVE' : 'DEMO';
-    if (demo) demo.setAttribute('aria-selected', String(next === 'DEMO'));
-    if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
-  };
+  setupLangSwitch(langSwitch);
 
   if (demo) {
     demo.addEventListener('click', () => {
       updateSelected('DEMO');
-      badgeController?.setMode?.('DEMO');
-      options?.onModeChange?.('DEMO');
+      onModeChange?.('DEMO');
     });
   }
-
   if (live) {
     live.addEventListener('click', () => {
       updateSelected('LIVE');
-      badgeController?.setMode?.('LIVE');
-      options?.onModeChange?.('LIVE');
+      onModeChange?.('LIVE');
     });
+  }
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportCurrentView);
+  }
+  if (infoBtn && typeof onInfo === 'function') {
+    infoBtn.addEventListener('click', onInfo);
   }
 }
 
@@ -374,8 +133,6 @@ function setupLangSwitch(container) {
     };
 
     try {
-      const upperTarget = target.toUpperCase();
-      localStorage.setItem('demo-lang', upperTarget);
       localStorage.setItem('lang', target);
       localStorage.setItem('hr:lang', target);
     } catch (err) {
@@ -400,12 +157,7 @@ function setupLangSwitch(container) {
 
   const saved = (() => {
     try {
-      return normalise(
-        localStorage.getItem('demo-lang')
-        || localStorage.getItem('lang')
-        || localStorage.getItem('hr:lang')
-        || window.I18N?.getLang?.()
-      );
+      return normalise(localStorage.getItem('lang') || localStorage.getItem('hr:lang') || window.I18N?.getLang?.());
     } catch (err) {
       return normalise(window.I18N?.getLang?.());
     }
@@ -430,165 +182,4 @@ function setupLangSwitch(container) {
     updateActive(lang);
     updateLabel();
   });
-}
-
-function readStoredTeam(){
-  try {
-    const primary = localStorage.getItem(TEAM_STORAGE_KEY);
-    if (primary && primary !== 'all') {
-      return primary;
-    }
-    const listRaw = localStorage.getItem(TEAM_LIST_STORAGE_KEY);
-    if (listRaw) {
-      const parsed = JSON.parse(listRaw);
-      if (Array.isArray(parsed) && parsed.length) {
-        return parsed[0];
-      }
-    }
-  } catch (err) {
-    /* storage optional */
-  }
-  return 'all';
-}
-
-function mountCETClock(element){
-  if (!element) {
-    return null;
-  }
-
-  let intervalId = null;
-
-  const update = () => {
-    const now = new Date();
-    const dt = CET_FORMATTER.format(now);
-    element.textContent = translate('toolbar.cet', '{dt} CET', { dt });
-    element.hidden = false;
-  };
-
-  const handleI18n = () => update();
-
-  update();
-
-  if (typeof window !== 'undefined') {
-    intervalId = window.setInterval(update, CLOCK_REFRESH_MS);
-    window.addEventListener('i18n:change', handleI18n);
-    window.addEventListener('i18n:ready', handleI18n);
-  }
-
-  return {
-    destroy() {
-      if (intervalId) {
-        window.clearInterval(intervalId);
-        intervalId = null;
-      }
-      window.removeEventListener('i18n:change', handleI18n);
-      window.removeEventListener('i18n:ready', handleI18n);
-    }
-  };
-}
-
-function mountOnDutyBadge(element, initialMode){
-  if (!element || !FF_DEMO_ONDUTY_BADGE) {
-    return null;
-  }
-
-  let currentMode = initialMode === 'DEMO' ? 'DEMO' : 'LIVE';
-  let intervalId = null;
-  let unsubscribe = null;
-  let cachedSamples = [];
-
-  const coverageProvider = (team, at) => {
-    const ratio = coverageFromData(team, at, cachedSamples);
-    if (typeof ratio === 'number' && Number.isFinite(ratio)) {
-      return ratio;
-    }
-    return demoCoverage(team, at);
-  };
-
-  const update = () => {
-    if (currentMode !== 'DEMO' || !FF_DEMO_ONDUTY_BADGE) {
-      element.textContent = BADGE_PLACEHOLDER;
-      element.hidden = true;
-      return;
-    }
-    const team = resolveTeamKey(readStoredTeam());
-    const now = new Date();
-    const { expected, sample, coveragePct } = sampleSize(team, now, coverageProvider);
-    const onDutyLabel = translate('toolbar.onDuty', 'On duty: {n}', { n: expected });
-    const sampleLabel = expected > 0
-      ? translate('toolbar.sample', 'Sample: {n} ({p}%)', { n: sample, p: coveragePct })
-      : translate('toolbar.sampleNA', 'Sample: —');
-    element.textContent = `${onDutyLabel} • ${sampleLabel}`;
-    element.hidden = false;
-  };
-
-  const startTimer = () => {
-    if (intervalId) {
-      window.clearInterval(intervalId);
-    }
-    intervalId = window.setInterval(update, BADGE_REFRESH_MS);
-  };
-
-  const stopTimer = () => {
-    if (intervalId) {
-      window.clearInterval(intervalId);
-      intervalId = null;
-    }
-  };
-
-  const applyMode = mode => {
-    currentMode = mode === 'DEMO' ? 'DEMO' : 'LIVE';
-    if (currentMode === 'DEMO') {
-      try {
-        appStore?.setMode?.('DEMO');
-        appStore?.loadSamples?.('DEMO').catch(() => {});
-      } catch (err) {
-        /* optional */
-      }
-      update();
-      startTimer();
-    } else {
-      stopTimer();
-      element.textContent = BADGE_PLACEHOLDER;
-      element.hidden = true;
-    }
-  };
-
-  const handleStorage = event => {
-    if (event && event.key === TEAM_STORAGE_KEY) {
-      update();
-    }
-  };
-
-  const handleI18n = () => update();
-
-  const handleSamples = state => {
-    const list = state && Array.isArray(state.samples) ? state.samples : [];
-    cachedSamples = list;
-    if (currentMode === 'DEMO') {
-      update();
-    }
-  };
-
-  if (appStore && typeof appStore.subscribe === 'function') {
-    unsubscribe = appStore.subscribe(handleSamples);
-  }
-
-  window.addEventListener('storage', handleStorage);
-  window.addEventListener('i18n:change', handleI18n);
-  window.addEventListener('i18n:ready', handleI18n);
-  applyMode(currentMode);
-
-  return {
-    setMode: applyMode,
-    destroy() {
-      stopTimer();
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('i18n:change', handleI18n);
-      window.removeEventListener('i18n:ready', handleI18n);
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    }
-  };
 }
