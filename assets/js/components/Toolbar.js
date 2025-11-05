@@ -1,13 +1,13 @@
 import { FF_DEMO_ONDUTY_BADGE } from '../modules/config/flags.js';
-import { sampleSize, demoCoverage } from '../modules/demo/sample.utils.js';
+import { sampleSize, demoCoverage, coverageFromData } from '../modules/demo/sample.utils.js';
 import { resolveTeamKey } from '../modules/demo/onDuty.utils.js';
+import { appStore } from '../modules/store/appState.js';
 
 const TEAM_STORAGE_KEY = 'hr:team';
 const TEAM_LIST_STORAGE_KEY = 'hr:teams';
 const BADGE_REFRESH_MS = 60_000;
 const BADGE_PLACEHOLDER = '—';
 const CLOCK_REFRESH_MS = 60_000;
-const CET_SUFFIX = ' CET';
 const CET_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Amsterdam',
   year: 'numeric',
@@ -17,6 +17,30 @@ const CET_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   minute: '2-digit',
   hour12: false,
 });
+
+function formatTemplate(template, vars = {}) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => {
+    if (Object.prototype.hasOwnProperty.call(vars, key)) {
+      const value = vars[key];
+      return value === undefined || value === null ? `{${key}}` : String(value);
+    }
+    return `{${key}}`;
+  });
+}
+
+function translate(key, fallback, vars = {}) {
+  try {
+    if (typeof window !== 'undefined' && window.I18N && typeof window.I18N.t === 'function') {
+      const translated = window.I18N.t(key, vars);
+      if (translated && translated !== key) {
+        return translated;
+      }
+    }
+  } catch (err) {
+    /* ignore translation failures */
+  }
+  return formatTemplate(fallback, vars);
+}
 
 export function exportCurrentView(){
   const payload = window.__currentView || {};
@@ -65,7 +89,7 @@ export function renderToolbar(options = {}) {
       <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
       <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
     </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}<span id="tb-cet" class="pill ml-2" hidden>—</span>` : ''}</div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden aria-live="polite">—</span>' : ''}<span id="tb-cet" class="pill ml-2" hidden aria-live="polite">—</span>` : ''}</div>
     <div id="tb-dates"${showDates ? '' : ' hidden'}>
       <div class="field" data-date-slot="start"></div>
       <div class="field" data-date-slot="end"></div>
@@ -270,14 +294,19 @@ function mountCETClock(element){
 
   const update = () => {
     const now = new Date();
-    element.textContent = `${CET_FORMATTER.format(now)}${CET_SUFFIX}`;
+    const dt = CET_FORMATTER.format(now);
+    element.textContent = translate('toolbar.cet', '{dt} CET', { dt });
     element.hidden = false;
   };
+
+  const handleI18n = () => update();
 
   update();
 
   if (typeof window !== 'undefined') {
     intervalId = window.setInterval(update, CLOCK_REFRESH_MS);
+    window.addEventListener('i18n:change', handleI18n);
+    window.addEventListener('i18n:ready', handleI18n);
   }
 
   return {
@@ -286,6 +315,8 @@ function mountCETClock(element){
         window.clearInterval(intervalId);
         intervalId = null;
       }
+      window.removeEventListener('i18n:change', handleI18n);
+      window.removeEventListener('i18n:ready', handleI18n);
     }
   };
 }
@@ -297,6 +328,16 @@ function mountOnDutyBadge(element, initialMode){
 
   let currentMode = initialMode === 'DEMO' ? 'DEMO' : 'LIVE';
   let intervalId = null;
+  let unsubscribe = null;
+  let cachedSamples = [];
+
+  const coverageProvider = (team, at) => {
+    const ratio = coverageFromData(team, at, cachedSamples);
+    if (typeof ratio === 'number' && Number.isFinite(ratio)) {
+      return ratio;
+    }
+    return demoCoverage(team, at);
+  };
 
   const update = () => {
     if (currentMode !== 'DEMO' || !FF_DEMO_ONDUTY_BADGE) {
@@ -306,8 +347,12 @@ function mountOnDutyBadge(element, initialMode){
     }
     const team = resolveTeamKey(readStoredTeam());
     const now = new Date();
-    const { expected, sample, coveragePct } = sampleSize(team, now, demoCoverage);
-    element.textContent = `On duty: ${expected} • Sample: ${sample} (${coveragePct}%)`;
+    const { expected, sample, coveragePct } = sampleSize(team, now, coverageProvider);
+    const onDutyLabel = translate('toolbar.onDuty', 'On duty: {n}', { n: expected });
+    const sampleLabel = expected > 0
+      ? translate('toolbar.sample', 'Sample: {n} ({p}%)', { n: sample, p: coveragePct })
+      : translate('toolbar.sampleNA', 'Sample: —');
+    element.textContent = `${onDutyLabel} • ${sampleLabel}`;
     element.hidden = false;
   };
 
@@ -328,6 +373,12 @@ function mountOnDutyBadge(element, initialMode){
   const applyMode = mode => {
     currentMode = mode === 'DEMO' ? 'DEMO' : 'LIVE';
     if (currentMode === 'DEMO') {
+      try {
+        appStore?.setMode?.('DEMO');
+        appStore?.loadSamples?.('DEMO').catch(() => {});
+      } catch (err) {
+        /* optional */
+      }
       update();
       startTimer();
     } else {
@@ -343,7 +394,23 @@ function mountOnDutyBadge(element, initialMode){
     }
   };
 
+  const handleI18n = () => update();
+
+  const handleSamples = state => {
+    const list = state && Array.isArray(state.samples) ? state.samples : [];
+    cachedSamples = list;
+    if (currentMode === 'DEMO') {
+      update();
+    }
+  };
+
+  if (appStore && typeof appStore.subscribe === 'function') {
+    unsubscribe = appStore.subscribe(handleSamples);
+  }
+
   window.addEventListener('storage', handleStorage);
+  window.addEventListener('i18n:change', handleI18n);
+  window.addEventListener('i18n:ready', handleI18n);
   applyMode(currentMode);
 
   return {
@@ -351,6 +418,11 @@ function mountOnDutyBadge(element, initialMode){
     destroy() {
       stopTimer();
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('i18n:change', handleI18n);
+      window.removeEventListener('i18n:ready', handleI18n);
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     }
   };
 }
