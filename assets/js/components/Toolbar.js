@@ -6,6 +6,17 @@ const TEAM_STORAGE_KEY = 'hr:team';
 const TEAM_LIST_STORAGE_KEY = 'hr:teams';
 const BADGE_REFRESH_MS = 60_000;
 const BADGE_PLACEHOLDER = '—';
+const CLOCK_REFRESH_MS = 60_000;
+const CET_SUFFIX = ' CET';
+const CET_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Amsterdam',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
 
 export function exportCurrentView(){
   const payload = window.__currentView || {};
@@ -32,6 +43,10 @@ export function renderToolbar(options = {}) {
     host.__onDutyBadgeController.destroy?.();
     host.__onDutyBadgeController = null;
   }
+  if (host.__cetClockController) {
+    host.__cetClockController.destroy?.();
+    host.__cetClockController = null;
+  }
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
   const controls = options?.controls || {};
   const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
@@ -50,7 +65,7 @@ export function renderToolbar(options = {}) {
       <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
       <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
     </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}` : ''}</div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}<span id="tb-cet" class="pill ml-2" hidden>—</span>` : ''}</div>
     <div id="tb-dates"${showDates ? '' : ' hidden'}>
       <div class="field" data-date-slot="start"></div>
       <div class="field" data-date-slot="end"></div>
@@ -104,8 +119,11 @@ export function renderToolbar(options = {}) {
 
   const badgeElement = showOnDutyBadge ? host.querySelector('#tb-on-duty') : null;
   const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
+  const clockElement = host.querySelector('#tb-cet');
+  const clockController = clockElement ? mountCETClock(clockElement) : null;
   if (host) {
     host.__onDutyBadgeController = badgeController;
+    host.__cetClockController = clockController;
   }
 
   const compareSlot = host.querySelector('#tb-compare');
@@ -241,6 +259,35 @@ function readStoredTeam(){
     /* storage optional */
   }
   return 'all';
+}
+
+function mountCETClock(element){
+  if (!element) {
+    return null;
+  }
+
+  let intervalId = null;
+
+  const update = () => {
+    const now = new Date();
+    element.textContent = `${CET_FORMATTER.format(now)}${CET_SUFFIX}`;
+    element.hidden = false;
+  };
+
+  update();
+
+  if (typeof window !== 'undefined') {
+    intervalId = window.setInterval(update, CLOCK_REFRESH_MS);
+  }
+
+  return {
+    destroy() {
+      if (intervalId) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+  };
 }
 
 function mountOnDutyBadge(element, initialMode){
