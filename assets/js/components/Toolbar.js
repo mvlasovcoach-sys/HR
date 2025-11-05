@@ -89,7 +89,7 @@ export function renderToolbar(options = {}) {
       <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
       <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
     </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden aria-live="polite">—</span>' : ''}<span id="tb-cet" class="pill ml-2" hidden aria-live="polite">—</span>` : ''}</div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div><span id="onDutyBadge" class="pill" aria-live="polite"></span><span id="clockCET" class="pill" aria-live="polite"></span>` : ''}</div>
     <div id="tb-dates"${showDates ? '' : ' hidden'}>
       <div class="field" data-date-slot="start"></div>
       <div class="field" data-date-slot="end"></div>
@@ -141,9 +141,9 @@ export function renderToolbar(options = {}) {
     toolbarEl.appendChild(datesHost);
   }
 
-  const badgeElement = showOnDutyBadge ? host.querySelector('#tb-on-duty') : null;
+  const badgeElement = showOnDutyBadge ? host.querySelector('#onDutyBadge') : null;
   const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
-  const clockElement = host.querySelector('#tb-cet');
+  const clockElement = host.querySelector('#clockCET');
   const clockController = clockElement ? mountCETClock(clockElement) : null;
   if (host) {
     host.__onDutyBadgeController = badgeController;

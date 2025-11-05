@@ -63,6 +63,33 @@
   gap: 8px;
 }
 
+.pill {
+  margin-left: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.demo-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.demo-table th,
+.demo-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+}
+
+.demo-table th:first-child,
+.demo-table td:first-child {
+  text-align: left;
+}
+
 .lang-switch .seg,
 .btn-export {
   height: 32px;
