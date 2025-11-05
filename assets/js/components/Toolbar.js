@@ -20,67 +20,84 @@ export function renderToolbar(options = {}) {
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
   if (!host) return;
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
-  const ranges = (Array.isArray(options?.controls?.ranges) && options.controls.ranges.length)
-    ? options.controls.ranges
+  const controls = options?.controls || {};
+  const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
+    ? controls.ranges
     : ['Today', '7 Days', 'Month to date', 'Quarter to date', 'Year to date'];
-  const htmlRanges = ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('');
+  const showRanges = controls?.showRanges !== false;
+  const showTeam = controls?.showTeam !== false;
+  const showDates = controls?.showDates !== false;
   host.innerHTML = `
   <div class="toolbar">
-    <div class="toolbar-row">
-      <div class="toolbar-left">
-        <div class="title">
-          <h1 class="page-title">${title || ''}</h1>
-          <button class="info" type="button" aria-label="About this page">i</button>
-        </div>
-      </div>
-      <div class="toolbar-right">
-        <div class="lang-stack">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button type="button" data-lang="en">EN</button>
-            <button type="button" data-lang="nl">NL</button>
-            <button type="button" data-lang="ru">RU</button>
-          </div>
-          <button id="btnExport" class="export" type="button">Export</button>
-        </div>
-      </div>
+    <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
+      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
     </div>
-    <div class="toolbar-row">
-      <div class="toolbar-left">
-        <div class="seg-group" id="rangeSwitch">${htmlRanges}</div>
-        <div id="modeSwitch" class="seg-group" role="tablist" aria-label="Mode">
-          <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
-          <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
-        </div>
-        <div id="teamSelect" class="team-slot"></div>
-        <div id="dateStart" class="toolbar-date-slot" data-date-slot="start">
-          <span class="toolbar-date-slot__label" id="dc-start-label">Start</span>
-          <input id="dc-start" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-start-label">
-        </div>
-        <div id="dateEnd" class="toolbar-date-slot" data-date-slot="end">
-          <span class="toolbar-date-slot__label" id="dc-end-label">End</span>
-          <input id="dc-end" class="toolbar-date-slot__input date-input" type="date" aria-labelledby="dc-end-label">
-        </div>
-        <label class="compare" data-compare-slot>
-          <input type="checkbox" id="compareChk">
-          <span class="compare__label">Compare</span>
-        </label>
-      </div>
+    <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
+      <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
+      <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
     </div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? '<div id="teamSelect"></div>' : ''}</div>
+    <div id="tb-dates"${showDates ? '' : ' hidden'}>
+      <div class="field" data-date-slot="start"></div>
+      <div class="field" data-date-slot="end"></div>
+    </div>
+    <div id="tb-compare" data-compare-slot></div>
   </div>`;
+
+  const pageHeader = document.querySelector('.page-header');
+  const headerTitle = pageHeader?.querySelector('.page-title');
+  if (headerTitle && title) {
+    headerTitle.textContent = title;
+  }
+
+  const infoBtn = document.getElementById('page-info');
+  if (infoBtn) {
+    infoBtn.type = 'button';
+    infoBtn.setAttribute('aria-label', 'About this page');
+    infoBtn.hidden = false;
+    infoBtn.onclick = typeof onInfo === 'function' ? onInfo : null;
+  }
+
+  const headerLangSwitch = document.querySelector('#header-actions .lang-switch');
+  setupLangSwitch(headerLangSwitch);
+
+  const exportBtn = document.getElementById('tb-export');
+  if (exportBtn && exportBtn.dataset.bound !== 'true') {
+    exportBtn.dataset.bound = 'true';
+    exportBtn.addEventListener('click', exportCurrentView);
+  }
 
   const demo = host.querySelector('#btnModeDemo');
   const live = host.querySelector('#btnModeLive');
-  const exportBtn = host.querySelector('#btnExport');
-  const infoBtn = host.querySelector('.title .info');
-  const langSwitch = host.querySelector('.lang-switch');
+  const quickHost = host.querySelector('#tb-quick');
+  if (quickHost && !showRanges) {
+    quickHost.hidden = true;
+    quickHost.setAttribute('aria-hidden', 'true');
+  }
+  const teamHost = host.querySelector('#tb-team');
+  if (teamHost && !showTeam) {
+    teamHost.setAttribute('aria-hidden', 'true');
+  }
+  const datesHost = host.querySelector('#tb-dates');
+  if (datesHost && !showDates) {
+    datesHost.setAttribute('aria-hidden', 'true');
+  }
+
+  const toolbarEl = host.querySelector('.toolbar');
+  if (toolbarEl && datesHost) {
+    toolbarEl.appendChild(datesHost);
+  }
+
+  const compareSlot = host.querySelector('#tb-compare');
+  if (compareSlot) {
+    compareSlot.innerHTML = '';
+  }
 
   const updateSelected = value => {
     const next = value === 'LIVE' ? 'LIVE' : 'DEMO';
     if (demo) demo.setAttribute('aria-selected', String(next === 'DEMO'));
     if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
   };
-
-  setupLangSwitch(langSwitch);
 
   if (demo) {
     demo.addEventListener('click', () => {
@@ -93,12 +110,6 @@ export function renderToolbar(options = {}) {
       updateSelected('LIVE');
       onModeChange?.('LIVE');
     });
-  }
-  if (exportBtn) {
-    exportBtn.addEventListener('click', exportCurrentView);
-  }
-  if (infoBtn && typeof onInfo === 'function') {
-    infoBtn.addEventListener('click', onInfo);
   }
 }
 
@@ -133,6 +144,8 @@ function setupLangSwitch(container) {
     };
 
     try {
+      const upperTarget = target.toUpperCase();
+      localStorage.setItem('demo-lang', upperTarget);
       localStorage.setItem('lang', target);
       localStorage.setItem('hr:lang', target);
     } catch (err) {
@@ -157,7 +170,12 @@ function setupLangSwitch(container) {
 
   const saved = (() => {
     try {
-      return normalise(localStorage.getItem('lang') || localStorage.getItem('hr:lang') || window.I18N?.getLang?.());
+      return normalise(
+        localStorage.getItem('demo-lang')
+        || localStorage.getItem('lang')
+        || localStorage.getItem('hr:lang')
+        || window.I18N?.getLang?.()
+      );
     } catch (err) {
       return normalise(window.I18N?.getLang?.());
     }
