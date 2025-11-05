@@ -1,3 +1,12 @@
+import { FF_DEMO_ONDUTY_BADGE } from '../modules/config/flags.js';
+import { sampleSize, demoCoverage } from '../modules/demo/sample.utils.js';
+import { resolveTeamKey } from '../modules/demo/onDuty.utils.js';
+
+const TEAM_STORAGE_KEY = 'hr:team';
+const TEAM_LIST_STORAGE_KEY = 'hr:teams';
+const BADGE_REFRESH_MS = 60_000;
+const BADGE_PLACEHOLDER = '—';
+
 export function exportCurrentView(){
   const payload = window.__currentView || {};
   const json = JSON.stringify(payload, null, 2);
@@ -19,6 +28,10 @@ export function renderToolbar(options = {}) {
   const { mount, title, mode, onModeChange, onInfo } = options;
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
   if (!host) return;
+  if (host.__onDutyBadgeController) {
+    host.__onDutyBadgeController.destroy?.();
+    host.__onDutyBadgeController = null;
+  }
   const resolvedMode = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
   const controls = options?.controls || {};
   const ranges = (Array.isArray(controls?.ranges) && controls.ranges.length)
@@ -27,6 +40,7 @@ export function renderToolbar(options = {}) {
   const showRanges = controls?.showRanges !== false;
   const showTeam = controls?.showTeam !== false;
   const showDates = controls?.showDates !== false;
+  const showOnDutyBadge = showTeam && FF_DEMO_ONDUTY_BADGE;
   host.innerHTML = `
   <div class="toolbar">
     <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
@@ -36,7 +50,7 @@ export function renderToolbar(options = {}) {
       <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
       <button id="btnModeLive" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='LIVE'}">Live</button>
     </div>
-    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? '<div id="teamSelect"></div>' : ''}</div>
+    <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? `<div id="teamSelect"></div>${showOnDutyBadge ? '<span id="tb-on-duty" class="pill" hidden>—</span>' : ''}` : ''}</div>
     <div id="tb-dates"${showDates ? '' : ' hidden'}>
       <div class="field" data-date-slot="start"></div>
       <div class="field" data-date-slot="end"></div>
@@ -88,6 +102,12 @@ export function renderToolbar(options = {}) {
     toolbarEl.appendChild(datesHost);
   }
 
+  const badgeElement = showOnDutyBadge ? host.querySelector('#tb-on-duty') : null;
+  const badgeController = badgeElement ? mountOnDutyBadge(badgeElement, resolvedMode) : null;
+  if (host) {
+    host.__onDutyBadgeController = badgeController;
+  }
+
   const compareSlot = host.querySelector('#tb-compare');
   if (compareSlot) {
     compareSlot.innerHTML = '';
@@ -102,12 +122,14 @@ export function renderToolbar(options = {}) {
   if (demo) {
     demo.addEventListener('click', () => {
       updateSelected('DEMO');
+      badgeController?.setMode?.('DEMO');
       onModeChange?.('DEMO');
     });
   }
   if (live) {
     live.addEventListener('click', () => {
       updateSelected('LIVE');
+      badgeController?.setMode?.('LIVE');
       onModeChange?.('LIVE');
     });
   }
@@ -200,4 +222,88 @@ function setupLangSwitch(container) {
     updateActive(lang);
     updateLabel();
   });
+}
+
+function readStoredTeam(){
+  try {
+    const primary = localStorage.getItem(TEAM_STORAGE_KEY);
+    if (primary && primary !== 'all') {
+      return primary;
+    }
+    const listRaw = localStorage.getItem(TEAM_LIST_STORAGE_KEY);
+    if (listRaw) {
+      const parsed = JSON.parse(listRaw);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed[0];
+      }
+    }
+  } catch (err) {
+    /* storage optional */
+  }
+  return 'all';
+}
+
+function mountOnDutyBadge(element, initialMode){
+  if (!element || !FF_DEMO_ONDUTY_BADGE) {
+    return null;
+  }
+
+  let currentMode = initialMode === 'DEMO' ? 'DEMO' : 'LIVE';
+  let intervalId = null;
+
+  const update = () => {
+    if (currentMode !== 'DEMO' || !FF_DEMO_ONDUTY_BADGE) {
+      element.textContent = BADGE_PLACEHOLDER;
+      element.hidden = true;
+      return;
+    }
+    const team = resolveTeamKey(readStoredTeam());
+    const now = new Date();
+    const { expected, sample, coveragePct } = sampleSize(team, now, demoCoverage);
+    element.textContent = `On duty: ${expected} • Sample: ${sample} (${coveragePct}%)`;
+    element.hidden = false;
+  };
+
+  const startTimer = () => {
+    if (intervalId) {
+      window.clearInterval(intervalId);
+    }
+    intervalId = window.setInterval(update, BADGE_REFRESH_MS);
+  };
+
+  const stopTimer = () => {
+    if (intervalId) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+
+  const applyMode = mode => {
+    currentMode = mode === 'DEMO' ? 'DEMO' : 'LIVE';
+    if (currentMode === 'DEMO') {
+      update();
+      startTimer();
+    } else {
+      stopTimer();
+      element.textContent = BADGE_PLACEHOLDER;
+      element.hidden = true;
+    }
+  };
+
+  const handleStorage = event => {
+    if (event && event.key === TEAM_STORAGE_KEY) {
+      update();
+    }
+  };
+
+  window.addEventListener('storage', handleStorage);
+  applyMode(currentMode);
+
+  return {
+    setMode: applyMode,
+    destroy() {
+      stopTimer();
+      window.removeEventListener('storage', handleStorage);
+    }
+  };
 }
