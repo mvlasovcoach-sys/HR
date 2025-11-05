@@ -349,6 +349,31 @@
   background: rgba(9, 24, 32, 0.45);
 }
 
+.toolbar--corporate .pill {
+  margin-left: 0.5rem;
+}
+
+.toolbar--corporate .pill:first-child {
+  margin-left: 0;
+}
+
+.main--corporate .demo-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.main--corporate .demo-table th,
+.main--corporate .demo-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+}
+
+.main--corporate .demo-table th:first-child,
+.main--corporate .demo-table td:first-child {
+  text-align: left;
+}
+
 .btn {
   background: rgba(11, 31, 41, 0.65);
   border: 1px solid rgba(39, 224, 255, 0.35);
