@@ -85,7 +85,7 @@ export function renderTeamFilter({ mount, options, value = [], onChange }) {
   );
 
   host.innerHTML = `
-  <div class="team-filter">
+  <div id="toolbar-team-filter" class="team-filter">
     <label class="filters-label" for="${buttonId}">${escapeHtml(teamLabel)}</label>
     <div class="tf-control" role="combobox" aria-expanded="false">
       <button class="tf-button" id="${buttonId}" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${panelId}"></button>

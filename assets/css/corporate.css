@@ -166,6 +166,15 @@ body[data-page="corporate"] #meta-team-slot {
   align-items: center;
   min-height: 36px;
 }
+body[data-page="corporate"] #meta-row ul,
+body[data-page="corporate"] #meta-row li {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+body[data-page="corporate"] #toolbar-team-filter {
+  margin: 0 !important;
+}
 body[data-page="corporate"] #meta-asof {
   display: flex;
   align-items: center;

@@ -35,6 +35,49 @@ const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'func
 })();
 // END corporate-meta-asof
 
+(function(){
+  const root = document.querySelector('body[data-page="corporate"]');
+  if (!root) return;
+
+  const slot = root.querySelector('#meta-team-slot');
+  if (!slot) return;
+
+  let attempts = 0;
+  const maxAttempts = 60;
+
+  const relocate = () => {
+    const team = root.querySelector('#toolbar-team-filter');
+    if (slot && team && !slot.contains(team)) {
+      slot.appendChild(team);
+    }
+
+    const metaRow = root.querySelector('#meta-row');
+    if (metaRow) {
+      metaRow.querySelectorAll('ul,ol').forEach(node => {
+        node.style.listStyle = 'none';
+        node.style.paddingLeft = '0';
+        node.style.margin = '0';
+      });
+      metaRow.querySelectorAll('li').forEach(node => {
+        node.style.listStyle = 'none';
+      });
+    }
+
+    const teamWrap = root.querySelector('#toolbar-team-filter');
+    if (teamWrap) {
+      teamWrap.style.margin = '0';
+    }
+
+    if (!slot.querySelector('#toolbar-team-filter') && attempts < maxAttempts) {
+      attempts += 1;
+      requestAnimationFrame(relocate);
+    }
+  };
+
+  relocate();
+})();
+
+
 document.addEventListener('DOMContentLoaded', () => {
   if (window.I18N?.onReady) {
     window.I18N.onReady(initCorporatePage);
