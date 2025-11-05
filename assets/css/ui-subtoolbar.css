@@ -1,0 +1,26 @@
+.subtoolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.subtoolbar__left{
+  display:flex;
+  align-items:center;
+  min-height:36px;
+}
+.subtoolbar__right{
+  display:flex;
+  align-items:center;
+  height:36px;
+  white-space:nowrap;
+}
+.subtoolbar__asof{
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted-foreground, rgba(255,255,255,.64));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
