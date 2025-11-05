@@ -153,29 +153,6 @@
   box-shadow: 0 0 12px rgba(15, 247, 177, 0.45);
 }
 
-/* BEGIN corporate-meta-row */
-body[data-page="corporate"] .toolbar-meta-row {
-  width: 100%;
-  justify-content: space-between;
-  gap: 12px;
-}
-body[data-page="corporate"] .toolbar-meta-row [data-team-slot] {
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  margin-right: auto;
-}
-body[data-page="corporate"] .toolbar-meta-row [data-team-slot] ul,
-body[data-page="corporate"] .toolbar-meta-row [data-team-slot] li {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-body[data-page="corporate"] .toolbar-meta-row #toolbar-team-filter {
-  margin: 0 !important;
-}
-/* END corporate-meta-row */
-
 #heatmap-grid {
   --heatmap-cols: 1;
   display: grid;
