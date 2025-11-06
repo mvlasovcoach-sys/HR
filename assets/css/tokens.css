@@ -14,6 +14,7 @@
 }
 
 body{ font-family: var(--font-sans); }
+
 /* Inter Variable — self-hosted */
 /* Roman */
 @font-face {
@@ -31,6 +32,8 @@ body{ font-family: var(--font-sans); }
   font-style: italic;
   font-display: swap;
 }
+
+/* Use through tokens */
 :root {
   --font-sans: "Inter Variable", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
 }
