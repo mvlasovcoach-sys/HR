@@ -1,33 +1,32 @@
-(function(){
-  const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
-  const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
-  const LIBS = [
-    {global: 'html2canvas', src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'},
-    {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
-  ];
-  const EXPORT_SELECTOR = '[data-export-key]';
-  const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
+const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
+const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
+const LIBS = [
+  {global: 'html2canvas', src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'},
+  {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
+];
+const EXPORT_SELECTOR = '[data-export-key]';
+const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
 
-  async function ensureLibs(){
-    for (const lib of LIBS) {
-      if (window[lib.global]) continue;
-      await loadScript(lib.src);
-    }
+export async function ensureExportLibs(){
+  for (const lib of LIBS) {
+    if (window[lib.global]) continue;
+    await loadScript(lib.src);
   }
+}
 
-  function loadScript(src){
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load ${src}`));
-      document.head.appendChild(script);
-    });
-  }
+export function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
 
   async function exportPilotSummary(options, legacyFilename){
-    await ensureLibs();
+    await ensureExportLibs();
     if (Array.isArray(options)) {
       const legacyName = typeof legacyFilename === 'string' ? legacyFilename : 'pilot_summary.pdf';
       await legacyExport(options, legacyName);
@@ -250,7 +249,7 @@
   }
 
   async function exportSiteBriefPDF(options={}){
-    await ensureLibs();
+    await ensureExportLibs();
     const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
     const margin = 12;
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -346,6 +345,17 @@
         doc.addPage();
         y = margin;
       }
+    }
+
+    function addHeading(title){
+      if (!title) return;
+      ensureSpace(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(title, margin, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
     }
 
     async function addSectionImage(element, opts={}){
@@ -622,16 +632,27 @@
     document.addEventListener('i18n:change', updateExportButtons);
   }
 
-  const api = Object.assign({}, window.exporter, {
-    exportPilotSummary,
-    sortTable,
-    exportSiteBriefPDF,
-    exportCurrentView,
-    notifyStart,
-    updateExportButtons,
-    collectSourceSummaries,
-    buildSourceCsvHeader
-  });
-  window.exporter = api;
-  window.EXPORTER = api;
-})();
+const api = Object.assign({}, window.exporter, {
+  exportPilotSummary,
+  sortTable,
+  exportSiteBriefPDF,
+  exportCurrentView,
+  notifyStart,
+  updateExportButtons,
+  collectSourceSummaries,
+  buildSourceCsvHeader
+});
+window.exporter = api;
+window.EXPORTER = api;
+
+export async function handleExportClick(options = {}) {
+  await ensureExportLibs();
+  const { trigger, onExport } = options;
+  if (typeof onExport === 'function') {
+    await onExport();
+    return;
+  }
+  if (typeof api.exportCurrentView === 'function') {
+    await api.exportCurrentView({ button: trigger || null });
+  }
+}

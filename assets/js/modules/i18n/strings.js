@@ -10,5 +10,11 @@ export const STRINGS = {
     burnout_hint: 'Accumulated exhaustion over weeks. Focus on trend, not a single day.',
     fatigue_hint: 'Last-week fatigue. Sleep deficit and late shifts are key drivers.',
     wellbeing_hint: 'Composite index from three metrics and behavioral data (beta).'
+  },
+  nl: {
+    stress_hint: 'Short-term physiological response. Increases with sleep loss and night shifts.',
+    burnout_hint: 'Accumulated exhaustion over weeks. Focus on trend, not a single day.',
+    fatigue_hint: 'Last-week fatigue. Sleep deficit and late shifts are key drivers.',
+    wellbeing_hint: 'Composite index from three metrics and behavioral data (beta).'
   }
 };

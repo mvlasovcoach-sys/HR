@@ -1,14 +1,6 @@
 const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
 const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.I18N?.onReady) {
-    window.I18N.onReady(initCorporatePage);
-  } else {
-    initCorporatePage();
-  }
-});
-
 function initCorporatePage(){
   const loaderGlobals = window.loaderGlobals || {};
   const applyVersion = typeof loaderGlobals.withV === 'function' ? loaderGlobals.withV : (url => url);
@@ -89,7 +81,9 @@ function initCorporatePage(){
   }
 
   if (!els.kpiGrid || !els.heatmapGrid || !els.eventsList || !els.activityTable) {
-    return;
+    return {
+      refreshCorporatePage: async () => {}
+    };
   }
 
   function readMode(){
@@ -291,16 +285,6 @@ function initCorporatePage(){
   }
 
   boot().catch(err => devError('Corporate init failed', err));
-
-  function canonicalPreset(value){
-    const key = String(value || '').toLowerCase();
-    if (key === 'today' || key === 'day') return '7d';
-    if (key === 'mtd' || key === 'month') return 'month';
-    if (key === 'qtd' || key === 'quarter') return 'month';
-    if (key === 'ytd' || key === 'year') return 'year';
-    if (key === '7d') return '7d';
-    return '7d';
-  }
 
   function displayPreset(value){
     const key = String(value || '').toLowerCase();
@@ -627,7 +611,8 @@ function initCorporatePage(){
       const rowHeader = document.createElement('div');
       rowHeader.className = 'heatmap-cell';
       rowHeader.setAttribute('role', 'rowheader');
-      rowHeader.textContent = state.teamMap.get(rowId) || rowId;
+      const teamLabel = state.teamMap.get(rowId) || rowId;
+      rowHeader.textContent = teamLabel;
       fragment.appendChild(rowHeader);
 
       const rowValues = Array.isArray(values?.[rowId]) ? values[rowId] : [];
@@ -647,10 +632,12 @@ function initCorporatePage(){
           cell.dataset.value = String(raw);
           const level = heatmapLevel(rounded);
           cell.dataset.level = level;
-          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • ${rounded}`);
+          cell.setAttribute('aria-label', cellAriaLabel(teamLabel, rounded));
         } else {
           cell.textContent = '—';
-          cell.setAttribute('aria-label', `${state.teamMap.get(rowId) || rowId} • ${label} • ${t('status.noData', 'No data')}`);
+          cell.removeAttribute('data-level');
+          cell.removeAttribute('data-value');
+          cell.setAttribute('aria-label', cellAriaLabel(teamLabel, null));
         }
         cell.addEventListener('click', () => {
           handleHeatmapSelection(colIndex);
@@ -678,6 +665,23 @@ function initCorporatePage(){
     if (value <= 55) return 'low';
     if (value <= 69) return 'mid';
     return 'high';
+  }
+
+  function bandFor(value){
+    if (!Number.isFinite(value)) return '';
+    if (value >= 70) return 'red';
+    if (value >= 56) return 'amber';
+    return 'green';
+  }
+
+  function cellAriaLabel(team, value){
+    const stressLabel = t('aria.stressIndex', 'stress index');
+    const name = team || '';
+    if (!Number.isFinite(value)) {
+      return `Team ${name} — ${t('status.noData', 'No data')} — ${stressLabel}`;
+    }
+    const rounded = Math.round(value);
+    return `Team ${name} — ${rounded} (${bandFor(rounded)}) — ${stressLabel}`;
   }
 
   function handleHeatmapSelection(index){
@@ -1454,13 +1458,17 @@ function initCorporatePage(){
     });
   }
 
-  window.refreshCorporatePage = async function refreshCorporatePage(){
+  async function refreshCorporatePage(){
     try {
       await loadMetrics();
       renderAll();
     } catch (err) {
       devError('Corporate refresh failed', err);
     }
+  }
+
+  return {
+    refreshCorporatePage
   };
 }
 
@@ -1489,4 +1497,21 @@ function renderKpis(kpi, delta={}, n){
       <div class="spark"></div>
     </div>`;
   }).join('');
+}
+
+let corporateController = null;
+
+export function mountCorporatePage(){
+  if (!corporateController) {
+    corporateController = initCorporatePage();
+  }
+  return corporateController;
+}
+
+export async function refreshCorporatePage(){
+  const controller = mountCorporatePage();
+  if (controller?.refreshCorporatePage) {
+    return controller.refreshCorporatePage();
+  }
+  return undefined;
 }
