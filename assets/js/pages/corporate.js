@@ -2,18 +2,24 @@ import { renderToolbar } from '../components/Toolbar.js';
 import { renderTeamFilter } from '../components/TeamFilter.js';
 import { ModeStore } from '../stores/modeStore.js';
 import { AppState } from '../stores/appState.js';
+import { mountCorporatePage } from '../corporate.js';
+
+let corporateController = null;
 
 function applyMode(mode){
   ModeStore.set(mode);
 }
 
 async function refreshPage(){
-  if (typeof window.refreshCorporatePage === 'function') {
-    await window.refreshCorporatePage();
+  if (!corporateController) {
+    corporateController = mountCorporatePage();
+  }
+  if (corporateController?.refreshCorporatePage) {
+    await corporateController.refreshCorporatePage();
   }
 }
 
-async function initPage(){
+export async function bootstrapCorporatePage(){
   ModeStore.init();
   renderToolbar({
     mount: document.getElementById('toolbar'),
@@ -52,10 +58,4 @@ async function initPage(){
   }
 
   await refreshPage();
-}
-
-if (document.readyState !== 'loading') {
-  initPage();
-} else {
-  document.addEventListener('DOMContentLoaded', initPage);
 }
