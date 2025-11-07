@@ -1,4 +1,5 @@
 import { devError } from '../utils/env.js';
+import { resolveRange } from '../utils/dateRange.js';
 
 const TEAM_KEY = 'hr:team';
 const TEAMS_KEY = 'hr:teams';
@@ -84,11 +85,60 @@ function normaliseTeams(values){
   return output;
 }
 
+const DEFAULT_RANGE_KIND = 'today';
+
 const state = {
   teams: readStoredTeams(),
   teamOptions: [],
-  allTeamsIds: []
+  allTeamsIds: [],
+  rangeKind: DEFAULT_RANGE_KIND,
+  rangeStart: null,
+  rangeEnd: null,
+  rangeResolved: null
 };
+
+function rangesEqual(a, b){
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return a.start === b.start && a.end === b.end && a.compare?.start === b.compare?.start && a.compare?.end === b.compare?.end;
+}
+
+function dispatchRangeChange(){
+  const selection = { kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd };
+  const resolved = resolveRange(selection);
+  if (!resolved) return;
+  if (rangesEqual(state.rangeResolved, resolved)) return;
+  state.rangeResolved = resolved;
+  document.dispatchEvent(new CustomEvent('state:range-changed', { detail: { range: resolved, selection } }));
+}
+
+function normaliseKind(kind){
+  if (typeof kind !== 'string') return DEFAULT_RANGE_KIND;
+  const value = kind.trim().toLowerCase();
+  switch (value) {
+    case 'today':
+    case 'day':
+    case '1d':
+      return 'today';
+    case '7d':
+    case '7':
+    case 'week':
+      return '7d';
+    case 'mtd':
+    case 'month':
+      return 'mtd';
+    case 'qtd':
+    case 'quarter':
+      return 'qtd';
+    case 'ytd':
+    case 'year':
+      return 'ytd';
+    case 'custom':
+      return 'custom';
+    default:
+      return DEFAULT_RANGE_KIND;
+  }
+}
 
 let teamsPromise = null;
 
@@ -140,5 +190,46 @@ export const AppState = {
     return Array.isArray(state.teams) && state.teams.length
       ? state.teams
       : state.allTeamsIds;
+  },
+  getRangeSelection(){
+    return {
+      kind: state.rangeKind,
+      start: state.rangeStart,
+      end: state.rangeEnd
+    };
+  },
+  getResolvedRange(){
+    if (!state.rangeResolved) {
+      state.rangeResolved = resolveRange({ kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd });
+    }
+    return state.rangeResolved;
+  },
+  setRangeKind(kind){
+    const nextKind = normaliseKind(kind);
+    if (state.rangeKind === nextKind && state.rangeStart == null && state.rangeEnd == null) {
+      dispatchRangeChange();
+      return;
+    }
+    state.rangeKind = nextKind;
+    if (nextKind !== 'custom') {
+      state.rangeStart = null;
+      state.rangeEnd = null;
+    }
+    state.rangeResolved = null;
+    dispatchRangeChange();
+  },
+  setCustomRange(start, end){
+    const cleanStart = typeof start === 'string' && start ? start : null;
+    const cleanEnd = typeof end === 'string' && end ? end : null;
+    state.rangeKind = 'custom';
+    state.rangeStart = cleanStart;
+    state.rangeEnd = cleanEnd;
+    state.rangeResolved = null;
+    if (!cleanStart || !cleanEnd) return;
+    dispatchRangeChange();
+  },
+  notifyRange(){
+    state.rangeResolved = null;
+    dispatchRangeChange();
   }
 };
