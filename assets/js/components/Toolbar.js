@@ -238,10 +238,19 @@ export function renderToolbar(options = {}) {
 
   document.addEventListener('state:range-changed', syncRange);
   requestAnimationFrame(() => {
-    const resolved = AppState.getResolvedRange();
-    const selection = AppState.getRangeSelection();
-    updateRangeButtons(quickHost, selection?.kind || 'today');
-    applyRangeToInputs(resolved, selection);
+    const applyInitial = resolved => {
+      const selection = AppState.getRangeSelection();
+      updateRangeButtons(quickHost, selection?.kind || 'today');
+      applyRangeToInputs(resolved || AppState.getResolvedRange(), selection);
+    };
+    const maybePromise = AppState.getResolvedRangeAsync?.();
+    if (maybePromise && typeof maybePromise.then === 'function') {
+      maybePromise.then(applyInitial).catch(() => {
+        applyInitial(AppState.getResolvedRange());
+      });
+    } else {
+      applyInitial(AppState.getResolvedRange());
+    }
   });
 }
 

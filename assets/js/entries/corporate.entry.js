@@ -73,6 +73,9 @@ const translate = (key, fallback) => window.I18N?.t?.(key, fallback) || fallback
 let kpiControllerPromise;
 let currentRange = null;
 let activeRequestId = 0;
+let demoFallbackActive = false;
+
+const DEMO_FALLBACK_MESSAGE = 'No demo data for this period — switched to 7 Days';
 
 async function ensureKpiController(){
   if (!kpiControllerPromise) {
@@ -122,6 +125,25 @@ async function fetchKpiSnapshot(resolved){
       lang: document.documentElement?.lang || 'en'
     });
     if (requestId !== activeRequestId) return;
+    const isDemoMode = mode === 'DEMO';
+    if (isDemoMode) {
+      const hasDemoRangeData = resolved.hasDemoData !== false;
+      const hasDemoSample = data?.demo?.hasSample !== false && (data?.counts?.current ?? 0) > 0;
+      if (!hasDemoRangeData || !hasDemoSample) {
+        demoFallbackActive = true;
+        controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
+        if (resolved.kind !== '7d') {
+          AppState.setRangeKind('7d');
+        }
+        return;
+      }
+      if (resolved.kind !== '7d') {
+        demoFallbackActive = false;
+      }
+    } else {
+      demoFallbackActive = false;
+    }
+    controller.setNotice?.(demoFallbackActive ? DEMO_FALLBACK_MESSAGE : null);
     controller.update(data);
   } catch (err) {
     if (requestId !== activeRequestId) return;
@@ -139,8 +161,8 @@ function handleRangeChange(event){
   });
 }
 
-function handleModeChange(mode){
-  const resolved = currentRange || AppState.getResolvedRange?.();
+async function handleModeChange(mode){
+  const resolved = currentRange || await AppState.getResolvedRangeAsync?.();
   if (!resolved) return;
   fetchKpiSnapshot(resolved).catch(err => {
     devError('KPI mode update failed:', err);
@@ -154,7 +176,7 @@ async function initKpiCards(){
     document.addEventListener('state:mode-changed', event => {
       handleModeChange(event?.detail?.mode);
     });
-    const initialRange = AppState.getResolvedRange?.();
+    const initialRange = await AppState.getResolvedRangeAsync?.();
     if (initialRange) {
       fetchKpiSnapshot(initialRange).catch(err => {
         devError('KPI initial load failed:', err);

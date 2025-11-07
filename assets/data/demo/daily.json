@@ -1,0 +1,2431 @@
+[
+  {
+    "date": "2024-11-01",
+    "stress": 55.0,
+    "burnout": 23.0,
+    "fatigue": 33.0,
+    "wellbeing": 68.1
+  },
+  {
+    "date": "2024-11-02",
+    "stress": 55.4,
+    "burnout": 23.2,
+    "fatigue": 33.0,
+    "wellbeing": 67.9
+  },
+  {
+    "date": "2024-11-03",
+    "stress": 55.8,
+    "burnout": 23.3,
+    "fatigue": 33.0,
+    "wellbeing": 67.6
+  },
+  {
+    "date": "2024-11-04",
+    "stress": 56.2,
+    "burnout": 23.5,
+    "fatigue": 32.9,
+    "wellbeing": 67.4
+  },
+  {
+    "date": "2024-11-05",
+    "stress": 56.6,
+    "burnout": 23.6,
+    "fatigue": 32.8,
+    "wellbeing": 67.2
+  },
+  {
+    "date": "2024-11-06",
+    "stress": 57.0,
+    "burnout": 23.7,
+    "fatigue": 32.7,
+    "wellbeing": 67.0
+  },
+  {
+    "date": "2024-11-07",
+    "stress": 57.4,
+    "burnout": 23.8,
+    "fatigue": 32.6,
+    "wellbeing": 66.9
+  },
+  {
+    "date": "2024-11-08",
+    "stress": 57.8,
+    "burnout": 23.9,
+    "fatigue": 32.4,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2024-11-09",
+    "stress": 58.1,
+    "burnout": 23.9,
+    "fatigue": 32.2,
+    "wellbeing": 66.6
+  },
+  {
+    "date": "2024-11-10",
+    "stress": 58.4,
+    "burnout": 24.0,
+    "fatigue": 32.0,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2024-11-11",
+    "stress": 58.7,
+    "burnout": 24.0,
+    "fatigue": 31.8,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2024-11-12",
+    "stress": 59.0,
+    "burnout": 24.0,
+    "fatigue": 31.6,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2024-11-13",
+    "stress": 59.2,
+    "burnout": 24.0,
+    "fatigue": 31.3,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2024-11-14",
+    "stress": 59.4,
+    "burnout": 24.0,
+    "fatigue": 31.0,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2024-11-15",
+    "stress": 59.6,
+    "burnout": 23.9,
+    "fatigue": 30.7,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2024-11-16",
+    "stress": 59.7,
+    "burnout": 23.9,
+    "fatigue": 30.4,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2024-11-17",
+    "stress": 59.9,
+    "burnout": 23.8,
+    "fatigue": 30.0,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2024-11-18",
+    "stress": 59.9,
+    "burnout": 23.8,
+    "fatigue": 29.7,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2024-11-19",
+    "stress": 60.0,
+    "burnout": 23.7,
+    "fatigue": 29.3,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2024-11-20",
+    "stress": 60.0,
+    "burnout": 23.6,
+    "fatigue": 28.9,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2024-11-21",
+    "stress": 60.0,
+    "burnout": 23.5,
+    "fatigue": 28.5,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2024-11-22",
+    "stress": 59.9,
+    "burnout": 23.3,
+    "fatigue": 28.1,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2024-11-23",
+    "stress": 59.8,
+    "burnout": 23.2,
+    "fatigue": 27.7,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2024-11-24",
+    "stress": 59.7,
+    "burnout": 23.0,
+    "fatigue": 27.3,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2024-11-25",
+    "stress": 59.5,
+    "burnout": 22.9,
+    "fatigue": 26.9,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2024-11-26",
+    "stress": 59.4,
+    "burnout": 22.7,
+    "fatigue": 26.4,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2024-11-27",
+    "stress": 59.1,
+    "burnout": 22.5,
+    "fatigue": 26.0,
+    "wellbeing": 66.8
+  },
+  {
+    "date": "2024-11-28",
+    "stress": 58.9,
+    "burnout": 22.3,
+    "fatigue": 25.6,
+    "wellbeing": 67.0
+  },
+  {
+    "date": "2024-11-29",
+    "stress": 58.6,
+    "burnout": 22.1,
+    "fatigue": 25.1,
+    "wellbeing": 67.2
+  },
+  {
+    "date": "2024-11-30",
+    "stress": 58.3,
+    "burnout": 21.8,
+    "fatigue": 24.7,
+    "wellbeing": 67.4
+  },
+  {
+    "date": "2024-12-01",
+    "stress": 58.0,
+    "burnout": 21.6,
+    "fatigue": 24.2,
+    "wellbeing": 67.6
+  },
+  {
+    "date": "2024-12-02",
+    "stress": 57.6,
+    "burnout": 21.3,
+    "fatigue": 23.8,
+    "wellbeing": 67.8
+  },
+  {
+    "date": "2024-12-03",
+    "stress": 57.3,
+    "burnout": 21.1,
+    "fatigue": 23.4,
+    "wellbeing": 68.1
+  },
+  {
+    "date": "2024-12-04",
+    "stress": 56.9,
+    "burnout": 20.8,
+    "fatigue": 22.9,
+    "wellbeing": 68.3
+  },
+  {
+    "date": "2024-12-05",
+    "stress": 56.5,
+    "burnout": 20.6,
+    "fatigue": 22.5,
+    "wellbeing": 68.5
+  },
+  {
+    "date": "2024-12-06",
+    "stress": 56.1,
+    "burnout": 20.3,
+    "fatigue": 22.1,
+    "wellbeing": 68.8
+  },
+  {
+    "date": "2024-12-07",
+    "stress": 55.7,
+    "burnout": 20.0,
+    "fatigue": 21.7,
+    "wellbeing": 69.0
+  },
+  {
+    "date": "2024-12-08",
+    "stress": 55.3,
+    "burnout": 19.7,
+    "fatigue": 21.3,
+    "wellbeing": 69.3
+  },
+  {
+    "date": "2024-12-09",
+    "stress": 54.9,
+    "burnout": 19.4,
+    "fatigue": 20.9,
+    "wellbeing": 69.6
+  },
+  {
+    "date": "2024-12-10",
+    "stress": 54.5,
+    "burnout": 19.1,
+    "fatigue": 20.5,
+    "wellbeing": 69.8
+  },
+  {
+    "date": "2024-12-11",
+    "stress": 54.0,
+    "burnout": 18.8,
+    "fatigue": 20.1,
+    "wellbeing": 70.1
+  },
+  {
+    "date": "2024-12-12",
+    "stress": 53.6,
+    "burnout": 18.5,
+    "fatigue": 19.8,
+    "wellbeing": 70.4
+  },
+  {
+    "date": "2024-12-13",
+    "stress": 53.2,
+    "burnout": 18.2,
+    "fatigue": 19.5,
+    "wellbeing": 70.6
+  },
+  {
+    "date": "2024-12-14",
+    "stress": 52.9,
+    "burnout": 17.9,
+    "fatigue": 19.2,
+    "wellbeing": 70.9
+  },
+  {
+    "date": "2024-12-15",
+    "stress": 52.5,
+    "burnout": 17.6,
+    "fatigue": 18.9,
+    "wellbeing": 71.2
+  },
+  {
+    "date": "2024-12-16",
+    "stress": 52.1,
+    "burnout": 17.4,
+    "fatigue": 18.6,
+    "wellbeing": 71.4
+  },
+  {
+    "date": "2024-12-17",
+    "stress": 51.8,
+    "burnout": 17.1,
+    "fatigue": 18.3,
+    "wellbeing": 71.6
+  },
+  {
+    "date": "2024-12-18",
+    "stress": 51.5,
+    "burnout": 16.8,
+    "fatigue": 18.1,
+    "wellbeing": 71.9
+  },
+  {
+    "date": "2024-12-19",
+    "stress": 51.2,
+    "burnout": 16.5,
+    "fatigue": 17.9,
+    "wellbeing": 72.1
+  },
+  {
+    "date": "2024-12-20",
+    "stress": 51.0,
+    "burnout": 16.2,
+    "fatigue": 17.7,
+    "wellbeing": 72.3
+  },
+  {
+    "date": "2024-12-21",
+    "stress": 50.7,
+    "burnout": 15.9,
+    "fatigue": 17.5,
+    "wellbeing": 72.6
+  },
+  {
+    "date": "2024-12-22",
+    "stress": 50.5,
+    "burnout": 15.6,
+    "fatigue": 17.4,
+    "wellbeing": 72.8
+  },
+  {
+    "date": "2024-12-23",
+    "stress": 50.4,
+    "burnout": 15.3,
+    "fatigue": 17.3,
+    "wellbeing": 72.9
+  },
+  {
+    "date": "2024-12-24",
+    "stress": 50.2,
+    "burnout": 15.1,
+    "fatigue": 17.2,
+    "wellbeing": 73.1
+  },
+  {
+    "date": "2024-12-25",
+    "stress": 50.1,
+    "burnout": 14.8,
+    "fatigue": 17.1,
+    "wellbeing": 73.3
+  },
+  {
+    "date": "2024-12-26",
+    "stress": 50.0,
+    "burnout": 14.6,
+    "fatigue": 17.0,
+    "wellbeing": 73.4
+  },
+  {
+    "date": "2024-12-27",
+    "stress": 50.0,
+    "burnout": 14.3,
+    "fatigue": 17.0,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2024-12-28",
+    "stress": 50.0,
+    "burnout": 14.1,
+    "fatigue": 17.0,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2024-12-29",
+    "stress": 50.0,
+    "burnout": 13.9,
+    "fatigue": 17.0,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2024-12-30",
+    "stress": 50.1,
+    "burnout": 13.7,
+    "fatigue": 17.1,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2024-12-31",
+    "stress": 50.2,
+    "burnout": 13.5,
+    "fatigue": 17.1,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-01-01",
+    "stress": 50.3,
+    "burnout": 13.3,
+    "fatigue": 17.2,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-01-02",
+    "stress": 50.5,
+    "burnout": 13.1,
+    "fatigue": 17.4,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-01-03",
+    "stress": 50.7,
+    "burnout": 12.9,
+    "fatigue": 17.5,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-01-04",
+    "stress": 50.9,
+    "burnout": 12.8,
+    "fatigue": 17.7,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-01-05",
+    "stress": 51.2,
+    "burnout": 12.6,
+    "fatigue": 17.9,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-01-06",
+    "stress": 51.5,
+    "burnout": 12.5,
+    "fatigue": 18.1,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-01-07",
+    "stress": 51.8,
+    "burnout": 12.4,
+    "fatigue": 18.3,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-01-08",
+    "stress": 52.1,
+    "burnout": 12.3,
+    "fatigue": 18.6,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-01-09",
+    "stress": 52.5,
+    "burnout": 12.2,
+    "fatigue": 18.8,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-01-10",
+    "stress": 52.8,
+    "burnout": 12.1,
+    "fatigue": 19.1,
+    "wellbeing": 73.6
+  },
+  {
+    "date": "2025-01-11",
+    "stress": 53.2,
+    "burnout": 12.1,
+    "fatigue": 19.4,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-01-12",
+    "stress": 53.6,
+    "burnout": 12.0,
+    "fatigue": 19.8,
+    "wellbeing": 73.3
+  },
+  {
+    "date": "2025-01-13",
+    "stress": 54.0,
+    "burnout": 12.0,
+    "fatigue": 20.1,
+    "wellbeing": 73.2
+  },
+  {
+    "date": "2025-01-14",
+    "stress": 54.4,
+    "burnout": 12.0,
+    "fatigue": 20.5,
+    "wellbeing": 73.0
+  },
+  {
+    "date": "2025-01-15",
+    "stress": 54.8,
+    "burnout": 12.0,
+    "fatigue": 20.8,
+    "wellbeing": 72.8
+  },
+  {
+    "date": "2025-01-16",
+    "stress": 55.3,
+    "burnout": 12.0,
+    "fatigue": 21.2,
+    "wellbeing": 72.6
+  },
+  {
+    "date": "2025-01-17",
+    "stress": 55.7,
+    "burnout": 12.1,
+    "fatigue": 21.6,
+    "wellbeing": 72.4
+  },
+  {
+    "date": "2025-01-18",
+    "stress": 56.1,
+    "burnout": 12.1,
+    "fatigue": 22.0,
+    "wellbeing": 72.2
+  },
+  {
+    "date": "2025-01-19",
+    "stress": 56.5,
+    "burnout": 12.2,
+    "fatigue": 22.5,
+    "wellbeing": 72.0
+  },
+  {
+    "date": "2025-01-20",
+    "stress": 56.9,
+    "burnout": 12.2,
+    "fatigue": 22.9,
+    "wellbeing": 71.7
+  },
+  {
+    "date": "2025-01-21",
+    "stress": 57.3,
+    "burnout": 12.3,
+    "fatigue": 23.3,
+    "wellbeing": 71.5
+  },
+  {
+    "date": "2025-01-22",
+    "stress": 57.6,
+    "burnout": 12.4,
+    "fatigue": 23.8,
+    "wellbeing": 71.2
+  },
+  {
+    "date": "2025-01-23",
+    "stress": 58.0,
+    "burnout": 12.6,
+    "fatigue": 24.2,
+    "wellbeing": 71.0
+  },
+  {
+    "date": "2025-01-24",
+    "stress": 58.3,
+    "burnout": 12.7,
+    "fatigue": 24.6,
+    "wellbeing": 70.7
+  },
+  {
+    "date": "2025-01-25",
+    "stress": 58.6,
+    "burnout": 12.8,
+    "fatigue": 25.1,
+    "wellbeing": 70.5
+  },
+  {
+    "date": "2025-01-26",
+    "stress": 58.9,
+    "burnout": 13.0,
+    "fatigue": 25.5,
+    "wellbeing": 70.2
+  },
+  {
+    "date": "2025-01-27",
+    "stress": 59.1,
+    "burnout": 13.2,
+    "fatigue": 26.0,
+    "wellbeing": 69.9
+  },
+  {
+    "date": "2025-01-28",
+    "stress": 59.3,
+    "burnout": 13.4,
+    "fatigue": 26.4,
+    "wellbeing": 69.7
+  },
+  {
+    "date": "2025-01-29",
+    "stress": 59.5,
+    "burnout": 13.6,
+    "fatigue": 26.8,
+    "wellbeing": 69.4
+  },
+  {
+    "date": "2025-01-30",
+    "stress": 59.7,
+    "burnout": 13.8,
+    "fatigue": 27.3,
+    "wellbeing": 69.1
+  },
+  {
+    "date": "2025-01-31",
+    "stress": 59.8,
+    "burnout": 14.0,
+    "fatigue": 27.7,
+    "wellbeing": 68.9
+  },
+  {
+    "date": "2025-02-01",
+    "stress": 59.9,
+    "burnout": 14.2,
+    "fatigue": 28.1,
+    "wellbeing": 68.6
+  },
+  {
+    "date": "2025-02-02",
+    "stress": 60.0,
+    "burnout": 14.4,
+    "fatigue": 28.5,
+    "wellbeing": 68.4
+  },
+  {
+    "date": "2025-02-03",
+    "stress": 60.0,
+    "burnout": 14.7,
+    "fatigue": 28.9,
+    "wellbeing": 68.1
+  },
+  {
+    "date": "2025-02-04",
+    "stress": 60.0,
+    "burnout": 15.0,
+    "fatigue": 29.3,
+    "wellbeing": 67.9
+  },
+  {
+    "date": "2025-02-05",
+    "stress": 59.9,
+    "burnout": 15.2,
+    "fatigue": 29.7,
+    "wellbeing": 67.7
+  },
+  {
+    "date": "2025-02-06",
+    "stress": 59.9,
+    "burnout": 15.5,
+    "fatigue": 30.0,
+    "wellbeing": 67.5
+  },
+  {
+    "date": "2025-02-07",
+    "stress": 59.8,
+    "burnout": 15.8,
+    "fatigue": 30.3,
+    "wellbeing": 67.3
+  },
+  {
+    "date": "2025-02-08",
+    "stress": 59.6,
+    "burnout": 16.0,
+    "fatigue": 30.7,
+    "wellbeing": 67.1
+  },
+  {
+    "date": "2025-02-09",
+    "stress": 59.4,
+    "burnout": 16.3,
+    "fatigue": 31.0,
+    "wellbeing": 66.9
+  },
+  {
+    "date": "2025-02-10",
+    "stress": 59.2,
+    "burnout": 16.6,
+    "fatigue": 31.3,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2025-02-11",
+    "stress": 59.0,
+    "burnout": 16.9,
+    "fatigue": 31.5,
+    "wellbeing": 66.6
+  },
+  {
+    "date": "2025-02-12",
+    "stress": 58.7,
+    "burnout": 17.2,
+    "fatigue": 31.8,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-02-13",
+    "stress": 58.4,
+    "burnout": 17.5,
+    "fatigue": 32.0,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-02-14",
+    "stress": 58.1,
+    "burnout": 17.8,
+    "fatigue": 32.2,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-02-15",
+    "stress": 57.8,
+    "burnout": 18.1,
+    "fatigue": 32.4,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-02-16",
+    "stress": 57.4,
+    "burnout": 18.4,
+    "fatigue": 32.5,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-02-17",
+    "stress": 57.1,
+    "burnout": 18.7,
+    "fatigue": 32.7,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-02-18",
+    "stress": 56.7,
+    "burnout": 19.0,
+    "fatigue": 32.8,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-02-19",
+    "stress": 56.3,
+    "burnout": 19.3,
+    "fatigue": 32.9,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-02-20",
+    "stress": 55.9,
+    "burnout": 19.6,
+    "fatigue": 32.9,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-02-21",
+    "stress": 55.5,
+    "burnout": 19.9,
+    "fatigue": 33.0,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-02-22",
+    "stress": 55.0,
+    "burnout": 20.2,
+    "fatigue": 33.0,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-02-23",
+    "stress": 54.6,
+    "burnout": 20.4,
+    "fatigue": 33.0,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-02-24",
+    "stress": 54.2,
+    "burnout": 20.7,
+    "fatigue": 33.0,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-02-25",
+    "stress": 53.8,
+    "burnout": 21.0,
+    "fatigue": 32.9,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-02-26",
+    "stress": 53.4,
+    "burnout": 21.2,
+    "fatigue": 32.8,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2025-02-27",
+    "stress": 53.0,
+    "burnout": 21.5,
+    "fatigue": 32.7,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-02-28",
+    "stress": 52.6,
+    "burnout": 21.7,
+    "fatigue": 32.6,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2025-03-01",
+    "stress": 52.3,
+    "burnout": 21.9,
+    "fatigue": 32.4,
+    "wellbeing": 66.8
+  },
+  {
+    "date": "2025-03-02",
+    "stress": 51.9,
+    "burnout": 22.2,
+    "fatigue": 32.2,
+    "wellbeing": 67.0
+  },
+  {
+    "date": "2025-03-03",
+    "stress": 51.6,
+    "burnout": 22.4,
+    "fatigue": 32.0,
+    "wellbeing": 67.2
+  },
+  {
+    "date": "2025-03-04",
+    "stress": 51.3,
+    "burnout": 22.6,
+    "fatigue": 31.8,
+    "wellbeing": 67.3
+  },
+  {
+    "date": "2025-03-05",
+    "stress": 51.1,
+    "burnout": 22.8,
+    "fatigue": 31.6,
+    "wellbeing": 67.6
+  },
+  {
+    "date": "2025-03-06",
+    "stress": 50.8,
+    "burnout": 22.9,
+    "fatigue": 31.3,
+    "wellbeing": 67.8
+  },
+  {
+    "date": "2025-03-07",
+    "stress": 50.6,
+    "burnout": 23.1,
+    "fatigue": 31.0,
+    "wellbeing": 68.0
+  },
+  {
+    "date": "2025-03-08",
+    "stress": 50.4,
+    "burnout": 23.3,
+    "fatigue": 30.7,
+    "wellbeing": 68.2
+  },
+  {
+    "date": "2025-03-09",
+    "stress": 50.3,
+    "burnout": 23.4,
+    "fatigue": 30.4,
+    "wellbeing": 68.5
+  },
+  {
+    "date": "2025-03-10",
+    "stress": 50.2,
+    "burnout": 23.5,
+    "fatigue": 30.1,
+    "wellbeing": 68.7
+  },
+  {
+    "date": "2025-03-11",
+    "stress": 50.1,
+    "burnout": 23.6,
+    "fatigue": 29.7,
+    "wellbeing": 69.0
+  },
+  {
+    "date": "2025-03-12",
+    "stress": 50.0,
+    "burnout": 23.7,
+    "fatigue": 29.4,
+    "wellbeing": 69.2
+  },
+  {
+    "date": "2025-03-13",
+    "stress": 50.0,
+    "burnout": 23.8,
+    "fatigue": 29.0,
+    "wellbeing": 69.5
+  },
+  {
+    "date": "2025-03-14",
+    "stress": 50.0,
+    "burnout": 23.9,
+    "fatigue": 28.6,
+    "wellbeing": 69.8
+  },
+  {
+    "date": "2025-03-15",
+    "stress": 50.1,
+    "burnout": 23.9,
+    "fatigue": 28.2,
+    "wellbeing": 70.0
+  },
+  {
+    "date": "2025-03-16",
+    "stress": 50.2,
+    "burnout": 24.0,
+    "fatigue": 27.8,
+    "wellbeing": 70.3
+  },
+  {
+    "date": "2025-03-17",
+    "stress": 50.3,
+    "burnout": 24.0,
+    "fatigue": 27.4,
+    "wellbeing": 70.6
+  },
+  {
+    "date": "2025-03-18",
+    "stress": 50.4,
+    "burnout": 24.0,
+    "fatigue": 26.9,
+    "wellbeing": 70.8
+  },
+  {
+    "date": "2025-03-19",
+    "stress": 50.6,
+    "burnout": 24.0,
+    "fatigue": 26.5,
+    "wellbeing": 71.1
+  },
+  {
+    "date": "2025-03-20",
+    "stress": 50.8,
+    "burnout": 24.0,
+    "fatigue": 26.1,
+    "wellbeing": 71.3
+  },
+  {
+    "date": "2025-03-21",
+    "stress": 51.1,
+    "burnout": 23.9,
+    "fatigue": 25.6,
+    "wellbeing": 71.6
+  },
+  {
+    "date": "2025-03-22",
+    "stress": 51.4,
+    "burnout": 23.9,
+    "fatigue": 25.2,
+    "wellbeing": 71.8
+  },
+  {
+    "date": "2025-03-23",
+    "stress": 51.7,
+    "burnout": 23.8,
+    "fatigue": 24.7,
+    "wellbeing": 72.1
+  },
+  {
+    "date": "2025-03-24",
+    "stress": 52.0,
+    "burnout": 23.7,
+    "fatigue": 24.3,
+    "wellbeing": 72.3
+  },
+  {
+    "date": "2025-03-25",
+    "stress": 52.3,
+    "burnout": 23.6,
+    "fatigue": 23.8,
+    "wellbeing": 72.5
+  },
+  {
+    "date": "2025-03-26",
+    "stress": 52.7,
+    "burnout": 23.5,
+    "fatigue": 23.4,
+    "wellbeing": 72.7
+  },
+  {
+    "date": "2025-03-27",
+    "stress": 53.1,
+    "burnout": 23.4,
+    "fatigue": 23.0,
+    "wellbeing": 72.9
+  },
+  {
+    "date": "2025-03-28",
+    "stress": 53.4,
+    "burnout": 23.3,
+    "fatigue": 22.5,
+    "wellbeing": 73.1
+  },
+  {
+    "date": "2025-03-29",
+    "stress": 53.8,
+    "burnout": 23.1,
+    "fatigue": 22.1,
+    "wellbeing": 73.2
+  },
+  {
+    "date": "2025-03-30",
+    "stress": 54.3,
+    "burnout": 23.0,
+    "fatigue": 21.7,
+    "wellbeing": 73.4
+  },
+  {
+    "date": "2025-03-31",
+    "stress": 54.7,
+    "burnout": 22.8,
+    "fatigue": 21.3,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-04-01",
+    "stress": 55.1,
+    "burnout": 22.6,
+    "fatigue": 20.9,
+    "wellbeing": 73.6
+  },
+  {
+    "date": "2025-04-02",
+    "stress": 55.5,
+    "burnout": 22.4,
+    "fatigue": 20.5,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-04-03",
+    "stress": 55.9,
+    "burnout": 22.2,
+    "fatigue": 20.2,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-04-04",
+    "stress": 56.3,
+    "burnout": 22.0,
+    "fatigue": 19.8,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-04-05",
+    "stress": 56.7,
+    "burnout": 21.7,
+    "fatigue": 19.5,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-04-06",
+    "stress": 57.1,
+    "burnout": 21.5,
+    "fatigue": 19.2,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-04-07",
+    "stress": 57.5,
+    "burnout": 21.3,
+    "fatigue": 18.9,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-04-08",
+    "stress": 57.8,
+    "burnout": 21.0,
+    "fatigue": 18.6,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-04-09",
+    "stress": 58.2,
+    "burnout": 20.7,
+    "fatigue": 18.4,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-04-10",
+    "stress": 58.5,
+    "burnout": 20.5,
+    "fatigue": 18.1,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-04-11",
+    "stress": 58.8,
+    "burnout": 20.2,
+    "fatigue": 17.9,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-04-12",
+    "stress": 59.0,
+    "burnout": 19.9,
+    "fatigue": 17.7,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-04-13",
+    "stress": 59.3,
+    "burnout": 19.6,
+    "fatigue": 17.5,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-04-14",
+    "stress": 59.5,
+    "burnout": 19.3,
+    "fatigue": 17.4,
+    "wellbeing": 73.6
+  },
+  {
+    "date": "2025-04-15",
+    "stress": 59.6,
+    "burnout": 19.0,
+    "fatigue": 17.3,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-04-16",
+    "stress": 59.8,
+    "burnout": 18.7,
+    "fatigue": 17.2,
+    "wellbeing": 73.4
+  },
+  {
+    "date": "2025-04-17",
+    "stress": 59.9,
+    "burnout": 18.4,
+    "fatigue": 17.1,
+    "wellbeing": 73.2
+  },
+  {
+    "date": "2025-04-18",
+    "stress": 60.0,
+    "burnout": 18.1,
+    "fatigue": 17.0,
+    "wellbeing": 73.0
+  },
+  {
+    "date": "2025-04-19",
+    "stress": 60.0,
+    "burnout": 17.8,
+    "fatigue": 17.0,
+    "wellbeing": 72.9
+  },
+  {
+    "date": "2025-04-20",
+    "stress": 60.0,
+    "burnout": 17.5,
+    "fatigue": 17.0,
+    "wellbeing": 72.7
+  },
+  {
+    "date": "2025-04-21",
+    "stress": 60.0,
+    "burnout": 17.3,
+    "fatigue": 17.0,
+    "wellbeing": 72.5
+  },
+  {
+    "date": "2025-04-22",
+    "stress": 59.9,
+    "burnout": 17.0,
+    "fatigue": 17.1,
+    "wellbeing": 72.3
+  },
+  {
+    "date": "2025-04-23",
+    "stress": 59.8,
+    "burnout": 16.7,
+    "fatigue": 17.1,
+    "wellbeing": 72.0
+  },
+  {
+    "date": "2025-04-24",
+    "stress": 59.7,
+    "burnout": 16.4,
+    "fatigue": 17.2,
+    "wellbeing": 71.8
+  },
+  {
+    "date": "2025-04-25",
+    "stress": 59.5,
+    "burnout": 16.1,
+    "fatigue": 17.4,
+    "wellbeing": 71.6
+  },
+  {
+    "date": "2025-04-26",
+    "stress": 59.3,
+    "burnout": 15.8,
+    "fatigue": 17.5,
+    "wellbeing": 71.3
+  },
+  {
+    "date": "2025-04-27",
+    "stress": 59.1,
+    "burnout": 15.5,
+    "fatigue": 17.7,
+    "wellbeing": 71.1
+  },
+  {
+    "date": "2025-04-28",
+    "stress": 58.8,
+    "burnout": 15.3,
+    "fatigue": 17.8,
+    "wellbeing": 70.8
+  },
+  {
+    "date": "2025-04-29",
+    "stress": 58.6,
+    "burnout": 15.0,
+    "fatigue": 18.1,
+    "wellbeing": 70.5
+  },
+  {
+    "date": "2025-04-30",
+    "stress": 58.3,
+    "burnout": 14.7,
+    "fatigue": 18.3,
+    "wellbeing": 70.3
+  },
+  {
+    "date": "2025-05-01",
+    "stress": 57.9,
+    "burnout": 14.5,
+    "fatigue": 18.5,
+    "wellbeing": 70.0
+  },
+  {
+    "date": "2025-05-02",
+    "stress": 57.6,
+    "burnout": 14.2,
+    "fatigue": 18.8,
+    "wellbeing": 69.7
+  },
+  {
+    "date": "2025-05-03",
+    "stress": 57.2,
+    "burnout": 14.0,
+    "fatigue": 19.1,
+    "wellbeing": 69.5
+  },
+  {
+    "date": "2025-05-04",
+    "stress": 56.8,
+    "burnout": 13.8,
+    "fatigue": 19.4,
+    "wellbeing": 69.2
+  },
+  {
+    "date": "2025-05-05",
+    "stress": 56.4,
+    "burnout": 13.6,
+    "fatigue": 19.7,
+    "wellbeing": 68.9
+  },
+  {
+    "date": "2025-05-06",
+    "stress": 56.0,
+    "burnout": 13.4,
+    "fatigue": 20.1,
+    "wellbeing": 68.7
+  },
+  {
+    "date": "2025-05-07",
+    "stress": 55.6,
+    "burnout": 13.2,
+    "fatigue": 20.4,
+    "wellbeing": 68.4
+  },
+  {
+    "date": "2025-05-08",
+    "stress": 55.2,
+    "burnout": 13.0,
+    "fatigue": 20.8,
+    "wellbeing": 68.2
+  },
+  {
+    "date": "2025-05-09",
+    "stress": 54.8,
+    "burnout": 12.9,
+    "fatigue": 21.2,
+    "wellbeing": 68.0
+  },
+  {
+    "date": "2025-05-10",
+    "stress": 54.4,
+    "burnout": 12.7,
+    "fatigue": 21.6,
+    "wellbeing": 67.7
+  },
+  {
+    "date": "2025-05-11",
+    "stress": 54.0,
+    "burnout": 12.6,
+    "fatigue": 22.0,
+    "wellbeing": 67.5
+  },
+  {
+    "date": "2025-05-12",
+    "stress": 53.6,
+    "burnout": 12.5,
+    "fatigue": 22.4,
+    "wellbeing": 67.3
+  },
+  {
+    "date": "2025-05-13",
+    "stress": 53.2,
+    "burnout": 12.4,
+    "fatigue": 22.8,
+    "wellbeing": 67.1
+  },
+  {
+    "date": "2025-05-14",
+    "stress": 52.8,
+    "burnout": 12.3,
+    "fatigue": 23.3,
+    "wellbeing": 67.0
+  },
+  {
+    "date": "2025-05-15",
+    "stress": 52.4,
+    "burnout": 12.2,
+    "fatigue": 23.7,
+    "wellbeing": 66.8
+  },
+  {
+    "date": "2025-05-16",
+    "stress": 52.1,
+    "burnout": 12.1,
+    "fatigue": 24.1,
+    "wellbeing": 66.6
+  },
+  {
+    "date": "2025-05-17",
+    "stress": 51.7,
+    "burnout": 12.1,
+    "fatigue": 24.6,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-05-18",
+    "stress": 51.4,
+    "burnout": 12.0,
+    "fatigue": 25.0,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2025-05-19",
+    "stress": 51.2,
+    "burnout": 12.0,
+    "fatigue": 25.5,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-05-20",
+    "stress": 50.9,
+    "burnout": 12.0,
+    "fatigue": 25.9,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-05-21",
+    "stress": 50.7,
+    "burnout": 12.0,
+    "fatigue": 26.4,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-05-22",
+    "stress": 50.5,
+    "burnout": 12.0,
+    "fatigue": 26.8,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-05-23",
+    "stress": 50.3,
+    "burnout": 12.1,
+    "fatigue": 27.2,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-05-24",
+    "stress": 50.2,
+    "burnout": 12.1,
+    "fatigue": 27.7,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-05-25",
+    "stress": 50.1,
+    "burnout": 12.2,
+    "fatigue": 28.1,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-05-26",
+    "stress": 50.0,
+    "burnout": 12.3,
+    "fatigue": 28.5,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-05-27",
+    "stress": 50.0,
+    "burnout": 12.4,
+    "fatigue": 28.9,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-05-28",
+    "stress": 50.0,
+    "burnout": 12.5,
+    "fatigue": 29.2,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-05-29",
+    "stress": 50.0,
+    "burnout": 12.6,
+    "fatigue": 29.6,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-05-30",
+    "stress": 50.1,
+    "burnout": 12.7,
+    "fatigue": 30.0,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-05-31",
+    "stress": 50.2,
+    "burnout": 12.9,
+    "fatigue": 30.3,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2025-06-01",
+    "stress": 50.4,
+    "burnout": 13.1,
+    "fatigue": 30.6,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-06-02",
+    "stress": 50.5,
+    "burnout": 13.2,
+    "fatigue": 30.9,
+    "wellbeing": 66.6
+  },
+  {
+    "date": "2025-06-03",
+    "stress": 50.7,
+    "burnout": 13.4,
+    "fatigue": 31.2,
+    "wellbeing": 66.8
+  },
+  {
+    "date": "2025-06-04",
+    "stress": 51.0,
+    "burnout": 13.6,
+    "fatigue": 31.5,
+    "wellbeing": 66.9
+  },
+  {
+    "date": "2025-06-05",
+    "stress": 51.2,
+    "burnout": 13.8,
+    "fatigue": 31.8,
+    "wellbeing": 67.1
+  },
+  {
+    "date": "2025-06-06",
+    "stress": 51.5,
+    "burnout": 14.1,
+    "fatigue": 32.0,
+    "wellbeing": 67.3
+  },
+  {
+    "date": "2025-06-07",
+    "stress": 51.8,
+    "burnout": 14.3,
+    "fatigue": 32.2,
+    "wellbeing": 67.5
+  },
+  {
+    "date": "2025-06-08",
+    "stress": 52.2,
+    "burnout": 14.5,
+    "fatigue": 32.4,
+    "wellbeing": 67.7
+  },
+  {
+    "date": "2025-06-09",
+    "stress": 52.5,
+    "burnout": 14.8,
+    "fatigue": 32.5,
+    "wellbeing": 67.9
+  },
+  {
+    "date": "2025-06-10",
+    "stress": 52.9,
+    "burnout": 15.0,
+    "fatigue": 32.7,
+    "wellbeing": 68.2
+  },
+  {
+    "date": "2025-06-11",
+    "stress": 53.3,
+    "burnout": 15.3,
+    "fatigue": 32.8,
+    "wellbeing": 68.4
+  },
+  {
+    "date": "2025-06-12",
+    "stress": 53.7,
+    "burnout": 15.6,
+    "fatigue": 32.9,
+    "wellbeing": 68.7
+  },
+  {
+    "date": "2025-06-13",
+    "stress": 54.1,
+    "burnout": 15.9,
+    "fatigue": 32.9,
+    "wellbeing": 68.9
+  },
+  {
+    "date": "2025-06-14",
+    "stress": 54.5,
+    "burnout": 16.1,
+    "fatigue": 33.0,
+    "wellbeing": 69.2
+  },
+  {
+    "date": "2025-06-15",
+    "stress": 54.9,
+    "burnout": 16.4,
+    "fatigue": 33.0,
+    "wellbeing": 69.4
+  },
+  {
+    "date": "2025-06-16",
+    "stress": 55.3,
+    "burnout": 16.7,
+    "fatigue": 33.0,
+    "wellbeing": 69.7
+  },
+  {
+    "date": "2025-06-17",
+    "stress": 55.7,
+    "burnout": 17.0,
+    "fatigue": 33.0,
+    "wellbeing": 70.0
+  },
+  {
+    "date": "2025-06-18",
+    "stress": 56.2,
+    "burnout": 17.3,
+    "fatigue": 32.9,
+    "wellbeing": 70.2
+  },
+  {
+    "date": "2025-06-19",
+    "stress": 56.6,
+    "burnout": 17.6,
+    "fatigue": 32.8,
+    "wellbeing": 70.5
+  },
+  {
+    "date": "2025-06-20",
+    "stress": 56.9,
+    "burnout": 17.9,
+    "fatigue": 32.7,
+    "wellbeing": 70.8
+  },
+  {
+    "date": "2025-06-21",
+    "stress": 57.3,
+    "burnout": 18.2,
+    "fatigue": 32.6,
+    "wellbeing": 71.0
+  },
+  {
+    "date": "2025-06-22",
+    "stress": 57.7,
+    "burnout": 18.5,
+    "fatigue": 32.4,
+    "wellbeing": 71.3
+  },
+  {
+    "date": "2025-06-23",
+    "stress": 58.0,
+    "burnout": 18.8,
+    "fatigue": 32.3,
+    "wellbeing": 71.5
+  },
+  {
+    "date": "2025-06-24",
+    "stress": 58.3,
+    "burnout": 19.1,
+    "fatigue": 32.1,
+    "wellbeing": 71.8
+  },
+  {
+    "date": "2025-06-25",
+    "stress": 58.6,
+    "burnout": 19.4,
+    "fatigue": 31.8,
+    "wellbeing": 72.0
+  },
+  {
+    "date": "2025-06-26",
+    "stress": 58.9,
+    "burnout": 19.7,
+    "fatigue": 31.6,
+    "wellbeing": 72.2
+  },
+  {
+    "date": "2025-06-27",
+    "stress": 59.2,
+    "burnout": 20.0,
+    "fatigue": 31.3,
+    "wellbeing": 72.4
+  },
+  {
+    "date": "2025-06-28",
+    "stress": 59.4,
+    "burnout": 20.2,
+    "fatigue": 31.1,
+    "wellbeing": 72.7
+  },
+  {
+    "date": "2025-06-29",
+    "stress": 59.6,
+    "burnout": 20.5,
+    "fatigue": 30.8,
+    "wellbeing": 72.8
+  },
+  {
+    "date": "2025-06-30",
+    "stress": 59.7,
+    "burnout": 20.8,
+    "fatigue": 30.4,
+    "wellbeing": 73.0
+  },
+  {
+    "date": "2025-07-01",
+    "stress": 59.8,
+    "burnout": 21.1,
+    "fatigue": 30.1,
+    "wellbeing": 73.2
+  },
+  {
+    "date": "2025-07-02",
+    "stress": 59.9,
+    "burnout": 21.3,
+    "fatigue": 29.8,
+    "wellbeing": 73.3
+  },
+  {
+    "date": "2025-07-03",
+    "stress": 60.0,
+    "burnout": 21.6,
+    "fatigue": 29.4,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-07-04",
+    "stress": 60.0,
+    "burnout": 21.8,
+    "fatigue": 29.0,
+    "wellbeing": 73.6
+  },
+  {
+    "date": "2025-07-05",
+    "stress": 60.0,
+    "burnout": 22.0,
+    "fatigue": 28.6,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-07-06",
+    "stress": 59.9,
+    "burnout": 22.2,
+    "fatigue": 28.2,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-07-07",
+    "stress": 59.8,
+    "burnout": 22.4,
+    "fatigue": 27.8,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-07-08",
+    "stress": 59.7,
+    "burnout": 22.6,
+    "fatigue": 27.4,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-07-09",
+    "stress": 59.6,
+    "burnout": 22.8,
+    "fatigue": 27.0,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-07-10",
+    "stress": 59.4,
+    "burnout": 23.0,
+    "fatigue": 26.5,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-07-11",
+    "stress": 59.2,
+    "burnout": 23.2,
+    "fatigue": 26.1,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-07-12",
+    "stress": 58.9,
+    "burnout": 23.3,
+    "fatigue": 25.7,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-07-13",
+    "stress": 58.7,
+    "burnout": 23.4,
+    "fatigue": 25.2,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-07-14",
+    "stress": 58.4,
+    "burnout": 23.6,
+    "fatigue": 24.8,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-07-15",
+    "stress": 58.1,
+    "burnout": 23.7,
+    "fatigue": 24.3,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-07-16",
+    "stress": 57.7,
+    "burnout": 23.8,
+    "fatigue": 23.9,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-07-17",
+    "stress": 57.4,
+    "burnout": 23.8,
+    "fatigue": 23.4,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-07-18",
+    "stress": 57.0,
+    "burnout": 23.9,
+    "fatigue": 23.0,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-07-19",
+    "stress": 56.6,
+    "burnout": 23.9,
+    "fatigue": 22.6,
+    "wellbeing": 73.4
+  },
+  {
+    "date": "2025-07-20",
+    "stress": 56.2,
+    "burnout": 24.0,
+    "fatigue": 22.2,
+    "wellbeing": 73.3
+  },
+  {
+    "date": "2025-07-21",
+    "stress": 55.8,
+    "burnout": 24.0,
+    "fatigue": 21.7,
+    "wellbeing": 73.1
+  },
+  {
+    "date": "2025-07-22",
+    "stress": 55.4,
+    "burnout": 24.0,
+    "fatigue": 21.3,
+    "wellbeing": 72.9
+  },
+  {
+    "date": "2025-07-23",
+    "stress": 55.0,
+    "burnout": 24.0,
+    "fatigue": 21.0,
+    "wellbeing": 72.7
+  },
+  {
+    "date": "2025-07-24",
+    "stress": 54.5,
+    "burnout": 24.0,
+    "fatigue": 20.6,
+    "wellbeing": 72.5
+  },
+  {
+    "date": "2025-07-25",
+    "stress": 54.1,
+    "burnout": 23.9,
+    "fatigue": 20.2,
+    "wellbeing": 72.3
+  },
+  {
+    "date": "2025-07-26",
+    "stress": 53.7,
+    "burnout": 23.9,
+    "fatigue": 19.9,
+    "wellbeing": 72.1
+  },
+  {
+    "date": "2025-07-27",
+    "stress": 53.3,
+    "burnout": 23.8,
+    "fatigue": 19.5,
+    "wellbeing": 71.9
+  },
+  {
+    "date": "2025-07-28",
+    "stress": 52.9,
+    "burnout": 23.7,
+    "fatigue": 19.2,
+    "wellbeing": 71.6
+  },
+  {
+    "date": "2025-07-29",
+    "stress": 52.6,
+    "burnout": 23.6,
+    "fatigue": 18.9,
+    "wellbeing": 71.4
+  },
+  {
+    "date": "2025-07-30",
+    "stress": 52.2,
+    "burnout": 23.5,
+    "fatigue": 18.6,
+    "wellbeing": 71.1
+  },
+  {
+    "date": "2025-07-31",
+    "stress": 51.9,
+    "burnout": 23.4,
+    "fatigue": 18.4,
+    "wellbeing": 70.9
+  },
+  {
+    "date": "2025-08-01",
+    "stress": 51.6,
+    "burnout": 23.2,
+    "fatigue": 18.1,
+    "wellbeing": 70.6
+  },
+  {
+    "date": "2025-08-02",
+    "stress": 51.3,
+    "burnout": 23.1,
+    "fatigue": 17.9,
+    "wellbeing": 70.3
+  },
+  {
+    "date": "2025-08-03",
+    "stress": 51.0,
+    "burnout": 22.9,
+    "fatigue": 17.7,
+    "wellbeing": 70.1
+  },
+  {
+    "date": "2025-08-04",
+    "stress": 50.8,
+    "burnout": 22.7,
+    "fatigue": 17.6,
+    "wellbeing": 69.8
+  },
+  {
+    "date": "2025-08-05",
+    "stress": 50.6,
+    "burnout": 22.5,
+    "fatigue": 17.4,
+    "wellbeing": 69.5
+  },
+  {
+    "date": "2025-08-06",
+    "stress": 50.4,
+    "burnout": 22.3,
+    "fatigue": 17.3,
+    "wellbeing": 69.3
+  },
+  {
+    "date": "2025-08-07",
+    "stress": 50.2,
+    "burnout": 22.1,
+    "fatigue": 17.2,
+    "wellbeing": 69.0
+  },
+  {
+    "date": "2025-08-08",
+    "stress": 50.1,
+    "burnout": 21.9,
+    "fatigue": 17.1,
+    "wellbeing": 68.8
+  },
+  {
+    "date": "2025-08-09",
+    "stress": 50.1,
+    "burnout": 21.7,
+    "fatigue": 17.0,
+    "wellbeing": 68.5
+  },
+  {
+    "date": "2025-08-10",
+    "stress": 50.0,
+    "burnout": 21.4,
+    "fatigue": 17.0,
+    "wellbeing": 68.3
+  },
+  {
+    "date": "2025-08-11",
+    "stress": 50.0,
+    "burnout": 21.2,
+    "fatigue": 17.0,
+    "wellbeing": 68.0
+  },
+  {
+    "date": "2025-08-12",
+    "stress": 50.0,
+    "burnout": 20.9,
+    "fatigue": 17.0,
+    "wellbeing": 67.8
+  },
+  {
+    "date": "2025-08-13",
+    "stress": 50.1,
+    "burnout": 20.7,
+    "fatigue": 17.1,
+    "wellbeing": 67.6
+  },
+  {
+    "date": "2025-08-14",
+    "stress": 50.2,
+    "burnout": 20.4,
+    "fatigue": 17.1,
+    "wellbeing": 67.4
+  },
+  {
+    "date": "2025-08-15",
+    "stress": 50.3,
+    "burnout": 20.1,
+    "fatigue": 17.2,
+    "wellbeing": 67.2
+  },
+  {
+    "date": "2025-08-16",
+    "stress": 50.5,
+    "burnout": 19.8,
+    "fatigue": 17.3,
+    "wellbeing": 67.0
+  },
+  {
+    "date": "2025-08-17",
+    "stress": 50.7,
+    "burnout": 19.5,
+    "fatigue": 17.5,
+    "wellbeing": 66.8
+  },
+  {
+    "date": "2025-08-18",
+    "stress": 50.9,
+    "burnout": 19.2,
+    "fatigue": 17.6,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2025-08-19",
+    "stress": 51.1,
+    "burnout": 18.9,
+    "fatigue": 17.8,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-08-20",
+    "stress": 51.4,
+    "burnout": 18.6,
+    "fatigue": 18.0,
+    "wellbeing": 66.4
+  },
+  {
+    "date": "2025-08-21",
+    "stress": 51.7,
+    "burnout": 18.3,
+    "fatigue": 18.3,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-08-22",
+    "stress": 52.0,
+    "burnout": 18.0,
+    "fatigue": 18.5,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-08-23",
+    "stress": 52.4,
+    "burnout": 17.7,
+    "fatigue": 18.8,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-08-24",
+    "stress": 52.8,
+    "burnout": 17.4,
+    "fatigue": 19.1,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-08-25",
+    "stress": 53.1,
+    "burnout": 17.2,
+    "fatigue": 19.4,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-08-26",
+    "stress": 53.5,
+    "burnout": 16.9,
+    "fatigue": 19.7,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-08-27",
+    "stress": 53.9,
+    "burnout": 16.6,
+    "fatigue": 20.0,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-08-28",
+    "stress": 54.3,
+    "burnout": 16.3,
+    "fatigue": 20.4,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-08-29",
+    "stress": 54.8,
+    "burnout": 16.0,
+    "fatigue": 20.8,
+    "wellbeing": 66.0
+  },
+  {
+    "date": "2025-08-30",
+    "stress": 55.2,
+    "burnout": 15.7,
+    "fatigue": 21.2,
+    "wellbeing": 66.1
+  },
+  {
+    "date": "2025-08-31",
+    "stress": 55.6,
+    "burnout": 15.4,
+    "fatigue": 21.6,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-09-01",
+    "stress": 56.0,
+    "burnout": 15.2,
+    "fatigue": 22.0,
+    "wellbeing": 66.2
+  },
+  {
+    "date": "2025-09-02",
+    "stress": 56.4,
+    "burnout": 14.9,
+    "fatigue": 22.4,
+    "wellbeing": 66.3
+  },
+  {
+    "date": "2025-09-03",
+    "stress": 56.8,
+    "burnout": 14.7,
+    "fatigue": 22.8,
+    "wellbeing": 66.5
+  },
+  {
+    "date": "2025-09-04",
+    "stress": 57.2,
+    "burnout": 14.4,
+    "fatigue": 23.2,
+    "wellbeing": 66.6
+  },
+  {
+    "date": "2025-09-05",
+    "stress": 57.5,
+    "burnout": 14.2,
+    "fatigue": 23.7,
+    "wellbeing": 66.7
+  },
+  {
+    "date": "2025-09-06",
+    "stress": 57.9,
+    "burnout": 13.9,
+    "fatigue": 24.1,
+    "wellbeing": 66.9
+  },
+  {
+    "date": "2025-09-07",
+    "stress": 58.2,
+    "burnout": 13.7,
+    "fatigue": 24.5,
+    "wellbeing": 67.1
+  },
+  {
+    "date": "2025-09-08",
+    "stress": 58.5,
+    "burnout": 13.5,
+    "fatigue": 25.0,
+    "wellbeing": 67.3
+  },
+  {
+    "date": "2025-09-09",
+    "stress": 58.8,
+    "burnout": 13.3,
+    "fatigue": 25.4,
+    "wellbeing": 67.5
+  },
+  {
+    "date": "2025-09-10",
+    "stress": 59.1,
+    "burnout": 13.1,
+    "fatigue": 25.9,
+    "wellbeing": 67.7
+  },
+  {
+    "date": "2025-09-11",
+    "stress": 59.3,
+    "burnout": 13.0,
+    "fatigue": 26.3,
+    "wellbeing": 67.9
+  },
+  {
+    "date": "2025-09-12",
+    "stress": 59.5,
+    "burnout": 12.8,
+    "fatigue": 26.8,
+    "wellbeing": 68.1
+  },
+  {
+    "date": "2025-09-13",
+    "stress": 59.7,
+    "burnout": 12.7,
+    "fatigue": 27.2,
+    "wellbeing": 68.4
+  },
+  {
+    "date": "2025-09-14",
+    "stress": 59.8,
+    "burnout": 12.5,
+    "fatigue": 27.6,
+    "wellbeing": 68.6
+  },
+  {
+    "date": "2025-09-15",
+    "stress": 59.9,
+    "burnout": 12.4,
+    "fatigue": 28.0,
+    "wellbeing": 68.9
+  },
+  {
+    "date": "2025-09-16",
+    "stress": 60.0,
+    "burnout": 12.3,
+    "fatigue": 28.4,
+    "wellbeing": 69.1
+  },
+  {
+    "date": "2025-09-17",
+    "stress": 60.0,
+    "burnout": 12.2,
+    "fatigue": 28.8,
+    "wellbeing": 69.4
+  },
+  {
+    "date": "2025-09-18",
+    "stress": 60.0,
+    "burnout": 12.2,
+    "fatigue": 29.2,
+    "wellbeing": 69.6
+  },
+  {
+    "date": "2025-09-19",
+    "stress": 60.0,
+    "burnout": 12.1,
+    "fatigue": 29.6,
+    "wellbeing": 69.9
+  },
+  {
+    "date": "2025-09-20",
+    "stress": 59.9,
+    "burnout": 12.0,
+    "fatigue": 29.9,
+    "wellbeing": 70.2
+  },
+  {
+    "date": "2025-09-21",
+    "stress": 59.8,
+    "burnout": 12.0,
+    "fatigue": 30.3,
+    "wellbeing": 70.4
+  },
+  {
+    "date": "2025-09-22",
+    "stress": 59.6,
+    "burnout": 12.0,
+    "fatigue": 30.6,
+    "wellbeing": 70.7
+  },
+  {
+    "date": "2025-09-23",
+    "stress": 59.5,
+    "burnout": 12.0,
+    "fatigue": 30.9,
+    "wellbeing": 71.0
+  },
+  {
+    "date": "2025-09-24",
+    "stress": 59.3,
+    "burnout": 12.0,
+    "fatigue": 31.2,
+    "wellbeing": 71.2
+  },
+  {
+    "date": "2025-09-25",
+    "stress": 59.0,
+    "burnout": 12.0,
+    "fatigue": 31.5,
+    "wellbeing": 71.5
+  },
+  {
+    "date": "2025-09-26",
+    "stress": 58.8,
+    "burnout": 12.1,
+    "fatigue": 31.7,
+    "wellbeing": 71.7
+  },
+  {
+    "date": "2025-09-27",
+    "stress": 58.5,
+    "burnout": 12.1,
+    "fatigue": 32.0,
+    "wellbeing": 71.9
+  },
+  {
+    "date": "2025-09-28",
+    "stress": 58.2,
+    "burnout": 12.2,
+    "fatigue": 32.2,
+    "wellbeing": 72.2
+  },
+  {
+    "date": "2025-09-29",
+    "stress": 57.9,
+    "burnout": 12.3,
+    "fatigue": 32.4,
+    "wellbeing": 72.4
+  },
+  {
+    "date": "2025-09-30",
+    "stress": 57.5,
+    "burnout": 12.4,
+    "fatigue": 32.5,
+    "wellbeing": 72.6
+  },
+  {
+    "date": "2025-10-01",
+    "stress": 57.1,
+    "burnout": 12.5,
+    "fatigue": 32.7,
+    "wellbeing": 72.8
+  },
+  {
+    "date": "2025-10-02",
+    "stress": 56.8,
+    "burnout": 12.7,
+    "fatigue": 32.8,
+    "wellbeing": 73.0
+  },
+  {
+    "date": "2025-10-03",
+    "stress": 56.4,
+    "burnout": 12.8,
+    "fatigue": 32.9,
+    "wellbeing": 73.2
+  },
+  {
+    "date": "2025-10-04",
+    "stress": 55.9,
+    "burnout": 13.0,
+    "fatigue": 32.9,
+    "wellbeing": 73.3
+  },
+  {
+    "date": "2025-10-05",
+    "stress": 55.5,
+    "burnout": 13.1,
+    "fatigue": 33.0,
+    "wellbeing": 73.5
+  },
+  {
+    "date": "2025-10-06",
+    "stress": 55.1,
+    "burnout": 13.3,
+    "fatigue": 33.0,
+    "wellbeing": 73.6
+  },
+  {
+    "date": "2025-10-07",
+    "stress": 54.7,
+    "burnout": 13.5,
+    "fatigue": 33.0,
+    "wellbeing": 73.7
+  },
+  {
+    "date": "2025-10-08",
+    "stress": 54.3,
+    "burnout": 13.7,
+    "fatigue": 33.0,
+    "wellbeing": 73.8
+  },
+  {
+    "date": "2025-10-09",
+    "stress": 53.9,
+    "burnout": 13.9,
+    "fatigue": 32.9,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-10-10",
+    "stress": 53.5,
+    "burnout": 14.1,
+    "fatigue": 32.8,
+    "wellbeing": 73.9
+  },
+  {
+    "date": "2025-10-11",
+    "stress": 53.1,
+    "burnout": 14.4,
+    "fatigue": 32.7,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-10-12",
+    "stress": 52.7,
+    "burnout": 14.6,
+    "fatigue": 32.6,
+    "wellbeing": 74.0
+  },
+  {
+    "date": "2025-10-13",
+    "stress": 52.3,
+    "burnout": 14.9,
+    "fatigue": 32.5,
+    "wellbeing": 74.0
+  }
+]

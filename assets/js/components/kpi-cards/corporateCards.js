@@ -255,6 +255,7 @@ export async function mountCorporateKpiCards(target, options = {}){
 
   const shellFragment = cardsTemplate.content.cloneNode(true);
   const grid = shellFragment.querySelector('.kpi-cards__grid');
+  const noticeEl = shellFragment.querySelector('.kpi-cards__notice');
   const cards = new Map();
 
   METRIC_CONFIG.forEach(metric => {
@@ -270,6 +271,17 @@ export async function mountCorporateKpiCards(target, options = {}){
 
   let lastData = null;
   let isLoading = false;
+
+  function updateNotice(text){
+    if (!noticeEl) return;
+    if (text) {
+      noticeEl.textContent = text;
+      noticeEl.hidden = false;
+    } else {
+      noticeEl.textContent = '';
+      noticeEl.hidden = true;
+    }
+  }
 
   function render(){
     cards.forEach(({ config, ...card }) => {
@@ -304,10 +316,15 @@ export async function mountCorporateKpiCards(target, options = {}){
     showError(message){
       isLoading = false;
       host.classList.remove('is-loading');
+      updateNotice(null);
       overlay.show(message || t('actions.retry', 'Tap to retry'));
     },
     setOnRetry(fn){
       overlay.setOnRetry(fn);
+    },
+    setNotice(text){
+      updateNotice(text);
+      return text;
     }
   };
 }

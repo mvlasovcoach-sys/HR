@@ -1,3 +1,5 @@
+import { demoBounds, getCachedDemoBounds, preloadDemoDaily } from '../services/demoData.js';
+
 const RANGE_LABELS = {
   today: 'Today',
   '7d': '7 Days',
@@ -157,21 +159,107 @@ function resolveCustomRange(selection, tz){
   };
 }
 
-export function resolveRange(selection, now = new Date(), tz = 'Europe/Amsterdam'){
+function normaliseMode(value){
+  if (!value) return 'DEMO';
+  const upper = String(value).trim().toUpperCase();
+  return upper === 'LIVE' ? 'LIVE' : 'DEMO';
+}
+
+function toIso(date){
+  return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
+}
+
+async function resolveDemoBounds(){
+  const cached = getCachedDemoBounds();
+  if (cached) return cached;
+  try {
+    return await demoBounds();
+  } catch (err) {
+    return { min: null, max: null };
+  }
+}
+
+function applyDemoClamp(range, bounds){
+  const output = { ...range };
+  if (!bounds?.min || !bounds?.max) {
+    output.hasDemoData = false;
+    return output;
+  }
+
+  const minTime = Date.parse(`${bounds.min}T00:00:00.000Z`);
+  const maxInclusive = Date.parse(`${bounds.max}T00:00:00.000Z`);
+  if (!Number.isFinite(minTime) || !Number.isFinite(maxInclusive)) {
+    output.hasDemoData = false;
+    return output;
+  }
+
+  const maxExclusive = maxInclusive + 24 * 60 * 60 * 1000;
+
+  const clamp = date => {
+    const time = date.getTime();
+    if (!Number.isFinite(time)) return time;
+    return Math.min(Math.max(time, minTime), maxExclusive);
+  };
+
+  const startTime = clamp(range.start);
+  const endTime = clamp(range.end);
+
+  const compareStartTime = clamp(range.compareStart);
+  const compareEndTime = clamp(range.compareEnd);
+
+  const clampedStart = new Date(startTime);
+  const clampedEnd = new Date(endTime);
+  const clampedCompareStart = new Date(compareStartTime);
+  const clampedCompareEnd = new Date(compareEndTime);
+
+  output.start = clampedStart;
+  output.end = clampedEnd;
+  output.compareStart = clampedCompareStart;
+  output.compareEnd = clampedCompareEnd;
+
+  if (clampedEnd.getTime() <= clampedStart.getTime()) {
+    output.hasDemoData = false;
+  }
+
+  return output;
+}
+
+async function ensureDemoContext(range, selection){
+  const modeInput = selection?.mode || selection?.context?.mode;
+  const mode = normaliseMode(modeInput);
+  if (mode !== 'DEMO') {
+    return { ...range, hasDemoData: true };
+  }
+
+  preloadDemoDaily();
+  const bounds = await resolveDemoBounds();
+  return applyDemoClamp(range, bounds);
+}
+
+export async function resolveRange(selection, now = new Date(), tz = 'Europe/Amsterdam'){
   const kind = normaliseKind(selection) || 'today';
   const base = startOfDayZoned(now, tz);
   if (kind === 'custom' && typeof selection === 'object') {
     const custom = resolveCustomRange(selection, tz);
     if (!custom) return null;
+    const clamped = await ensureDemoContext({
+      kind: custom.kind,
+      label: custom.label,
+      start: custom.start,
+      end: custom.end,
+      compareStart: custom.compareStart,
+      compareEnd: custom.compareEnd
+    }, selection);
     return {
       kind: custom.kind,
       label: custom.label,
-      start: custom.start.toISOString(),
-      end: custom.end.toISOString(),
+      start: toIso(clamped.start),
+      end: toIso(clamped.end),
       compare: {
-        start: custom.compareStart.toISOString(),
-        end: custom.compareEnd.toISOString()
-      }
+        start: toIso(clamped.compareStart),
+        end: toIso(clamped.compareEnd)
+      },
+      hasDemoData: clamped.hasDemoData !== false
     };
   }
 
@@ -227,15 +315,25 @@ export function resolveRange(selection, now = new Date(), tz = 'Europe/Amsterdam
     }
   }
 
+  const resolved = await ensureDemoContext({
+    kind,
+    label,
+    start,
+    end,
+    compareStart,
+    compareEnd
+  }, selection);
+
   return {
     kind,
     label,
-    start: start.toISOString(),
-    end: end.toISOString(),
+    start: toIso(resolved.start),
+    end: toIso(resolved.end),
     compare: {
-      start: compareStart.toISOString(),
-      end: compareEnd.toISOString()
-    }
+      start: toIso(resolved.compareStart),
+      end: toIso(resolved.compareEnd)
+    },
+    hasDemoData: resolved.hasDemoData !== false
   };
 }
 

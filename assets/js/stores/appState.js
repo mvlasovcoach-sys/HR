@@ -1,5 +1,6 @@
 import { devError } from '../utils/env.js';
 import { resolveRange } from '../utils/dateRange.js';
+import { ModeStore } from './modeStore.js';
 
 const TEAM_KEY = 'hr:team';
 const TEAMS_KEY = 'hr:teams';
@@ -97,19 +98,38 @@ const state = {
   rangeResolved: null
 };
 
+let pendingRangePromise = null;
+
 function rangesEqual(a, b){
   if (!a && !b) return true;
   if (!a || !b) return false;
   return a.start === b.start && a.end === b.end && a.compare?.start === b.compare?.start && a.compare?.end === b.compare?.end;
 }
 
-function dispatchRangeChange(){
-  const selection = { kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd };
-  const resolved = resolveRange(selection);
-  if (!resolved) return;
-  if (rangesEqual(state.rangeResolved, resolved)) return;
-  state.rangeResolved = resolved;
-  document.dispatchEvent(new CustomEvent('state:range-changed', { detail: { range: resolved, selection } }));
+async function dispatchRangeChange(){
+  const selection = { kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd, mode: ModeStore.mode };
+  const promise = resolveRange(selection);
+  pendingRangePromise = promise;
+  try {
+    const resolved = await promise;
+    if (pendingRangePromise !== promise) return;
+    if (!resolved) return;
+    if (rangesEqual(state.rangeResolved, resolved)) return;
+    state.rangeResolved = resolved;
+    document.dispatchEvent(new CustomEvent('state:range-changed', { detail: { range: resolved, selection } }));
+  } catch (err) {
+    devError('Failed to resolve range', err);
+  } finally {
+    if (pendingRangePromise === promise) {
+      pendingRangePromise = null;
+    }
+  }
+}
+
+function safeDispatch(){
+  dispatchRangeChange().catch(err => {
+    devError('Range dispatch failed', err);
+  });
 }
 
 function normaliseKind(kind){
@@ -199,15 +219,28 @@ export const AppState = {
     };
   },
   getResolvedRange(){
-    if (!state.rangeResolved) {
-      state.rangeResolved = resolveRange({ kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd });
-    }
     return state.rangeResolved;
+  },
+  async getResolvedRangeAsync(){
+    if (state.rangeResolved) {
+      return state.rangeResolved;
+    }
+    const selection = { kind: state.rangeKind, start: state.rangeStart, end: state.rangeEnd, mode: ModeStore.mode };
+    try {
+      const resolved = await resolveRange(selection);
+      if (resolved) {
+        state.rangeResolved = resolved;
+      }
+      return resolved;
+    } catch (err) {
+      devError('Failed to resolve range', err);
+      return null;
+    }
   },
   setRangeKind(kind){
     const nextKind = normaliseKind(kind);
     if (state.rangeKind === nextKind && state.rangeStart == null && state.rangeEnd == null) {
-      dispatchRangeChange();
+      safeDispatch();
       return;
     }
     state.rangeKind = nextKind;
@@ -216,7 +249,7 @@ export const AppState = {
       state.rangeEnd = null;
     }
     state.rangeResolved = null;
-    dispatchRangeChange();
+    safeDispatch();
   },
   setCustomRange(start, end){
     const cleanStart = typeof start === 'string' && start ? start : null;
@@ -226,10 +259,10 @@ export const AppState = {
     state.rangeEnd = cleanEnd;
     state.rangeResolved = null;
     if (!cleanStart || !cleanEnd) return;
-    dispatchRangeChange();
+    safeDispatch();
   },
   notifyRange(){
     state.rangeResolved = null;
-    dispatchRangeChange();
+    safeDispatch();
   }
 };

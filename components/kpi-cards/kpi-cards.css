@@ -37,6 +37,25 @@
   gap: 16px;
 }
 
+.kpi-cards__notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpi-cards__notice[hidden] {
+  display: none;
+}
+
 .kpi-cards__title-block {
   display: grid;
   gap: 4px;
