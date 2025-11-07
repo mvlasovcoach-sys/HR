@@ -1,8 +1,16 @@
 const devError = typeof window !== 'undefined' && typeof window.devError === 'function' ? window.devError : () => {};
 const devWarn = typeof window !== 'undefined' && typeof window.devWarn === 'function' ? window.devWarn : () => {};
 const LIBS = [
-  {global: 'html2canvas', src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'},
-  {global: 'jspdf', src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'}
+  {
+    global: 'html2canvas',
+    src: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+    integrity: 'sha512-BNaXQ4i9M/dwZ0pniS3pSkeYMt2rt7NmBGG99nmHn7+O+kO5OVwOB1p5MNDoAuCEi0aKBslZx2drXr/7ju0R2w=='
+  },
+  {
+    global: 'jspdf',
+    src: 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+    integrity: 'sha512-/sP9H8byN6D+PfYZ7R6pujISiFDUFxIr05oig3NbS1Ry6j3Tz6kRXKuX3sI5Yucs5cjox96D65V6pZeRA7IJRg=='
+  }
 ];
 const EXPORT_SELECTOR = '[data-export-key]';
 const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
@@ -10,15 +18,22 @@ const SOURCE_SELECTOR = '.panel[data-source-id], .card.panel[data-source-id]';
 export async function ensureExportLibs(){
   for (const lib of LIBS) {
     if (window[lib.global]) continue;
-    await loadScript(lib.src);
+    await loadScript(lib.src, { integrity: lib.integrity, crossOrigin: 'anonymous' });
   }
 }
 
-export function loadScript(src){
+export function loadScript(src, options = {}){
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
     script.async = true;
+    if (options.integrity) {
+      script.integrity = options.integrity;
+      script.crossOrigin = options.crossOrigin || 'anonymous';
+      if (options.referrerPolicy) {
+        script.referrerPolicy = options.referrerPolicy;
+      }
+    }
     script.onload = () => resolve();
     script.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(script);

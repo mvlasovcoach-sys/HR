@@ -7,13 +7,29 @@ import replace from '@rollup/plugin-replace';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const entries = [
+  'analytics',
+  'corporate',
+  'demo',
+  'devices',
+  'engagement',
+  'summary'
+];
+
 export default {
-  input: path.resolve(__dirname, 'assets/js/entries/corporate.entry.js'),
+  input: Object.fromEntries(
+    entries.map(name => [
+      name,
+      path.resolve(__dirname, `assets/js/entries/${name}.entry.js`)
+    ])
+  ),
   output: {
-    file: path.resolve(__dirname, 'assets/build/corporate.bundle.js'),
-    format: 'iife',
+    dir: path.resolve(__dirname, 'assets/build'),
+    format: 'esm',
     sourcemap: true,
-    name: 'CorporateBundle'
+    entryFileNames: '[name].bundle.js',
+    chunkFileNames: 'chunks/[name]-[hash].js',
+    assetFileNames: '[name]-[hash][extname]'
   },
   plugins: [
     resolve({ browser: true }),
