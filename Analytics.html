@@ -56,12 +56,14 @@
           <button class="icon info" aria-label="info" id="page-info" type="button">i</button>
         </div>
         <div class="page-header__right" id="header-actions">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button class="seg is-active" data-lang="en" type="button">EN</button>
-            <button class="seg" data-lang="nl" type="button">NL</button>
-            <button class="seg" data-lang="ru" type="button">RU</button>
+          <div class="toolbar" role="toolbar" aria-label="Language and export controls">
+            <div class="lang-switch" role="group" aria-label="Language">
+              <button class="seg is-active" data-lang="en" type="button" aria-pressed="true">EN</button>
+              <button class="seg" data-lang="nl" type="button" aria-pressed="false">NL</button>
+              <button class="seg" data-lang="ru" type="button" aria-pressed="false">RU</button>
+            </div>
+            <button id="tb-export" class="export-btn" type="button">Export</button>
           </div>
-          <button id="tb-export" class="btn-export" type="button">Export</button>
         </div>
       </header>
       <div id="toolbar" data-toolbar-root></div>
@@ -78,7 +80,7 @@
         <div id="analytics-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
         <section class="card chart-card analytics-tracker" id="analytics-tracker-panel" data-source-id="demo-synth-2025">
       <div class="card__header">
-        <h2 class="card__title">
+        <h2 class="card__title section-title">
           <span data-i18n="analytics.tracker">Wellbeing score (MA7)</span>
         </h2>
         <div class="trk-controls">
@@ -101,7 +103,7 @@
     </section>
         <section class="card analytics-breakdown">
       <header class="card__header">
-        <div class="card__subtitle" data-i18n="section.breakdowns">Risk Breakdown</div>
+        <div class="card__subtitle section-title" data-i18n="section.breakdowns">Risk Breakdown</div>
       </header>
       <div class="card__body">
         <div class="breakdown-grid num" id="analytics-breakdown" aria-live="polite"></div>
@@ -114,7 +116,7 @@
         <div class="skeleton__block"></div>
       </div>
       <header class="card__header so-head">
-        <h2 class="card__title" data-i18n="stress.title">Emotional wellbeing</h2>
+        <h2 class="card__title section-title" data-i18n="stress.title">Emotional wellbeing</h2>
         <div class="range-pills" role="tablist" data-i18n="stress.range" data-i18n-attr="aria-label" aria-label="Time range">
           <button role="tab" data-range="day"   class="range-pill is-active" data-i18n="range.day" aria-selected="true" aria-pressed="true" tabindex="0">Day</button>
           <button role="tab" data-range="week"  class="range-pill"        data-i18n="range.week" aria-selected="false" aria-pressed="false" tabindex="-1">Week</button>
