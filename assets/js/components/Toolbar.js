@@ -28,7 +28,7 @@ export function renderToolbar(options = {}) {
   const showTeam = controls?.showTeam !== false;
   const showDates = controls?.showDates !== false;
   host.innerHTML = `
-  <div class="toolbar">
+  <div class="toolbar toolbar--filters">
     <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
       ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
     </div>

@@ -66,12 +66,14 @@
           <button class="icon info" aria-label="info" id="page-info" type="button">i</button>
         </div>
         <div class="page-header__right" id="header-actions">
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button class="seg is-active" data-lang="en" type="button">EN</button>
-            <button class="seg" data-lang="nl" type="button">NL</button>
-            <button class="seg" data-lang="ru" type="button">RU</button>
+          <div class="toolbar" role="toolbar" aria-label="Language and export controls">
+            <div class="lang-switch" role="group" aria-label="Language">
+              <button class="seg is-active" data-lang="en" type="button" aria-pressed="true">EN</button>
+              <button class="seg" data-lang="nl" type="button" aria-pressed="false">NL</button>
+              <button class="seg" data-lang="ru" type="button" aria-pressed="false">RU</button>
+            </div>
+            <button id="tb-export" class="export-btn" type="button">Export</button>
           </div>
-          <button id="tb-export" class="btn-export" type="button">Export</button>
         </div>
       </header>
       <div id="toolbar" data-toolbar-root></div>
@@ -88,8 +90,8 @@
       <div id="page-content">
         <div id="global-caption"></div>
 
-        <section id="corp-kpis" class="panel">
-      <div class="panel__head" data-i18n="section.corporateOverview">Overview KPIs</div>
+        <section id="corp-kpis" class="panel card">
+      <div class="panel__head section-title" data-i18n="section.corporateOverview">Overview KPIs</div>
       <!-- KPI BLOCK START -->
       <section class="kpi-cards kpi-cards--compact" id="kpi"></section>
       <div id="fatigue-today-card" class="trend-card-host is-hidden" aria-live="polite"></div>
@@ -97,9 +99,9 @@
       <div id="corp-kpi-grid" class="grid grid-4" data-legacy-kpi></div>
     </section>
 
-        <section id="corp-heatmap" class="panel">
+        <section id="corp-heatmap" class="panel card">
       <div class="panel__head">
-        <span data-i18n="section.corporateHeatmap">Divisional Heatmap</span>
+        <span class="section-title" data-i18n="section.corporateHeatmap">Divisional Heatmap</span>
         <span class="legend" aria-hidden="true">
           <span><i class="sw red"></i><span data-i18n="legend.low">≤55 red</span></span>
           <span><i class="sw amber"></i><span data-i18n="legend.mid">56–69 amber</span></span>
@@ -110,9 +112,9 @@
       <div id="heatmap-grid"></div>
     </section>
 
-        <section id="corp-events" class="panel">
+        <section id="corp-events" class="panel card">
       <div class="panel__head">
-        <span data-i18n="section.corporateEvents">Detected Events</span>
+        <span class="section-title" data-i18n="section.corporateEvents">Detected Events</span>
         <div class="event-badges" id="event-badges" aria-live="polite">
           <span class="pill pill--neutral" id="ev-count"></span>
           <span class="pill pill--critical" id="ev-crit"></span>
@@ -123,9 +125,9 @@
       <div id="events-list"></div>
     </section>
 
-        <section id="corp-activity" class="panel">
+        <section id="corp-activity" class="panel card">
       <div class="panel__head">
-        <span data-i18n="section.corporateActivity">Activity Log</span>
+        <span class="section-title" data-i18n="section.corporateActivity">Activity Log</span>
         <button id="export-activity" class="brand-btn--primary btn--export" data-export-key="ui.exportCSV" data-export-icon="⇩">
           <span class="btn__icon" aria-hidden="true">⇩</span>
           <span class="btn__label" data-i18n="ui.exportCSV">Export CSV</span>

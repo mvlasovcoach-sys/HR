@@ -19,5 +19,50 @@
 }
 :root {
   --font-sans: "Inter Variable", system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+
+  --fs-h1: clamp(24px, 2.2vw, 32px);
+  --fs-h2: clamp(18px, 1.6vw, 24px);
+  --fs-h3: clamp(16px, 1.4vw, 20px);
+  --fs-base: 15px;
+  --fs-small: 13px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --card-radius: 20px;
+  --card-px: 28px;
+  --card-py: 20px;
+  --card-shadow: 0 16px 60px rgba(0,0,0,.25), 0 0 1px rgba(255,255,255,.06) inset;
+  --card-bg: rgba(15, 34, 39, .6);
 }
-body { font-family: var(--font-sans); }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+}
+
+.page-title {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-h1);
+  letter-spacing: .2px;
+  margin: 0;
+}
+
+.section-title {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-h2);
+  margin: 0;
+}
+
+.body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+}
+
+.small {
+  font-size: var(--fs-small);
+}
