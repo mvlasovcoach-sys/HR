@@ -1,9 +1,11 @@
 import { loadDemoSamples, loadLiveSamples } from './dataSource.js';
+import { loadDemoDaily } from './demoData.js';
 import { keyForRange } from '../utils/dateRange.js';
 
 const BURNOUT_THRESHOLD = 55;
 const FATIGUE_THRESHOLD = 60;
 const MIN_SAMPLE_SIZE = 5;
+const DEMO_MIN_SAMPLE_SIZE = 1;
 
 const datasetCache = new Map();
 const dailyCache = new Map();
@@ -145,6 +147,9 @@ async function ensureDataset(mode){
 }
 
 async function ensureDailyIndex(mode){
+  if (mode !== 'LIVE') {
+    return new Map();
+  }
   const key = mode === 'LIVE' ? 'LIVE' : 'DEMO';
   if (!dailyCache.has(key)) {
     const promise = ensureDataset(key).then(buildDailyIndex);
@@ -225,6 +230,107 @@ function normaliseLang(){
   return 'en';
 }
 
+function mean(values){
+  if (!Array.isArray(values) || !values.length) return null;
+  const sum = values.reduce((acc, value) => acc + value, 0);
+  return Number.isFinite(sum) ? +(sum / values.length).toFixed(1) : null;
+}
+
+function toRangeFilter(startIso, endIso){
+  const startTime = Date.parse(startIso);
+  const endTime = Date.parse(endIso);
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) {
+    return () => false;
+  }
+  return row => {
+    const ts = Date.parse(`${row?.date}T00:00:00.000Z`);
+    if (!Number.isFinite(ts)) return false;
+    return ts >= startTime && ts < endTime;
+  };
+}
+
+function aggregateDemoRows(rows = []){
+  const wellbeing = [];
+  const stress = [];
+  const burnout = [];
+  const fatigue = [];
+
+  rows.forEach(row => {
+    const w = Number(row?.wellbeing);
+    if (Number.isFinite(w)) wellbeing.push(w);
+    const s = Number(row?.stress);
+    if (Number.isFinite(s)) stress.push(s);
+    const b = Number(row?.burnout);
+    if (Number.isFinite(b)) burnout.push(b);
+    const f = Number(row?.fatigue);
+    if (Number.isFinite(f)) fatigue.push(f);
+  });
+
+  return {
+    wellbeing: mean(wellbeing),
+    stress: mean(stress),
+    burnout: mean(burnout),
+    fatigue: mean(fatigue),
+    n: rows.length
+  };
+}
+
+async function getDemoKpis({ start, end, compareStart, compareEnd, teamId, lang }){
+  const rows = await loadDemoDaily().catch(() => []);
+  const filterCurrent = toRangeFilter(start, end);
+  const filterCompare = toRangeFilter(compareStart, compareEnd);
+  const currentRows = rows.filter(filterCurrent);
+  const compareRows = rows.filter(filterCompare);
+  const currentAgg = aggregateDemoRows(currentRows);
+  const compareAgg = aggregateDemoRows(compareRows);
+  const isInsufficient = currentRows.length < DEMO_MIN_SAMPLE_SIZE;
+  const hasSample = currentRows.length > 0;
+
+  return {
+    mode: 'DEMO',
+    start,
+    end,
+    teamId,
+    lang,
+    isInsufficient,
+    demo: {
+      hasSample,
+      guardSmallN: DEMO_MIN_SAMPLE_SIZE,
+      samples: currentRows.length
+    },
+    counts: {
+      current: currentRows.length,
+      compare: compareRows.length
+    },
+    wellbeing: {
+      value: isInsufficient ? null : currentAgg.wellbeing,
+      previous: compareAgg.wellbeing,
+      unit: '/100'
+    },
+    stress: {
+      value: isInsufficient ? null : currentAgg.stress,
+      previous: compareAgg.stress,
+      unit: '/100'
+    },
+    burnout: {
+      value: isInsufficient ? null : currentAgg.burnout,
+      previous: compareAgg.burnout,
+      unit: '%'
+    },
+    fatigue: {
+      value: isInsufficient ? null : currentAgg.fatigue,
+      previous: compareAgg.fatigue,
+      unit: '%'
+    },
+    deltas: {
+      wellbeing: isInsufficient ? null : diff(currentAgg.wellbeing, compareAgg.wellbeing),
+      stress: isInsufficient ? null : diff(currentAgg.stress, compareAgg.stress),
+      burnout: isInsufficient ? null : diff(currentAgg.burnout, compareAgg.burnout),
+      fatigue: isInsufficient ? null : diff(currentAgg.fatigue, compareAgg.fatigue)
+    }
+  };
+}
+
 export async function getKpis(params = {}){
   const mode = normaliseMode(params.mode);
   const lang = params.lang || normaliseLang();
@@ -240,6 +346,10 @@ export async function getKpis(params = {}){
   }
 
   const request = (async () => {
+    if (mode === 'DEMO') {
+      return getDemoKpis({ start, end, compareStart, compareEnd, teamId, lang });
+    }
+
     const dayIndex = await ensureDailyIndex(mode);
     const currentDays = iterateDays(start, end);
     const compareDays = iterateDays(compareStart, compareEnd);
