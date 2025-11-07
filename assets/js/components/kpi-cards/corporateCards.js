@@ -122,7 +122,7 @@ function createOverlay(host, onRetry){
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'kpi-cards__overlay-action';
-  button.textContent = t('actions.retry', 'Tap to retry');
+  button.textContent = t('actions.retry', 'Retry');
   button.addEventListener('click', () => {
     container.hidden = true;
     onRetry?.();
@@ -136,7 +136,7 @@ function createOverlay(host, onRetry){
     message,
     button,
     show(text){
-      message.textContent = text || t('actions.retry', 'Tap to retry');
+      message.textContent = text || t('actions.retry', 'Retry');
       container.hidden = false;
     },
     hide(){
@@ -182,36 +182,60 @@ function createCard(cardTemplate, metric){
   };
 }
 
-function renderCard(card, metric, payload, delta, options){
+function renderCard(card, metric, value, delta, options){
   const { element, refs } = card;
-  const isLoading = options.isLoading;
-  const isInsufficient = options.isInsufficient;
+  const isLoading = Boolean(options.isLoading);
+  const isInsufficient = Boolean(options.isInsufficient);
+  const mode = options.mode || 'demo';
   const thresholds = options.thresholds || KPI_THRESHOLDS;
 
-  element.classList.toggle('is-loading', Boolean(isLoading));
+  element.classList.toggle('is-loading', isLoading);
 
-  if (isInsufficient) {
-    refs.numberEl.textContent = 'N/A';
-    refs.unitEl.textContent = '';
-    refs.deltaValueEl.textContent = t('kpi.delta.na', 'N/A');
+  if (isLoading) {
+    refs.numberEl.textContent = '—';
+    refs.unitEl.textContent = metric.unit === '/100' ? '/100' : metric.unit === '%' ? '%' : '';
+    if (refs.deltaEl) {
+      refs.deltaEl.hidden = true;
+    }
     refs.deltaIconEl.textContent = '';
-    if (refs.deltaEl) refs.deltaEl.dataset.direction = 'flat';
-    refs.assistiveEl.textContent = t('kpi.assistive.na', 'Data not available for this range.');
+    refs.deltaValueEl.textContent = '';
+    refs.assistiveEl.textContent = t('kpi.assistive.loading', 'Loading KPI value…');
     if (refs.miniFillEl) refs.miniFillEl.style.width = '0%';
     element.dataset.tone = 'neutral';
     if (refs.badgeEl) refs.badgeEl.textContent = '';
     return;
   }
 
-  const band = resolveBand(metric.key, payload?.value, thresholds);
+  if (isInsufficient) {
+    refs.numberEl.textContent = 'N/A';
+    refs.unitEl.textContent = '';
+    if (refs.deltaEl) {
+      refs.deltaEl.hidden = true;
+    }
+    refs.deltaIconEl.textContent = '';
+    refs.deltaValueEl.textContent = '';
+    refs.assistiveEl.textContent = mode === 'live'
+      ? t('kpi.assistive.liveNA', 'No live data for this period.')
+      : t('kpi.assistive.na', 'Data not available for this range.');
+    if (refs.miniFillEl) refs.miniFillEl.style.width = '0%';
+    element.dataset.tone = 'neutral';
+    if (refs.badgeEl) refs.badgeEl.textContent = '';
+    return;
+  }
+
+  if (refs.deltaEl) {
+    refs.deltaEl.hidden = false;
+  }
+
+  const band = resolveBand(metric.key, value, thresholds);
   element.dataset.tone = band;
 
-  const formatted = formatValue(payload?.value, metric.unit);
+  const formatted = formatValue(value, metric.unit);
   refs.numberEl.textContent = formatted.number;
   refs.unitEl.textContent = formatted.unit;
 
   const deltaLabel = deltaDisplay(delta);
-  if (deltaLabel) {
+  if (deltaLabel && Number.isFinite(delta)) {
     const direction = delta > 0 ? 'up' : 'down';
     if (refs.deltaEl) refs.deltaEl.dataset.direction = direction;
     refs.deltaValueEl.textContent = `${deltaLabel}${formatted.unit}`;
@@ -225,7 +249,7 @@ function renderCard(card, metric, payload, delta, options){
   }
 
   if (refs.miniFillEl) {
-    const fill = resolveFill(metric.key, payload?.value, metric.polarity);
+    const fill = resolveFill(metric.key, value, metric.polarity);
     refs.miniFillEl.style.width = `${fill}%`;
   }
 
@@ -284,10 +308,14 @@ export async function mountCorporateKpiCards(target, options = {}){
   }
 
   function render(){
+    const mode = (lastData?.mode || 'demo').toLowerCase();
+    const deltas = lastData?.deltas || {};
     cards.forEach(({ config, ...card }) => {
-      const payload = lastData ? lastData[config.key] : null;
-      const delta = lastData?.deltas?.[config.key] ?? null;
-      renderCard(card, config, payload, delta, {
+      const rawValue = lastData?.[config.key];
+      const value = Number.isFinite(rawValue) ? rawValue : null;
+      const delta = Number.isFinite(deltas[config.key]) ? deltas[config.key] : null;
+      renderCard(card, config, value, delta, {
+        mode,
         isLoading,
         isInsufficient: Boolean(lastData?.isInsufficient),
         thresholds: options.thresholds || KPI_THRESHOLDS
@@ -317,7 +345,7 @@ export async function mountCorporateKpiCards(target, options = {}){
       isLoading = false;
       host.classList.remove('is-loading');
       updateNotice(null);
-      overlay.show(message || t('actions.retry', 'Tap to retry'));
+      overlay.show(message || t('actions.retry', 'Retry'));
     },
     setOnRetry(fn){
       overlay.setOnRetry(fn);

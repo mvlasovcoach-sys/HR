@@ -1,5 +1,3 @@
-import { demoBounds, getCachedDemoBounds, preloadDemoDaily } from '../services/demoData.js';
-
 const RANGE_LABELS = {
   today: 'Today',
   '7d': '7 Days',
@@ -159,189 +157,148 @@ function resolveCustomRange(selection, tz){
   };
 }
 
-function normaliseMode(value){
-  if (!value) return 'DEMO';
-  const upper = String(value).trim().toUpperCase();
-  return upper === 'LIVE' ? 'LIVE' : 'DEMO';
-}
-
 function toIso(date){
   return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
 }
 
-async function resolveDemoBounds(){
-  const cached = getCachedDemoBounds();
-  if (cached) return cached;
-  try {
-    return await demoBounds();
-  } catch (err) {
-    return { min: null, max: null };
-  }
-}
-
-function applyDemoClamp(range, bounds){
-  const output = { ...range };
-  if (!bounds?.min || !bounds?.max) {
-    output.hasDemoData = false;
-    return output;
-  }
-
-  const minTime = Date.parse(`${bounds.min}T00:00:00.000Z`);
-  const maxInclusive = Date.parse(`${bounds.max}T00:00:00.000Z`);
-  if (!Number.isFinite(minTime) || !Number.isFinite(maxInclusive)) {
-    output.hasDemoData = false;
-    return output;
-  }
-
-  const maxExclusive = maxInclusive + 24 * 60 * 60 * 1000;
-
-  const clamp = date => {
-    const time = date.getTime();
-    if (!Number.isFinite(time)) return time;
-    return Math.min(Math.max(time, minTime), maxExclusive);
+function normaliseOutput({ kind, label, start, end, compareStart, compareEnd }){
+  const startISO = toIso(start);
+  const endISO = toIso(end);
+  const compareStartISO = toIso(compareStart);
+  const compareEndISO = toIso(compareEnd);
+  return {
+    kind,
+    label,
+    startISO,
+    endISO,
+    start: startISO,
+    end: endISO,
+    compare: {
+      startISO: compareStartISO,
+      endISO: compareEndISO,
+      start: compareStartISO,
+      end: compareEndISO
+    }
   };
-
-  const startTime = clamp(range.start);
-  const endTime = clamp(range.end);
-
-  const compareStartTime = clamp(range.compareStart);
-  const compareEndTime = clamp(range.compareEnd);
-
-  const clampedStart = new Date(startTime);
-  const clampedEnd = new Date(endTime);
-  const clampedCompareStart = new Date(compareStartTime);
-  const clampedCompareEnd = new Date(compareEndTime);
-
-  output.start = clampedStart;
-  output.end = clampedEnd;
-  output.compareStart = clampedCompareStart;
-  output.compareEnd = clampedCompareEnd;
-
-  if (clampedEnd.getTime() <= clampedStart.getTime()) {
-    output.hasDemoData = false;
-  }
-
-  return output;
-}
-
-async function ensureDemoContext(range, selection){
-  const modeInput = selection?.mode || selection?.context?.mode;
-  const mode = normaliseMode(modeInput);
-  if (mode !== 'DEMO') {
-    return { ...range, hasDemoData: true };
-  }
-
-  preloadDemoDaily();
-  const bounds = await resolveDemoBounds();
-  return applyDemoClamp(range, bounds);
 }
 
 export async function resolveRange(selection, now = new Date(), tz = 'Europe/Amsterdam'){
   const kind = normaliseKind(selection) || 'today';
-  const base = startOfDayZoned(now, tz);
   if (kind === 'custom' && typeof selection === 'object') {
     const custom = resolveCustomRange(selection, tz);
-    if (!custom) return null;
-    const clamped = await ensureDemoContext({
-      kind: custom.kind,
-      label: custom.label,
-      start: custom.start,
-      end: custom.end,
-      compareStart: custom.compareStart,
-      compareEnd: custom.compareEnd
-    }, selection);
-    return {
-      kind: custom.kind,
-      label: custom.label,
-      start: toIso(clamped.start),
-      end: toIso(clamped.end),
-      compare: {
-        start: toIso(clamped.compareStart),
-        end: toIso(clamped.compareEnd)
-      },
-      hasDemoData: clamped.hasDemoData !== false
-    };
+    return custom ? normaliseOutput(custom) : null;
   }
 
+  const base = startOfDayZoned(now, tz);
   let start = base;
   let end = addDaysZoned(base, tz, 1);
-  let compareStart = addDaysZoned(base, tz, -1);
-  let compareEnd = base;
-  let label = RANGE_LABELS.today;
 
   switch (kind) {
-    case 'today': {
-      label = RANGE_LABELS.today;
-      break;
-    }
-    case '7d': {
-      label = RANGE_LABELS['7d'];
+    case '7d':
       end = base;
       start = addDaysZoned(end, tz, -7);
-      compareEnd = start;
-      compareStart = addDaysZoned(compareEnd, tz, -7);
       break;
-    }
-    case 'mtd': {
-      label = RANGE_LABELS.mtd;
+    case 'mtd':
       start = startOfMonthZoned(base, tz);
       end = base;
-      const span = countDays(start, end, tz);
-      compareEnd = start;
-      compareStart = addDaysZoned(compareEnd, tz, -span);
       break;
-    }
-    case 'qtd': {
-      label = RANGE_LABELS.qtd;
+    case 'qtd':
       start = startOfQuarterZoned(base, tz);
       end = base;
-      const span = countDays(start, end, tz);
-      compareEnd = start;
-      compareStart = addDaysZoned(compareEnd, tz, -span);
       break;
-    }
-    case 'ytd': {
-      label = RANGE_LABELS.ytd;
+    case 'ytd':
       start = startOfYearZoned(base, tz);
       end = base;
-      const span = countDays(start, end, tz);
-      compareEnd = start;
-      compareStart = addDaysZoned(compareEnd, tz, -span);
       break;
-    }
-    default: {
-      label = RANGE_LABELS.today;
+    case 'today':
+    default:
+      start = base;
+      end = addDaysZoned(base, tz, 1);
       break;
-    }
   }
 
-  const resolved = await ensureDemoContext({
+  const span = countDays(start, end, tz);
+  const compareEnd = start;
+  const compareStart = span > 0 ? addDaysZoned(compareEnd, tz, -span) : compareEnd;
+  return normaliseOutput({
     kind,
-    label,
+    label: RANGE_LABELS[kind] || RANGE_LABELS.today,
     start,
     end,
     compareStart,
     compareEnd
-  }, selection);
-
-  return {
-    kind,
-    label,
-    start: toIso(resolved.start),
-    end: toIso(resolved.end),
-    compare: {
-      start: toIso(resolved.compareStart),
-      end: toIso(resolved.compareEnd)
-    },
-    hasDemoData: resolved.hasDemoData !== false
-  };
+  });
 }
 
-export function keyForRange({ start, end, teamId = 'all', mode = 'DEMO', lang = 'en' } = {}){
-  const safeStart = typeof start === 'string' ? start : '';
-  const safeEnd = typeof end === 'string' ? end : '';
+function normaliseIsoEntry(value){
+  if (!value) return null;
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+  if (Number.isNaN(date.valueOf())) return null;
+  return { iso: date.toISOString(), time: date.getTime() };
+}
+
+function normaliseDay(day){
+  if (typeof day !== 'string' || day.length !== 10) return null;
+  const date = new Date(`${day}T00:00:00.000Z`);
+  if (Number.isNaN(date.valueOf())) return null;
+  return { iso: date.toISOString(), time: date.getTime() };
+}
+
+function addDaysISO(day, amount){
+  const normalized = normaliseDay(day);
+  if (!normalized) return null;
+  const date = new Date(normalized.time);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString();
+}
+
+function maxISO(iso, minDay){
+  const left = normaliseIsoEntry(iso);
+  const right = normaliseDay(minDay);
+  if (!left && !right) return null;
+  if (!left) return right.iso;
+  if (!right) return left.iso;
+  return left.time >= right.time ? left.iso : right.iso;
+}
+
+function minISO(iso, boundIso){
+  const left = normaliseIsoEntry(iso);
+  const right = normaliseIsoEntry(boundIso);
+  if (!left && !right) return null;
+  if (!left) return right.iso;
+  if (!right) return left.iso;
+  return left.time <= right.time ? left.iso : right.iso;
+}
+
+export function clampToDemo(range, bounds){
+  const startInput = range?.startISO || range?.start || null;
+  const endInput = range?.endISO || range?.end || null;
+  const min = bounds?.min || null;
+  const max = bounds?.max || null;
+  const startNormalized = normaliseIsoEntry(startInput)?.iso || null;
+  const endNormalized = normaliseIsoEntry(endInput)?.iso || null;
+  if (!startNormalized || !endNormalized) {
+    return { startISO: startNormalized, endISO: endNormalized, start: startNormalized, end: endNormalized, ok: false };
+  }
+  if (!min || !max) {
+    return { startISO: startNormalized, endISO: endNormalized, start: startNormalized, end: endNormalized, ok: false };
+  }
+  const endBoundISO = addDaysISO(max, 1);
+  const clampedStart = maxISO(startNormalized, min);
+  const clampedEnd = minISO(endNormalized, endBoundISO);
+  const startIso = normaliseIsoEntry(clampedStart)?.iso || null;
+  const endIso = normaliseIsoEntry(clampedEnd)?.iso || null;
+  const ok = Boolean(startIso && endIso && endIso > startIso);
+  return { startISO: startIso, endISO: endIso, start: startIso, end: endIso, ok };
+}
+
+export function keyForRange({ startISO, endISO, start, end, teamId = 'all', mode = 'DEMO', lang = 'en' } = {}){
+  const safeStart = typeof startISO === 'string' ? startISO : typeof start === 'string' ? start : '';
+  const safeEnd = typeof endISO === 'string' ? endISO : typeof end === 'string' ? end : '';
   const safeTeam = teamId != null ? String(teamId) : 'all';
   const safeMode = mode != null ? String(mode) : 'DEMO';
   const safeLang = lang != null ? String(lang) : 'en';
   return `range:${safeStart}:${safeEnd}:team:${safeTeam}:mode:${safeMode}:lang:${safeLang}`;
 }
+
+export { addDaysISO };

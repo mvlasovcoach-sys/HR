@@ -17,6 +17,8 @@ import '../theme.js';
 import '../asof.js';
 import { AppState } from '../stores/appState.js';
 import { ModeStore } from '../stores/modeStore.js';
+import { clampToDemo } from '../utils/dateRange.js';
+import { demoBounds } from '../services/demoData.js';
 
 const devError = globalThis.devError || ((...args) => console.error(...args));
 
@@ -106,40 +108,53 @@ function resolveTeamId(){
 }
 
 async function fetchKpiSnapshot(resolved){
-  if (!resolved || !resolved.start || !resolved.end) return;
+  const startISO = resolved?.startISO || resolved?.start;
+  const endISO = resolved?.endISO || resolved?.end;
+  if (!startISO || !endISO) return;
   currentRange = resolved;
   const controller = await ensureKpiController();
   const requestId = ++activeRequestId;
   controller.setLoading(true);
   try {
     const service = await loadKpiService();
-    const mode = (ModeStore.mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+    const mode = (ModeStore.mode || '').toLowerCase() === 'live' ? 'live' : 'demo';
     const teamId = resolveTeamId();
-    const data = await service.getKpis({
-      start: resolved.start,
-      end: resolved.end,
-      compareStart: resolved.compare?.start,
-      compareEnd: resolved.compare?.end,
-      teamId,
-      mode,
-      lang: document.documentElement?.lang || 'en'
-    });
-    if (requestId !== activeRequestId) return;
-    const isDemoMode = mode === 'DEMO';
-    if (isDemoMode) {
-      const hasDemoRangeData = resolved.hasDemoData !== false;
-      const hasDemoSample = data?.demo?.hasSample !== false && (data?.counts?.current ?? 0) > 0;
-      if (!hasDemoRangeData || !hasDemoSample) {
+    if (mode === 'demo') {
+      const bounds = await demoBounds();
+      if (requestId !== activeRequestId) return;
+      const clampResult = clampToDemo({ startISO, endISO }, bounds);
+      if (!clampResult.ok) {
         demoFallbackActive = true;
+        controller.setLoading(false);
         controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
         if (resolved.kind !== '7d') {
           AppState.setRangeKind('7d');
         }
         return;
       }
-      if (resolved.kind !== '7d') {
-        demoFallbackActive = false;
+    }
+
+    const data = await service.getKpis({
+      startISO,
+      endISO,
+      compareStartISO: resolved.compare?.startISO || resolved.compare?.start,
+      compareEndISO: resolved.compare?.endISO || resolved.compare?.end,
+      teamId,
+      mode,
+      lang: document.documentElement?.lang || 'en'
+    });
+    if (requestId !== activeRequestId) return;
+    if (mode === 'demo') {
+      if (data?.reason === 'no-demo-range' || data?.isInsufficient) {
+        demoFallbackActive = true;
+        controller.setLoading(false);
+        controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
+        if (resolved.kind !== '7d') {
+          AppState.setRangeKind('7d');
+        }
+        return;
       }
+      demoFallbackActive = resolved.kind === '7d' ? demoFallbackActive : false;
     } else {
       demoFallbackActive = false;
     }
@@ -148,8 +163,7 @@ async function fetchKpiSnapshot(resolved){
   } catch (err) {
     if (requestId !== activeRequestId) return;
     devError('KPI fetch failed:', err);
-    const controller = await ensureKpiController();
-    controller.showError(translate('actions.retry', 'Tap to retry'));
+    controller.showError(translate('actions.retry', 'Retry'));
   }
 }
 
