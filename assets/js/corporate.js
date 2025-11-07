@@ -621,7 +621,6 @@ function initCorporatePage(){
         const cell = document.createElement('div');
         cell.className = 'heatmap-cell';
         cell.setAttribute('role', 'gridcell');
-        cell.tabIndex = 0;
         cell.dataset.colIndex = String(colIndex);
         cell.dataset.colLabel = label;
         if (dates[colIndex]) cell.dataset.date = dates[colIndex];
@@ -641,12 +640,6 @@ function initCorporatePage(){
         }
         cell.addEventListener('click', () => {
           handleHeatmapSelection(colIndex);
-        });
-        cell.addEventListener('keydown', evt => {
-          if (evt.key === 'Enter' || evt.key === ' ') {
-            evt.preventDefault();
-            handleHeatmapSelection(colIndex);
-          }
         });
         fragment.appendChild(cell);
       });
@@ -1144,7 +1137,7 @@ function initCorporatePage(){
     if (els.exportBtn) {
       window.exporter?.notifyStart?.(els.exportBtn);
     }
-    const lang = window.I18N?.getLang?.() || 'en';
+    const lang = (window.I18N?.getLang?.() || 'en').slice(0, 2).toLowerCase();
     const headers = buildActivityColumns(lang).map(col => csvEscape(col.label));
     const lines = [headers.join(',')].concat(state.activityCsvRows.map(row => row.map(csvEscape).join(',')));
     const tableEl = els.activityTable;
@@ -1153,10 +1146,8 @@ function initCorporatePage(){
     const csvBody = lines.join('\n');
     const csv = attribution.length ? `${attribution.join('\n')}\n${csvBody}` : csvBody;
     const blob = new Blob([csv], {type: 'text/csv'});
-    const team = state.teamSelection === 'all' ? 'all' : state.teamSelection;
-    const range = state.rangeKey || '7d';
     const stamp = formatFileDate(new Date());
-    const filename = `activity_${team}_${range}_${stamp}.csv`;
+    const filename = `Corporate_${stamp}_${lang}.csv`;
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
