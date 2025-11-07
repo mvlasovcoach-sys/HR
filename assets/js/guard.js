@@ -34,7 +34,14 @@
       ? msg
       : (global.I18N?.t?.('guard.insufficient') || 'Insufficient group size');
     const label = Number.isFinite(count) ? count : '–';
-    target.innerHTML = `<div class="kGuard">${message} (n=${label}).</div>`;
+    if (target.tagName === 'TBODY') {
+      const table = target.closest('table');
+      const headerCells = table ? table.querySelectorAll('thead th, thead td') : null;
+      const span = headerCells && headerCells.length ? headerCells.length : 1;
+      target.innerHTML = `<tr class="kGuard"><td colspan="${span}">${message} (n=${label}).</td></tr>`;
+    } else {
+      target.innerHTML = `<div class="kGuard">${message} (n=${label}).</div>`;
+    }
     target.setAttribute('data-guard', 'true');
     target.setAttribute('data-guard-message', `${message} (n=${label}).`);
     return true;

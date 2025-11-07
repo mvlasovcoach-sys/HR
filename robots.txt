@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /HR/
+Sitemap: https://mvlasovcoach-sys.github.io/HR/sitemap.xml
