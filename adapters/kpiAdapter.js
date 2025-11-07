@@ -2,10 +2,19 @@ const METRICS = ['wellbeing', 'stressAvg', 'burnoutPct', 'fatiguePct'];
 const RANGE_KEYS = ['1d', '7d', '30d', 'mtd', 'qtd', 'ytd'];
 
 const DATA_URL = new URL('../public/demo/night-shift.json', import.meta.url);
+const TODAY_URL = new URL('../public/data/demo/kpi_today.json', import.meta.url);
 const BURNOUT_THRESHOLD = 55;
 const FATIGUE_THRESHOLD = 60;
 
+const SNAPSHOT_VALUE_KEYS = {
+  wellbeing: 'wellbeing',
+  stressAvg: 'stress',
+  burnoutPct: 'burnout',
+  fatiguePct: 'fatigue'
+};
+
 let datasetPromise = null;
+let todaySnapshotPromise = null;
 
 // Helpers
 const clamp0_100 = v => Math.max(0, Math.min(100, v));
@@ -25,6 +34,11 @@ function safeAvg(arr, key) {
 function safePct(numer, denom) {
   if (!Number.isFinite(numer) || !Number.isFinite(denom) || denom <= 0) return undefined;
   return clamp0_100((numer / denom) * 100);
+}
+
+function safeNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : undefined;
 }
 
 function blankMetric() {
@@ -68,6 +82,41 @@ async function loadSamples() {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+async function fetchTodaySnapshot() {
+  if (!todaySnapshotPromise) {
+    todaySnapshotPromise = fetch(TODAY_URL)
+      .then(response => {
+        if (!response.ok) throw new Error(`Failed to load today KPI snapshot (${response.status})`);
+        return response.json();
+      })
+      .catch(() => null);
+  }
+  return todaySnapshotPromise;
+}
+
+function applyTodaySnapshot(metrics, snapshot) {
+  if (!snapshot || !metrics) return;
+  METRICS.forEach(metric => {
+    const valueKey = SNAPSHOT_VALUE_KEYS[metric];
+    if (!valueKey || !metrics[metric]) return;
+    const entry = metrics[metric]['1d'] || { value: undefined, delta: undefined };
+    const value = safeNumber(snapshot[valueKey]);
+    if (value != null) {
+      entry.value = clamp0_100(value);
+    }
+    const delta = safeNumber(snapshot[`${valueKey}_delta`]);
+    if (delta != null) {
+      entry.delta = delta;
+    }
+    const trendKey = `${valueKey}_trend`;
+    const trend = snapshot[trendKey];
+    if (typeof trend === 'string' && trend.trim()) {
+      entry.trend = trend.trim();
+    }
+    metrics[metric]['1d'] = entry;
+  });
+}
 
 function startOfDayUTC(date) {
   if (!(date instanceof Date) || Number.isNaN(date.valueOf())) return new Date(NaN);
@@ -249,13 +298,18 @@ function withTrend(curr, prev) {
 
 export async function getKpiData() {
   const byDay = await fetchDaily();
+  const todaySnapshot = await fetchTodaySnapshot();
   if (!byDay.length) {
+    const metrics = METRICS.reduce((acc, key) => {
+      acc[key] = blankMetric();
+      return acc;
+    }, {});
+    if (todaySnapshot) {
+      applyTodaySnapshot(metrics, todaySnapshot);
+    }
     return {
       defaultRange: '7d',
-      metrics: METRICS.reduce((acc, key) => {
-        acc[key] = blankMetric();
-        return acc;
-      }, {})
+      metrics
     };
   }
 
@@ -356,6 +410,10 @@ export async function getKpiData() {
       metrics[metric][rangeKey] = payload[metric];
     });
   });
+
+  if (todaySnapshot) {
+    applyTodaySnapshot(metrics, todaySnapshot);
+  }
 
   return {
     defaultRange: '7d',

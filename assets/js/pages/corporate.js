@@ -6,8 +6,14 @@ import { mountCorporatePage } from '../corporate.js';
 
 let corporateController = null;
 
-function applyMode(mode){
-  ModeStore.set(mode);
+async function applyMode(mode){
+  const next = (mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+  ModeStore.set(next);
+  try {
+    await refreshPage();
+  } catch (err) {
+    (globalThis.devError || console.error)?.('Corporate mode switch failed', err);
+  }
 }
 
 async function refreshPage(){
