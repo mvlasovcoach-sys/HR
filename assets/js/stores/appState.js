@@ -103,7 +103,15 @@ let pendingRangePromise = null;
 function rangesEqual(a, b){
   if (!a && !b) return true;
   if (!a || !b) return false;
-  return a.start === b.start && a.end === b.end && a.compare?.start === b.compare?.start && a.compare?.end === b.compare?.end;
+  const aStart = a.startISO || a.start;
+  const bStart = b.startISO || b.start;
+  const aEnd = a.endISO || a.end;
+  const bEnd = b.endISO || b.end;
+  const aCompareStart = a.compare?.startISO || a.compare?.start;
+  const bCompareStart = b.compare?.startISO || b.compare?.start;
+  const aCompareEnd = a.compare?.endISO || a.compare?.end;
+  const bCompareEnd = b.compare?.endISO || b.compare?.end;
+  return aStart === bStart && aEnd === bEnd && aCompareStart === bCompareStart && aCompareEnd === bCompareEnd;
 }
 
 async function dispatchRangeChange(){

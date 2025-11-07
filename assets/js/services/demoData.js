@@ -1,7 +1,6 @@
-const DAILY_URL = new URL('../../data/demo/daily.json', import.meta.url);
+const DEMO_DAILY_PATH = 'assets/data/demo/daily.json';
 
-let _cache = null;
-let _promise = null;
+let _rows = null;
 let _bounds = null;
 
 function getFetcher(){
@@ -18,69 +17,52 @@ function getFetcher(){
   };
 }
 
+function toNumber(value){
+  if (value === '' || value == null) return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function normaliseRows(rows){
   if (!Array.isArray(rows)) return [];
   return rows
     .map(row => ({
       date: typeof row?.date === 'string' ? row.date : null,
-      stress: Number(row?.stress),
-      burnout: Number(row?.burnout),
-      fatigue: Number(row?.fatigue),
-      wellbeing: Number(row?.wellbeing)
+      stress: toNumber(row?.stress),
+      burnout: toNumber(row?.burnout),
+      fatigue: toNumber(row?.fatigue),
+      wellbeing: toNumber(row?.wellbeing)
     }))
     .filter(entry => typeof entry.date === 'string' && entry.date.length === 10)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function updateBounds(list){
-  if (list.length === 0) {
-    _bounds = null;
+  if (!list.length) {
+    _bounds = { min: null, max: null };
     return;
   }
-  const first = list[0]?.date || null;
-  const last = list[list.length - 1]?.date || null;
-  _bounds = first && last ? { min: first, max: last } : null;
-}
-
-export function getCachedDemoBounds(){
-  return _bounds ? { ..._bounds } : null;
+  _bounds = {
+    min: list[0].date,
+    max: list[list.length - 1].date
+  };
 }
 
 export async function loadDemoDaily(){
-  if (_cache) return _cache;
-  if (_promise) return _promise;
+  if (_rows) return _rows;
   const fetchJSON = getFetcher();
-  _promise = fetchJSON(DAILY_URL.toString())
-    .then(normaliseRows)
-    .then(list => {
-      _cache = list;
-      updateBounds(list);
-      return list;
-    })
-    .catch(err => {
-      _cache = [];
-      _bounds = null;
-      throw err;
-    })
-    .finally(() => {
-      _promise = null;
-    });
-  return _promise;
+  const data = await fetchJSON(DEMO_DAILY_PATH).catch(() => []);
+  _rows = normaliseRows(data);
+  updateBounds(_rows);
+  return _rows;
 }
 
 export async function demoBounds(){
-  if (_bounds) {
-    return { ..._bounds };
+  if (!_bounds) {
+    await loadDemoDaily().catch(() => []);
   }
-  try {
-    const rows = await loadDemoDaily();
-    updateBounds(rows);
-  } catch (err) {
-    /* ignore and fall through */
+  if (!_bounds) {
+    return { min: null, max: null };
   }
-  return _bounds ? { ..._bounds } : { min: null, max: null };
-}
-
-export function preloadDemoDaily(){
-  return loadDemoDaily().catch(() => []);
+  return { ..._bounds };
 }
