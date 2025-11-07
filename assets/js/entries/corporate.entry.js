@@ -17,13 +17,38 @@ import '../guards.js';
 import '../theme.js';
 import '../asof.js';
 
-import { bootstrapCorporatePage } from '../pages/corporate.js';
-import { handleExportClick } from '../exporter.js';
-import { mountKpiCards, KPI_CONFIG } from '../../../components/kpi-cards/kpi-cards.js';
-import { exportCurrentView } from '../components/Toolbar.js';
-import { getKpiData } from '../../../adapters/kpiAdapter.js';
-
 const devError = globalThis.devError || ((...args) => console.error(...args));
+
+let corporateModulePromise;
+let exporterModulePromise;
+let toolbarModulePromise;
+let kpiCardsModulePromise;
+let kpiAdapterModulePromise;
+
+function loadCorporatePage() {
+  corporateModulePromise ||= import('../pages/corporate.js');
+  return corporateModulePromise;
+}
+
+function loadExporter() {
+  exporterModulePromise ||= import('../exporter.js');
+  return exporterModulePromise;
+}
+
+function loadToolbar() {
+  toolbarModulePromise ||= import('../components/Toolbar.js');
+  return toolbarModulePromise;
+}
+
+function loadKpiCards() {
+  kpiCardsModulePromise ||= import('../../../components/kpi-cards/kpi-cards.js');
+  return kpiCardsModulePromise;
+}
+
+function loadKpiAdapter() {
+  kpiAdapterModulePromise ||= import('../../../adapters/kpiAdapter.js');
+  return kpiAdapterModulePromise;
+}
 
 function onDomReady(callback) {
   if (document.readyState === 'loading') {
@@ -44,7 +69,11 @@ function waitForI18n() {
 
 async function initKpiCards() {
   try {
-    const data = await getKpiData();
+    const [adapterModule, cardsModule] = await Promise.all([
+      loadKpiAdapter(),
+      loadKpiCards()
+    ]);
+    const data = await adapterModule.getKpiData();
 
     function bindExternalRange(cb) {
       document.addEventListener('toolbar:range', event => {
@@ -53,7 +82,7 @@ async function initKpiCards() {
       });
     }
 
-    mountKpiCards('#kpi', data, KPI_CONFIG, {
+    cardsModule.mountKpiCards('#kpi', data, cardsModule.KPI_CONFIG, {
       initialRange: '1d',
       bindExternalRange
     });
@@ -65,11 +94,17 @@ async function initKpiCards() {
 function bindExportButton() {
   const exportBtn = document.getElementById('tb-export');
   if (!exportBtn) return;
-  exportBtn.removeEventListener('click', exportCurrentView);
   exportBtn.addEventListener('click', async event => {
     event.preventDefault();
     try {
-      await handleExportClick({ trigger: exportBtn, onExport: exportCurrentView });
+      const [exporter, toolbar] = await Promise.all([
+        loadExporter(),
+        loadToolbar()
+      ]);
+      await exporter.handleExportClick({
+        trigger: exportBtn,
+        onExport: toolbar.exportCurrentView
+      });
     } catch (err) {
       devError('Export failed:', err);
     }
@@ -105,6 +140,7 @@ function setupLayoutChrome() {
 
 async function bootstrap() {
   await waitForI18n();
+  const { bootstrapCorporatePage } = await loadCorporatePage();
   await bootstrapCorporatePage();
   await initKpiCards();
   bindExportButton();
