@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#071423"/>
+      <stop offset="100%" stop-color="#0f2844"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g fill="#8beeff" opacity="0.24">
+    <circle cx="210" cy="150" r="120"/>
+    <circle cx="1030" cy="500" r="170"/>
+    <circle cx="920" cy="150" r="95"/>
+  </g>
+  <g fill="#ffffff" opacity="0.08">
+    <rect x="170" y="260" width="880" height="210" rx="38"/>
+    <rect x="170" y="500" width="560" height="70" rx="24"/>
+  </g>
+  <text x="190" y="190" fill="#9ff7ff" font-size="36" font-family="'Inter', 'Segoe UI', sans-serif" letter-spacing="0.08em">SPA2099 HR HEALTH</text>
+  <text x="190" y="260" fill="#ffffff" font-size="80" font-weight="700" font-family="'Inter', 'Segoe UI', sans-serif">Demo Control Room</text>
+  <text x="190" y="330" fill="#d2f8ff" font-size="32" font-family="'Inter', 'Segoe UI', sans-serif">Scenario walkthrough &amp; KPI sandbox</text>
+</svg>

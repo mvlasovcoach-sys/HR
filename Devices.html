@@ -1,8 +1,28 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/>
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.jsdelivr.net;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self' data:;
+  img-src 'self' data:;
+  connect-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <base href="./">
 <title>SPA2099 HR Health — Devices</title>
+<meta name="description" content="Devices dashboard: fleet coverage, readiness and device status insights.">
+<link rel="canonical" href="https://mvlasovcoach-sys.github.io/HR/Devices.html">
+<meta property="og:title" content="SPA2099 HR Health — Devices">
+<meta property="og:description" content="Coverage, status and readiness insights.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mvlasovcoach-sys.github.io/HR/Devices.html">
+<meta property="og:image" content="assets/og/devices.svg">
+<meta name="twitter:card" content="summary_large_image">
 <!-- Базовая тема (легаси, не трогаем визуал) -->
 <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
 
@@ -20,30 +40,20 @@
 <link rel="stylesheet" href="./shared/brand.chips.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.inputs.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/nojs-nav.css?v=2025-11-02-1">
 <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-<script type="module" src="./assets/js/utils/env.js?v=2025-11-02-1"></script>
-<script type="module" src="./assets/js/data-loader.js"></script>
-<script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/version.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/devices.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/exporter.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
-<script src="assets/js/asof.js" defer></script>
 </head><body>
 <div class="page">
-    <nav id="side-nav" class="sidebar"></nav>
+    <nav id="side-nav" class="sidebar"><noscript>
+  <ul class="nojs-nav">
+    <li><a href="Corporate.html">Corporate</a></li>
+    <li><a href="Analytics.html">Analytics</a></li>
+    <li><a href="Engagement.html">Engagement</a></li>
+    <li><a href="Devices.html">Devices</a></li>
+    <li><a href="Summary.html">Summary</a></li>
+    <li><a href="Demo.html">Demo</a></li>
+  </ul>
+</noscript></nav>
   <main class="main main--devices page-wrap">
       <header class="page-header">
         <div class="page-header__left">
@@ -52,9 +62,9 @@
         </div>
         <div class="page-header__right" id="header-actions">
           <div class="lang-switch" role="group" aria-label="Language">
-            <button class="seg is-active" data-lang="en" type="button">EN</button>
-            <button class="seg" data-lang="nl" type="button">NL</button>
-            <button class="seg" data-lang="ru" type="button">RU</button>
+            <button class="seg is-active" data-lang="en" type="button" aria-pressed="true">EN</button>
+            <button class="seg" data-lang="nl" type="button" aria-pressed="false">NL</button>
+            <button class="seg" data-lang="ru" type="button" aria-pressed="false">RU</button>
           </div>
           <button id="tb-export" class="btn-export" type="button">Export</button>
         </div>
@@ -87,30 +97,11 @@
       <div class="panel__meta" data-i18n="section.devicesOverview">Fleet status</div>
       <div class="kpi-grid" id="fleet-cards" aria-live="polite"></div>
     </section>
-      </div>
+  </div>
   </main>
 </div>
   <div id="devices-toast" class="toast toast--quiet" role="status" aria-live="assertive" hidden></div>
-  <script type="module" src="assets/js/stores/modeStore.js?v=2025-11-02-1"></script>
-  <script type="module" src="assets/js/components/Toolbar.js?v=2025-11-02-1"></script>
-  <!-- страничный js ниже -->
-  <script type="module" src="./assets/js/pages/devices.js?v=2025.10.19-05"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSideNav('devices');
-      window.DateControls?.mount('#tb-quick', {
-        presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
-        compare: false,
-        startSlot: '#tb-dates [data-date-slot="start"]',
-        endSlot: '#tb-dates [data-date-slot="end"]',
-        compareSlot: '#tb-compare'
-      });
-      window.Caption?.render('#global-caption', {
-        asOf: new Date(),
-        insight: window.PageInsight || ''
-      });
-    });
-  </script>
+  <script type="module" src="assets/js/entries/devices.entry.js?v=4"></script>
 <!-- global overlay root -->
 <div id="ui-portal"></div>
 

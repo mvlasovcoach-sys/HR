@@ -875,6 +875,9 @@ function initCorporatePage(){
     const table = els.activityTable;
     const cardsHost = els.activityCards;
     if (!table) return;
+    const theadEl = table.querySelector('thead');
+    const tbodyEl = table.querySelector('tbody');
+    if (!theadEl || !tbodyEl) return;
     const rows = Array.isArray(activity) ? activity : [];
     const filtered = rows.filter(row => {
       if (!row) return false;
@@ -882,13 +885,14 @@ function initCorporatePage(){
       return true;
     });
 
-    table.innerHTML = '';
+    theadEl.innerHTML = '';
+    tbodyEl.innerHTML = '';
     if (cardsHost) {
       cardsHost.innerHTML = '';
     }
     if (state.insufficient) {
       if (window.guardSmallN) {
-        window.guardSmallN(0, table, t('guard.insufficient', 'Insufficient group size'));
+        window.guardSmallN(0, tbodyEl, t('guard.insufficient', 'Insufficient group size'));
       }
       if (cardsHost) {
         cardsHost.innerHTML = '';
@@ -899,16 +903,16 @@ function initCorporatePage(){
     }
 
     if (window.guardSmallN) {
-      window.guardSmallN(5, table);
+      window.guardSmallN(5, tbodyEl);
     }
 
     const lang = window.I18N?.getLang?.() || 'en';
     const columns = buildActivityColumns(lang);
-    const thead = `<thead><tr>${columns.map((col, index) => activityHeaderCell(col, index)).join('')}</tr></thead>`;
+    theadEl.innerHTML = `<tr>${columns.map((col, index) => activityHeaderCell(col, index)).join('')}</tr>`;
     let tbody = '';
 
     if (!filtered.length) {
-      tbody = `<tbody><tr data-empty-row="true"><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr></tbody>`;
+      tbody = `<tr data-empty-row="true"><td colspan="${columns.length}">${t('activity.empty', 'No activity data')}</td></tr>`;
       if (cardsHost) {
         cardsHost.innerHTML = `<p class="caption">${t('activity.empty', 'No activity data')}</p>`;
       }
@@ -924,7 +928,7 @@ function initCorporatePage(){
         });
         return `<tr>${cells.join('')}</tr>`;
       });
-      tbody = `<tbody>${bodyRows.join('')}</tbody>`;
+      tbody = bodyRows.join('');
 
       if (cardsHost) {
         const cardMarkup = sorted.map(row => {
@@ -938,7 +942,7 @@ function initCorporatePage(){
       }
     }
 
-    table.innerHTML = `${thead}${tbody}`;
+    tbodyEl.innerHTML = tbody;
     updateActivityHeaderState(table, state.activitySort.key, state.activitySort.dir);
     updateActivityCsvFromDom();
   }

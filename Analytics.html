@@ -1,8 +1,28 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/>
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.jsdelivr.net;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self' data:;
+  img-src 'self' data:;
+  connect-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <base href="./">
 <title>SPA2099 HR Health — Analytics</title>
+<meta name="description" content="Analytics wellbeing dashboard: KPI trends, stress overview, heatmap insights.">
+<link rel="canonical" href="https://mvlasovcoach-sys.github.io/HR/Analytics.html">
+<meta property="og:title" content="SPA2099 HR Health — Analytics">
+<meta property="og:description" content="Trends, stress overview, wellbeing insights.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mvlasovcoach-sys.github.io/HR/Analytics.html">
+<meta property="og:image" content="assets/og/analytics.svg">
+<meta name="twitter:card" content="summary_large_image">
 <!-- Базовая тема (легаси, не трогаем визуал) -->
 <link rel="stylesheet" href="./assets/css/aurora.css?v=2">
 
@@ -20,35 +40,20 @@
 <link rel="stylesheet" href="./shared/brand.chips.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/brand.inputs.css?v=2025-10-26">
 <link rel="stylesheet" href="./shared/ui.header.css?v=2025-10-26">
+<link rel="stylesheet" href="./shared/nojs-nav.css?v=2025-11-02-1">
 <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-<script type="module" src="./assets/js/utils/env.js?v=2025-11-02-1"></script>
-<script type="module" src="./assets/js/data-loader.js"></script>
-<script src="./assets/js/audio-guard.js?v=2025.10.25-01"></script>
-<script defer src="./assets/js/api.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/i18n.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/team-filter.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/version.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/site.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/nav.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/app-shell.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/date-controls.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/caption.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/lazy-charts.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/guard.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/analytics.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/about.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/exporter.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/auth.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/guards.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/theme.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/sources.js?v=2025.10.19-05"></script>
-<script defer src="./assets/js/source-badge.js?v=2025.10.19-05"></script>
-<script type="module" src="./assets/js/stress.overview.js?v=2025.10.25-01"></script>
-<script type="module" src="./assets/js/ui/modal.js?v=2025-10-26"></script>
-<script src="assets/js/asof.js" defer></script>
 </head><body>
 <div class="page">
-    <nav id="side-nav" class="sidebar"></nav>
+    <nav id="side-nav" class="sidebar"><noscript>
+  <ul class="nojs-nav">
+    <li><a href="Corporate.html">Corporate</a></li>
+    <li><a href="Analytics.html">Analytics</a></li>
+    <li><a href="Engagement.html">Engagement</a></li>
+    <li><a href="Devices.html">Devices</a></li>
+    <li><a href="Summary.html">Summary</a></li>
+    <li><a href="Demo.html">Demo</a></li>
+  </ul>
+</noscript></nav>
   <main class="main main--analytics page-wrap">
       <header class="page-header">
         <div class="page-header__left">
@@ -183,232 +188,7 @@
     </section>
   </div>
 </div>
-  <script type="module" src="assets/js/stores/modeStore.js?v=2025-11-02-1"></script>
-  <script type="module" src="assets/js/components/Toolbar.js?v=2025-11-02-1"></script>
-  <!-- страничный js ниже -->
-  <script type="module" src="./assets/js/pages/analytics.js?v=2025.10.19-05"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const introKey = 'analytics_tour_dismissed_v2';
-
-      const initAnalyticsIntro = () => {
-        const modalId = 'legend-modal';
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-
-        const params = new URLSearchParams(window.location.search);
-        const forceTour = params.get('tour') === '1';
-
-        let dismissed = false;
-        try {
-          dismissed = localStorage.getItem(introKey) === '1';
-        } catch (err) {
-          dismissed = false;
-        }
-
-        if (dismissed && !forceTour) return;
-
-        const closeBtn = modal.querySelector('[data-close]');
-        const backdrop = modal.querySelector('.modal__backdrop');
-        let isOpen = false;
-        let previousOverflow = '';
-
-        const persistDismissed = () => {
-          try {
-            localStorage.setItem(introKey, '1');
-          } catch (err) {
-            /* noop */
-          }
-        };
-
-        const unlockScroll = () => {
-          document.body.style.overflow = previousOverflow || '';
-        };
-
-        const handleKeydown = event => {
-          if (event.key !== 'Escape') return;
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          event.stopPropagation();
-          dismiss();
-        };
-
-        const open = () => {
-          if (isOpen) return;
-          isOpen = true;
-          previousOverflow = document.body.style.overflow;
-          document.body.style.overflow = 'hidden';
-          if (typeof window.openModal === 'function') {
-            window.openModal(modalId);
-          } else {
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-          }
-          document.addEventListener('keydown', handleKeydown, true);
-        };
-
-        const dismiss = () => {
-          if (!isOpen) return;
-          persistDismissed();
-          isOpen = false;
-          document.removeEventListener('keydown', handleKeydown, true);
-          unlockScroll();
-          if (typeof window.closeModal === 'function') {
-            window.closeModal(modalId);
-          } else {
-            modal.classList.remove('is-open');
-            modal.setAttribute('aria-hidden', 'true');
-          }
-        };
-
-        if (closeBtn) {
-          closeBtn.addEventListener('click', event => {
-            event.preventDefault();
-            event.stopPropagation();
-            dismiss();
-          });
-        }
-
-        modal.addEventListener('click', event => {
-          if (event.target !== modal) return;
-          event.preventDefault();
-          event.stopPropagation();
-          dismiss();
-        });
-
-        if (backdrop) {
-          backdrop.addEventListener('click', event => {
-            event.preventDefault();
-            event.stopPropagation();
-            dismiss();
-          });
-        }
-
-        open();
-      };
-
-      initAnalyticsIntro();
-
-      const canonicalScenarioFn = (() => {
-        const fn = window.loaderGlobals?.canonicalScenarioKey;
-        if (typeof fn === 'function') return fn;
-        return value => {
-          const key = String(value || '').toLowerCase().trim();
-          if (key === 'night' || key === 'night-shift' || key === 'night_shift' || key === 'nightshift') return 'night';
-          if (key === 'demo' || key === 'sandbox' || key === 'preview') return 'demo';
-          return 'live';
-        };
-      })();
-
-      const knownScenarioKeys = new Set([
-        'live', 'production', 'prod', 'default', 'main',
-        'night', 'night-shift', 'night_shift', 'nightshift',
-        'demo', 'sandbox', 'preview'
-      ]);
-
-      const applyScenarioFromQuery = () => {
-        let queryValue = null;
-        try {
-          queryValue = new URLSearchParams(window.location.search).get('scenario');
-        } catch (err) {
-          queryValue = null;
-        }
-        if (!queryValue) return;
-        const raw = String(queryValue || '').toLowerCase().trim();
-        if (!knownScenarioKeys.has(raw)) return;
-        const canonical = canonicalScenarioFn(raw);
-        try {
-          localStorage.setItem('hr:scenario', canonical);
-        } catch (err) {
-          /* ignore storage issues */
-        }
-      };
-
-      applyScenarioFromQuery();
-
-      const t = (key, fallback) => window.I18N?.t?.(key) || fallback;
-      const periodLabel = () => {
-        const raw = (() => {
-          try {
-            return localStorage.getItem('hr:range');
-          } catch (err) {
-            return null;
-          }
-        })();
-        if (!raw) return t('range.7d', '7 Days');
-        try {
-          const parsed = JSON.parse(raw);
-          const preset = String(parsed?.preset || '').toLowerCase();
-          const key = preset === 'today' || preset === 'day'
-            ? 'today'
-            : preset === 'mtd' || preset === 'month'
-              ? 'mtd'
-              : preset === 'qtd' || preset === 'quarter'
-                ? 'qtd'
-                : preset === 'ytd' || preset === 'year'
-                  ? 'ytd'
-                  : '7d';
-          return t(`range.${key}`, '7 Days');
-        } catch (err) {
-          return t('range.7d', '7 Days');
-        }
-      };
-      const teamLabel = () => {
-        let team = 'all';
-        try {
-          team = localStorage.getItem('hr:team') || 'all';
-        } catch (err) {
-          team = 'all';
-        }
-        if (!team || team === 'all') return t('caption.teamAll', 'All Teams');
-        try {
-          const map = JSON.parse(localStorage.getItem('hr:team:names') || 'null');
-          if (map && map[team]) return map[team];
-        } catch (err) {
-          /* noop */
-        }
-        return team;
-      };
-      const captionInsight = () => {
-        const prefix = (() => {
-          try {
-            return localStorage.getItem('hr:scenario') === 'night'
-              ? t('caption.scenarioPrefix', 'Night-Shift Scenario · ')
-              : '';
-          } catch (err) {
-            return '';
-          }
-        })();
-        const base = `${t('caption.orgAvg', 'Org avg')} • ${periodLabel()} • ${teamLabel()}`;
-        return `${prefix}${base}`;
-      };
-
-      const renderCaption = () => {
-        window.Caption?.render?.('#global-caption', {
-          asOf: new Date(),
-          insight: captionInsight()
-        });
-      };
-
-      renderSideNav('analytics');
-      window.DateControls?.mount('#tb-quick', {
-        presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
-        compare: false,
-        startSlot: '#tb-dates [data-date-slot="start"]',
-        endSlot: '#tb-dates [data-date-slot="end"]',
-        compareSlot: '#tb-compare'
-      });
-      renderCaption();
-      document.addEventListener('i18n:change', renderCaption);
-      window.addEventListener('storage', event => {
-        if (!event) return;
-        if (event.key === 'hr:range' || event.key === 'hr:team' || event.key === 'hr:scenario') {
-          renderCaption();
-        }
-      });
-      window.StressOverview?.mount('so-chart', 'day');
-    });
-  </script>
+  <script type="module" src="assets/js/entries/analytics.entry.js?v=4"></script>
 <!-- global overlay root -->
 <div id="ui-portal"></div>
 

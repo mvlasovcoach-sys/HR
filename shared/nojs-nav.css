@@ -1,0 +1,16 @@
+.nojs-nav {
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 12px;
+}
+
+.nojs-nav a {
+  text-decoration: none;
+  font: 500 14px/1 var(--font-sans, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+}
