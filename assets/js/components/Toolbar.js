@@ -15,6 +15,51 @@ export function exportCurrentView(){
   });
 }
 
+import { AppState } from '../stores/appState.js';
+
+const RANGE_PRESETS = {
+  today: 'Today',
+  '7d': '7 Days',
+  mtd: 'Month to date',
+  qtd: 'Quarter to date',
+  ytd: 'Year to date'
+};
+
+function normaliseRangeLabel(label){
+  if (typeof label !== 'string') return null;
+  const normalized = label.trim().toLowerCase();
+  if (/^today/.test(normalized) || normalized === 'day' || normalized === '1d') return 'today';
+  if (normalized.includes('7') || normalized === '7d' || normalized === 'week') return '7d';
+  if (normalized.includes('month') || normalized === 'mtd') return 'mtd';
+  if (normalized.includes('quarter') || normalized === 'qtd') return 'qtd';
+  if (normalized.includes('year') || normalized === 'ytd') return 'ytd';
+  return null;
+}
+
+function formatDateForInput(iso, tz = 'Europe/Amsterdam'){
+  if (typeof iso !== 'string' || !iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.valueOf())) return '';
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(date);
+}
+
+function updateRangeButtons(quickHost, activeKind){
+  if (!quickHost) return;
+  const buttons = quickHost.querySelectorAll('button[data-range-kind]');
+  buttons.forEach(button => {
+    const kind = button.dataset.rangeKind;
+    const isActive = kind === activeKind;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
 export function renderToolbar(options = {}) {
   const { mount, title, mode, onModeChange, onInfo } = options;
   const host = typeof mount === 'string' ? document.querySelector(mount) : mount;
@@ -30,7 +75,11 @@ export function renderToolbar(options = {}) {
   host.innerHTML = `
   <div class="toolbar toolbar--filters">
     <div id="tb-quick" class="seg-group" role="group" aria-label="Quick ranges">
-      ${showRanges ? ranges.map(r => `<button class="seg" data-range="${r}">${r}</button>`).join('') : ''}
+      ${showRanges ? ranges.map(r => {
+        const kind = normaliseRangeLabel(r) || '';
+        const label = typeof r === 'string' ? r : (RANGE_PRESETS[kind] || r);
+        return `<button class="seg" data-range-kind="${kind}" type="button" role="button">${label}</button>`;
+      }).join('') : ''}
     </div>
     <div id="tb-mode" class="seg-group" role="tablist" aria-label="Mode">
       <button id="btnModeDemo" class="seg" type="button" role="tab" aria-selected="${resolvedMode==='DEMO'}">Demo</button>
@@ -38,8 +87,14 @@ export function renderToolbar(options = {}) {
     </div>
     <div id="tb-team" class="team-slot"${showTeam ? '' : ' hidden'}>${showTeam ? '<div id="teamSelect"></div>' : ''}</div>
     <div id="tb-dates"${showDates ? '' : ' hidden'}>
-      <div class="field" data-date-slot="start"></div>
-      <div class="field" data-date-slot="end"></div>
+      <label class="seg-input">
+        <span>Start</span>
+        <input type="date" id="tb-date-start" name="date-start" />
+      </label>
+      <label class="seg-input">
+        <span>End</span>
+        <input type="date" id="tb-date-end" name="date-end" />
+      </label>
     </div>
     <div id="tb-compare" data-compare-slot></div>
   </div>`;
@@ -99,18 +154,95 @@ export function renderToolbar(options = {}) {
     if (live) live.setAttribute('aria-selected', String(next === 'LIVE'));
   };
 
+  const emitModeChange = value => {
+    const next = value === 'LIVE' ? 'LIVE' : 'DEMO';
+    document.dispatchEvent(new CustomEvent('state:mode-changed', { detail: { mode: next } }));
+    onModeChange?.(next);
+  };
+
   if (demo) {
     demo.addEventListener('click', () => {
       updateSelected('DEMO');
-      onModeChange?.('DEMO');
+      emitModeChange('DEMO');
     });
   }
   if (live) {
     live.addEventListener('click', () => {
       updateSelected('LIVE');
-      onModeChange?.('LIVE');
+      emitModeChange('LIVE');
     });
   }
+
+  if (quickHost) {
+    quickHost.addEventListener('click', event => {
+      const btn = event.target?.closest?.('button[data-range-kind]');
+      if (!btn) return;
+      const kind = btn.dataset.rangeKind || '';
+      AppState.setRangeKind(kind);
+    });
+  }
+
+  const startInput = host.querySelector('#tb-date-start');
+  const endInput = host.querySelector('#tb-date-end');
+
+  const applyRangeToInputs = (resolved, selection) => {
+    if (!startInput || !endInput || !resolved) return;
+    const tz = 'Europe/Amsterdam';
+    if (selection?.kind === 'custom' && selection.start && selection.end) {
+      startInput.value = selection.start;
+      endInput.value = selection.end;
+      return;
+    }
+    const startValue = formatDateForInput(resolved.start, tz);
+    let endValue = startValue;
+    if (typeof resolved.end === 'string') {
+      const exclusive = new Date(resolved.end);
+      if (!Number.isNaN(exclusive.valueOf())) {
+        const inclusive = new Date(exclusive.getTime() - 1);
+        endValue = formatDateForInput(inclusive.toISOString(), tz) || endValue;
+      }
+    }
+    startInput.value = startValue;
+    endInput.value = endValue;
+  };
+
+  if (startInput) {
+    startInput.addEventListener('change', () => {
+      if (!startInput.value || !endInput?.value) {
+        AppState.setCustomRange(startInput.value, endInput?.value ?? '');
+        return;
+      }
+      if (startInput.value > endInput.value) return;
+      AppState.setCustomRange(startInput.value, endInput.value);
+    });
+  }
+
+  if (endInput) {
+    endInput.addEventListener('change', () => {
+      if (!startInput?.value || !endInput.value) {
+        AppState.setCustomRange(startInput?.value ?? '', endInput.value);
+        return;
+      }
+      if (startInput.value > endInput.value) return;
+      AppState.setCustomRange(startInput.value, endInput.value);
+    });
+  }
+
+  const syncRange = event => {
+    const detail = event?.detail || {};
+    const resolved = detail.range || AppState.getResolvedRange();
+    const selection = detail.selection || AppState.getRangeSelection();
+    updateRangeButtons(quickHost, selection?.kind || 'today');
+    applyRangeToInputs(resolved, selection);
+  };
+
+  document.addEventListener('state:range-changed', syncRange);
+  requestAnimationFrame(() => {
+    const resolved = AppState.getResolvedRange();
+    const selection = AppState.getRangeSelection();
+    updateRangeButtons(quickHost, selection?.kind || 'today');
+    applyRangeToInputs(resolved, selection);
+  });
 }
 
 function setupLangSwitch(container) {

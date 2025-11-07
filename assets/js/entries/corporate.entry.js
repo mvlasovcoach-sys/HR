@@ -7,7 +7,6 @@ import '../version.js';
 import '../site.js';
 import '../nav.js';
 import '../app-shell.js';
-import '../date-controls.js';
 import '../caption.js';
 import '../lazy-charts.js';
 import '../guard.js';
@@ -16,6 +15,8 @@ import '../auth.js';
 import '../guards.js';
 import '../theme.js';
 import '../asof.js';
+import { AppState } from '../stores/appState.js';
+import { ModeStore } from '../stores/modeStore.js';
 
 const devError = globalThis.devError || ((...args) => console.error(...args));
 
@@ -23,7 +24,7 @@ let corporateModulePromise;
 let exporterModulePromise;
 let toolbarModulePromise;
 let kpiCardsModulePromise;
-let kpiAdapterModulePromise;
+let kpiServiceModulePromise;
 
 function loadCorporatePage() {
   corporateModulePromise ||= import('../pages/corporate.js');
@@ -41,13 +42,13 @@ function loadToolbar() {
 }
 
 function loadKpiCards() {
-  kpiCardsModulePromise ||= import('../../../components/kpi-cards/kpi-cards.js');
+  kpiCardsModulePromise ||= import('../components/kpi-cards/corporateCards.js');
   return kpiCardsModulePromise;
 }
 
-function loadKpiAdapter() {
-  kpiAdapterModulePromise ||= import('../../../adapters/kpiAdapter.js');
-  return kpiAdapterModulePromise;
+function loadKpiService() {
+  kpiServiceModulePromise ||= import('../services/kpiService.js');
+  return kpiServiceModulePromise;
 }
 
 function onDomReady(callback) {
@@ -67,25 +68,98 @@ function waitForI18n() {
   return Promise.resolve();
 }
 
-async function initKpiCards() {
-  try {
-    const [adapterModule, cardsModule] = await Promise.all([
-      loadKpiAdapter(),
-      loadKpiCards()
-    ]);
-    const data = await adapterModule.getKpiData();
+const translate = (key, fallback) => window.I18N?.t?.(key, fallback) || fallback;
 
-    function bindExternalRange(cb) {
-      document.addEventListener('toolbar:range', event => {
-        const range = event?.detail?.range;
-        cb(range);
+let kpiControllerPromise;
+let currentRange = null;
+let activeRequestId = 0;
+
+async function ensureKpiController(){
+  if (!kpiControllerPromise) {
+    kpiControllerPromise = loadKpiCards().then(module =>
+      module.mountCorporateKpiCards('#kpi', {
+        onRetry: () => {
+          if (currentRange) {
+            fetchKpiSnapshot(currentRange).catch(err => {
+              devError('KPI retry failed:', err);
+            });
+          }
+        }
+      })
+    ).catch(err => {
+      kpiControllerPromise = null;
+      throw err;
+    });
+  }
+  return kpiControllerPromise;
+}
+
+function resolveTeamId(){
+  const teams = AppState.getActiveTeams?.();
+  if (Array.isArray(teams) && teams.length) {
+    return teams[0];
+  }
+  return 'all';
+}
+
+async function fetchKpiSnapshot(resolved){
+  if (!resolved || !resolved.start || !resolved.end) return;
+  currentRange = resolved;
+  const controller = await ensureKpiController();
+  const requestId = ++activeRequestId;
+  controller.setLoading(true);
+  try {
+    const service = await loadKpiService();
+    const mode = (ModeStore.mode || '').toUpperCase() === 'LIVE' ? 'LIVE' : 'DEMO';
+    const teamId = resolveTeamId();
+    const data = await service.getKpis({
+      start: resolved.start,
+      end: resolved.end,
+      compareStart: resolved.compare?.start,
+      compareEnd: resolved.compare?.end,
+      teamId,
+      mode,
+      lang: document.documentElement?.lang || 'en'
+    });
+    if (requestId !== activeRequestId) return;
+    controller.update(data);
+  } catch (err) {
+    if (requestId !== activeRequestId) return;
+    devError('KPI fetch failed:', err);
+    const controller = await ensureKpiController();
+    controller.showError(translate('actions.retry', 'Tap to retry'));
+  }
+}
+
+function handleRangeChange(event){
+  const resolved = event?.detail?.range;
+  if (!resolved) return;
+  fetchKpiSnapshot(resolved).catch(err => {
+    devError('KPI range update failed:', err);
+  });
+}
+
+function handleModeChange(mode){
+  const resolved = currentRange || AppState.getResolvedRange?.();
+  if (!resolved) return;
+  fetchKpiSnapshot(resolved).catch(err => {
+    devError('KPI mode update failed:', err);
+  });
+}
+
+async function initKpiCards(){
+  try {
+    await ensureKpiController();
+    document.addEventListener('state:range-changed', handleRangeChange);
+    document.addEventListener('state:mode-changed', event => {
+      handleModeChange(event?.detail?.mode);
+    });
+    const initialRange = AppState.getResolvedRange?.();
+    if (initialRange) {
+      fetchKpiSnapshot(initialRange).catch(err => {
+        devError('KPI initial load failed:', err);
       });
     }
-
-    cardsModule.mountKpiCards('#kpi', data, cardsModule.KPI_CONFIG, {
-      initialRange: '1d',
-      bindExternalRange
-    });
   } catch (err) {
     devError('KPI mount failed:', err);
   }
@@ -120,16 +194,6 @@ function setupLayoutChrome() {
     devError('Side nav render failed:', err);
   }
 
-  if (window.DateControls?.mount) {
-    window.DateControls.mount('#tb-quick', {
-      presets: ['Today', '7D', 'MTD', 'QTD', 'YTD'],
-      compare: false,
-      startSlot: '#tb-dates [data-date-slot="start"]',
-      endSlot: '#tb-dates [data-date-slot="end"]',
-      compareSlot: '#tb-compare'
-    });
-  }
-
   if (window.Caption?.render) {
     window.Caption.render('#global-caption', {
       asOf: new Date(),
@@ -143,6 +207,7 @@ async function bootstrap() {
   const { bootstrapCorporatePage } = await loadCorporatePage();
   await bootstrapCorporatePage();
   await initKpiCards();
+  AppState.notifyRange?.();
   bindExportButton();
   setupLayoutChrome();
 }
