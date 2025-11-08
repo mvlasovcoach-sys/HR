@@ -2,8 +2,8 @@ import { loadLiveSamples } from './dataSource.js';
 import { loadDemoDaily, demoBounds } from './demoData.js';
 import { keyForRange } from '../utils/dateRange.js';
 
-const guardLive = 5;
-const guardDemo = 1;
+const guardDemo = 1;   // demo must not fall into N/A if we have at least 1 daily row
+const guardLive = 5;   // unchanged
 const BURNOUT_THRESHOLD = 55;
 const FATIGUE_THRESHOLD = 60;
 

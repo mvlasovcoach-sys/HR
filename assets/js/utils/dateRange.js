@@ -184,6 +184,99 @@ function normaliseOutput({ kind, label, start, end, compareStart, compareEnd }){
   };
 }
 
+function parseIsoDate(value){
+  if (!value) return null;
+  if (value instanceof Date) {
+    const clone = new Date(value.getTime());
+    return Number.isNaN(clone.valueOf()) ? null : clone;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.valueOf())) return null;
+  return date;
+}
+
+function startOfNextMonthUTC(date){
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
+}
+
+function startOfNextQuarterUTC(date){
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 3, 1));
+}
+
+function startOfNextYearUTC(date){
+  return new Date(Date.UTC(date.getUTCFullYear() + 1, 0, 1));
+}
+
+function normaliseShiftedRange({ kind, label, start, end }){
+  const windowDays = Math.max(1, countDays(start, end, 'UTC'));
+  const compareEnd = start;
+  const compareStart = addDaysZoned(compareEnd, 'UTC', -windowDays);
+  return normaliseOutput({ kind, label, start, end, compareStart, compareEnd });
+}
+
+export function shiftRangeToDemoEnd(resolved, bounds){
+  if (!resolved || !bounds?.max) {
+    return resolved ? { ...resolved, ok: false } : { ok: false };
+  }
+
+  const startDate = parseIsoDate(resolved.startISO || resolved.start);
+  const endDate = parseIsoDate(resolved.endISO || resolved.end);
+  if (!startDate || !endDate) {
+    return { ...resolved, ok: false };
+  }
+
+  const maxDay = parseIsoDate(`${bounds.max}T00:00:00Z`);
+  if (!maxDay) {
+    return { ...resolved, ok: false };
+  }
+
+  const endCap = addDaysZoned(maxDay, 'UTC', 1);
+  const minDay = bounds.min ? parseIsoDate(`${bounds.min}T00:00:00Z`) : null;
+
+  if (minDay && startDate.getTime() >= minDay.getTime() && endDate.getTime() <= endCap.getTime()) {
+    return { ...resolved, ok: true };
+  }
+
+  let start = startDate;
+  let end = endCap;
+  const originalSpan = Math.max(1, countDays(startDate, endDate, 'UTC'));
+
+  switch (resolved.kind) {
+    case 'mtd': {
+      const monthStart = startOfMonthZoned(maxDay, 'UTC');
+      const monthNext = startOfNextMonthUTC(monthStart);
+      start = monthStart;
+      end = endCap.getTime() < monthNext.getTime() ? endCap : monthNext;
+      break;
+    }
+    case 'qtd': {
+      const quarterStart = startOfQuarterZoned(maxDay, 'UTC');
+      const quarterNext = startOfNextQuarterUTC(quarterStart);
+      start = quarterStart;
+      end = endCap.getTime() < quarterNext.getTime() ? endCap : quarterNext;
+      break;
+    }
+    case 'ytd': {
+      const yearStart = startOfYearZoned(maxDay, 'UTC');
+      const yearNext = startOfNextYearUTC(yearStart);
+      start = yearStart;
+      end = endCap.getTime() < yearNext.getTime() ? endCap : yearNext;
+      break;
+    }
+    default: {
+      start = addDaysZoned(end, 'UTC', -originalSpan);
+      break;
+    }
+  }
+
+  if (end.getTime() <= start.getTime()) {
+    end = addDaysZoned(start, 'UTC', 1);
+  }
+
+  const label = resolved.label || RANGE_LABELS[resolved.kind] || RANGE_LABELS.today;
+  return { ...normaliseShiftedRange({ kind: resolved.kind, label, start, end }), ok: true };
+}
+
 export async function resolveRange(selection, now = new Date(), tz = 'Europe/Amsterdam'){
   const kind = normaliseKind(selection) || 'today';
   if (kind === 'custom' && typeof selection === 'object') {
