@@ -17,8 +17,6 @@ import '../theme.js';
 import '../asof.js';
 import { AppState } from '../stores/appState.js';
 import { ModeStore } from '../stores/modeStore.js';
-import { clampToDemo } from '../utils/dateRange.js';
-import { demoBounds } from '../services/demoData.js';
 
 const devError = globalThis.devError || ((...args) => console.error(...args));
 
@@ -75,8 +73,6 @@ const translate = (key, fallback) => window.I18N?.t?.(key, fallback) || fallback
 let kpiControllerPromise;
 let currentRange = null;
 let activeRequestId = 0;
-let demoFallbackActive = false;
-
 const DEMO_FALLBACK_MESSAGE = 'No demo data for this period — switched to 7 Days';
 
 async function ensureKpiController(){
@@ -119,46 +115,25 @@ async function fetchKpiSnapshot(resolved){
     const service = await loadKpiService();
     const mode = (ModeStore.mode || '').toLowerCase() === 'live' ? 'live' : 'demo';
     const teamId = resolveTeamId();
-    if (mode === 'demo') {
-      const bounds = await demoBounds();
-      if (requestId !== activeRequestId) return;
-      const clampResult = clampToDemo({ startISO, endISO }, bounds);
-      if (!clampResult.ok) {
-        demoFallbackActive = true;
-        controller.setLoading(false);
-        controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
-        if (resolved.kind !== '7d') {
-          AppState.setRangeKind('7d');
-        }
-        return;
-      }
-    }
-
     const data = await service.getKpis({
       startISO,
       endISO,
-      compareStartISO: resolved.compare?.startISO || resolved.compare?.start,
-      compareEndISO: resolved.compare?.endISO || resolved.compare?.end,
+      compareStartISO: resolved.compareStartISO || resolved.compare?.startISO || resolved.compare?.start,
+      compareEndISO: resolved.compareEndISO || resolved.compare?.endISO || resolved.compare?.end,
       teamId,
       mode,
       lang: document.documentElement?.lang || 'en'
     });
     if (requestId !== activeRequestId) return;
-    if (mode === 'demo') {
-      if (data?.reason === 'no-demo-range' || data?.isInsufficient) {
-        demoFallbackActive = true;
-        controller.setLoading(false);
-        controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
-        if (resolved.kind !== '7d') {
-          AppState.setRangeKind('7d');
-        }
-        return;
+    if (mode === 'demo' && data?.isInsufficient) {
+      controller.setLoading(false);
+      controller.setNotice?.(DEMO_FALLBACK_MESSAGE);
+      if (resolved.kind !== '7d') {
+        AppState.setRangeKind('7d');
       }
-      demoFallbackActive = resolved.kind === '7d' ? demoFallbackActive : false;
-    } else {
-      demoFallbackActive = false;
+      return;
     }
-    controller.setNotice?.(demoFallbackActive ? DEMO_FALLBACK_MESSAGE : null);
+    controller.setNotice?.(null);
     controller.update(data);
   } catch (err) {
     if (requestId !== activeRequestId) return;

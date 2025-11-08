@@ -190,6 +190,7 @@ function renderCard(card, metric, value, delta, options){
   const thresholds = options.thresholds || KPI_THRESHOLDS;
 
   element.classList.toggle('is-loading', isLoading);
+  element.dataset.disabled = 'false';
 
   if (isLoading) {
     refs.numberEl.textContent = '—';
@@ -214,9 +215,13 @@ function renderCard(card, metric, value, delta, options){
     }
     refs.deltaIconEl.textContent = '';
     refs.deltaValueEl.textContent = '';
-    refs.assistiveEl.textContent = mode === 'live'
-      ? t('kpi.assistive.liveNA', 'No live data for this period.')
-      : t('kpi.assistive.na', 'Data not available for this range.');
+    if (mode === 'live') {
+      refs.assistiveEl.textContent = t('kpi.assistive.liveNA', 'No live data');
+      element.dataset.disabled = 'true';
+    } else {
+      refs.assistiveEl.textContent = t('kpi.assistive.na', 'Data not available for this range.');
+      element.dataset.disabled = 'false';
+    }
     if (refs.miniFillEl) refs.miniFillEl.style.width = '0%';
     element.dataset.tone = 'neutral';
     if (refs.badgeEl) refs.badgeEl.textContent = '';
