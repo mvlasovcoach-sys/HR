@@ -171,6 +171,8 @@ function normaliseOutput({ kind, label, start, end, compareStart, compareEnd }){
     label,
     startISO,
     endISO,
+    compareStartISO,
+    compareEndISO,
     start: startISO,
     end: endISO,
     compare: {
@@ -230,68 +232,6 @@ export async function resolveRange(selection, now = new Date(), tz = 'Europe/Ams
   });
 }
 
-function normaliseIsoEntry(value){
-  if (!value) return null;
-  const date = value instanceof Date ? new Date(value) : new Date(value);
-  if (Number.isNaN(date.valueOf())) return null;
-  return { iso: date.toISOString(), time: date.getTime() };
-}
-
-function normaliseDay(day){
-  if (typeof day !== 'string' || day.length !== 10) return null;
-  const date = new Date(`${day}T00:00:00.000Z`);
-  if (Number.isNaN(date.valueOf())) return null;
-  return { iso: date.toISOString(), time: date.getTime() };
-}
-
-function addDaysISO(day, amount){
-  const normalized = normaliseDay(day);
-  if (!normalized) return null;
-  const date = new Date(normalized.time);
-  date.setUTCDate(date.getUTCDate() + amount);
-  return date.toISOString();
-}
-
-function maxISO(iso, minDay){
-  const left = normaliseIsoEntry(iso);
-  const right = normaliseDay(minDay);
-  if (!left && !right) return null;
-  if (!left) return right.iso;
-  if (!right) return left.iso;
-  return left.time >= right.time ? left.iso : right.iso;
-}
-
-function minISO(iso, boundIso){
-  const left = normaliseIsoEntry(iso);
-  const right = normaliseIsoEntry(boundIso);
-  if (!left && !right) return null;
-  if (!left) return right.iso;
-  if (!right) return left.iso;
-  return left.time <= right.time ? left.iso : right.iso;
-}
-
-export function clampToDemo(range, bounds){
-  const startInput = range?.startISO || range?.start || null;
-  const endInput = range?.endISO || range?.end || null;
-  const min = bounds?.min || null;
-  const max = bounds?.max || null;
-  const startNormalized = normaliseIsoEntry(startInput)?.iso || null;
-  const endNormalized = normaliseIsoEntry(endInput)?.iso || null;
-  if (!startNormalized || !endNormalized) {
-    return { startISO: startNormalized, endISO: endNormalized, start: startNormalized, end: endNormalized, ok: false };
-  }
-  if (!min || !max) {
-    return { startISO: startNormalized, endISO: endNormalized, start: startNormalized, end: endNormalized, ok: false };
-  }
-  const endBoundISO = addDaysISO(max, 1);
-  const clampedStart = maxISO(startNormalized, min);
-  const clampedEnd = minISO(endNormalized, endBoundISO);
-  const startIso = normaliseIsoEntry(clampedStart)?.iso || null;
-  const endIso = normaliseIsoEntry(clampedEnd)?.iso || null;
-  const ok = Boolean(startIso && endIso && endIso > startIso);
-  return { startISO: startIso, endISO: endIso, start: startIso, end: endIso, ok };
-}
-
 export function keyForRange({ startISO, endISO, start, end, teamId = 'all', mode = 'DEMO', lang = 'en' } = {}){
   const safeStart = typeof startISO === 'string' ? startISO : typeof start === 'string' ? start : '';
   const safeEnd = typeof endISO === 'string' ? endISO : typeof end === 'string' ? end : '';
@@ -300,5 +240,3 @@ export function keyForRange({ startISO, endISO, start, end, teamId = 'all', mode
   const safeLang = lang != null ? String(lang) : 'en';
   return `range:${safeStart}:${safeEnd}:team:${safeTeam}:mode:${safeMode}:lang:${safeLang}`;
 }
-
-export { addDaysISO };

@@ -1,6 +1,6 @@
 import { loadLiveSamples } from './dataSource.js';
 import { loadDemoDaily, demoBounds } from './demoData.js';
-import { clampToDemo, keyForRange } from '../utils/dateRange.js';
+import { keyForRange } from '../utils/dateRange.js';
 
 const guardLive = 5;
 const guardDemo = 1;
@@ -210,9 +210,9 @@ function aggregateDays(dayIndex, dayKeys){
   };
 }
 
-function sliceByDate(rows, startIso, endIso){
-  const startTime = Date.parse(startIso);
-  const endTime = Date.parse(endIso);
+const within = (rows, sISO, eISO) => {
+  const startTime = Date.parse(sISO);
+  const endTime = Date.parse(eISO);
   if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) return [];
   if (endTime <= startTime) return [];
   return rows.filter(row => {
@@ -220,50 +220,35 @@ function sliceByDate(rows, startIso, endIso){
     if (!Number.isFinite(ts)) return false;
     return ts >= startTime && ts < endTime;
   });
-}
+};
 
-function mean(values){
-  if (!Array.isArray(values) || !values.length) return null;
-  const sum = values.reduce((acc, value) => acc + value, 0);
-  const avg = sum / values.length;
-  return Number.isFinite(avg) ? +avg.toFixed(1) : null;
-}
+const mean = arr => {
+  if (!Array.isArray(arr) || arr.length === 0) return 0;
+  const sum = arr.reduce((total, value) => total + value, 0);
+  const avg = sum / arr.length;
+  return Number.isFinite(avg) ? avg : 0;
+};
 
-function aggregateDemo(rows = []){
-  const wellbeing = [];
-  const stress = [];
-  const burnout = [];
-  const fatigue = [];
-
-  rows.forEach(row => {
-    if (Number.isFinite(row?.wellbeing)) wellbeing.push(row.wellbeing);
-    if (Number.isFinite(row?.stress)) stress.push(row.stress);
-    if (Number.isFinite(row?.burnout)) burnout.push(row.burnout);
-    if (Number.isFinite(row?.fatigue)) fatigue.push(row.fatigue);
-  });
+const aggregateDemo = rows => {
+  const wellbeing = rows.map(row => Number(row?.wellbeing)).filter(Number.isFinite);
+  const stress = rows.map(row => Number(row?.stress)).filter(Number.isFinite);
+  const burnout = rows.map(row => Number(row?.burnout)).filter(Number.isFinite);
+  const fatigue = rows.map(row => Number(row?.fatigue)).filter(Number.isFinite);
 
   return {
-    wellbeing: mean(wellbeing),
-    stress: mean(stress),
-    burnout: mean(burnout),
-    fatigue: mean(fatigue)
+    wellbeing: Math.round(mean(wellbeing)),
+    stress: Math.round(mean(stress)),
+    burnout: Math.round(mean(burnout)),
+    fatigue: Math.round(mean(fatigue) * 10) / 10
   };
-}
+};
 
-function delta(current, previous){
-  if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
-  const value = +(current - previous).toFixed(1);
-  return Number.isFinite(value) ? value : null;
-}
-
-function diffObjects(previous = {}, current = {}){
-  return {
-    wellbeing: delta(current.wellbeing, previous.wellbeing),
-    stress: delta(current.stress, previous.stress),
-    burnout: delta(current.burnout, previous.burnout),
-    fatigue: delta(current.fatigue, previous.fatigue)
-  };
-}
+const diffObjects = (previous = {}, current = {}) => ({
+  wellbeing: +(Number(current.wellbeing ?? 0) - Number(previous.wellbeing ?? 0)).toFixed(1),
+  stress: +(Number(current.stress ?? 0) - Number(previous.stress ?? 0)).toFixed(1),
+  burnout: +(Number(current.burnout ?? 0) - Number(previous.burnout ?? 0)).toFixed(1),
+  fatigue: +(Number(current.fatigue ?? 0) - Number(previous.fatigue ?? 0)).toFixed(1)
+});
 
 export async function getKpis(params = {}){
   const mode = normaliseMode(params.mode);
@@ -281,18 +266,35 @@ export async function getKpis(params = {}){
 
   const request = (async () => {
     if (mode === 'demo') {
-      const [rows, bounds] = await Promise.all([loadDemoDaily(), demoBounds()]);
-      const clamped = clampToDemo({ startISO, endISO }, bounds);
-      if (!clamped.ok) {
+      const rows = await loadDemoDaily();
+      const { min, max } = await demoBounds();
+      if (!min || !max) {
+        return { mode: 'demo', isInsufficient: true };
+      }
+
+      const minISO = `${min}T00:00:00.000Z`;
+      const maxEndDate = new Date(`${max}T00:00:00.000Z`);
+      maxEndDate.setUTCDate(maxEndDate.getUTCDate() + 1);
+      const maxISO = maxEndDate.toISOString();
+
+      const sISO = typeof startISO === 'string' && startISO > minISO ? startISO : minISO;
+      const eISO = typeof endISO === 'string' && endISO < maxISO ? endISO : maxISO;
+
+      if (!(eISO > sISO)) {
         return { mode: 'demo', isInsufficient: true, reason: 'no-demo-range' };
       }
-      const currentRows = sliceByDate(rows, clamped.startISO, clamped.endISO);
-      const previousRows = sliceByDate(rows, compareStartISO, compareEndISO);
+
+      const currentRows = within(rows, sISO, eISO);
+      const previousRows = within(rows, compareStartISO, compareEndISO);
+
       if (currentRows.length < guardDemo) {
         return { mode: 'demo', isInsufficient: true };
       }
+
       const currentAgg = aggregateDemo(currentRows);
       const previousAgg = aggregateDemo(previousRows);
+      const deltas = diffObjects(previousAgg, currentAgg);
+
       return {
         mode: 'demo',
         isInsufficient: false,
@@ -301,7 +303,7 @@ export async function getKpis(params = {}){
         burnout: currentAgg.burnout,
         fatigue: currentAgg.fatigue,
         samples: currentRows.length,
-        deltas: diffObjects(previousAgg, currentAgg)
+        deltas
       };
     }
 
