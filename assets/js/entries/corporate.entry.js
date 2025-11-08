@@ -17,6 +17,8 @@ import '../theme.js';
 import '../asof.js';
 import { AppState } from '../stores/appState.js';
 import { ModeStore } from '../stores/modeStore.js';
+import { demoBounds } from '../services/demoData.js';
+import { shiftRangeToDemoEnd } from '../utils/dateRange.js';
 
 const devError = globalThis.devError || ((...args) => console.error(...args));
 
@@ -112,14 +114,24 @@ async function fetchKpiSnapshot(resolved){
   const requestId = ++activeRequestId;
   controller.setLoading(true);
   try {
-    const service = await loadKpiService();
     const mode = (ModeStore.mode || '').toLowerCase() === 'live' ? 'live' : 'demo';
+    let effective = resolved;
+
+    if (mode === 'demo') {
+      const bounds = await demoBounds();
+      const shifted = shiftRangeToDemoEnd(resolved, bounds);
+      if (shifted?.ok) {
+        effective = shifted;
+      }
+    }
+
+    const service = await loadKpiService();
     const teamId = resolveTeamId();
     const data = await service.getKpis({
-      startISO,
-      endISO,
-      compareStartISO: resolved.compareStartISO || resolved.compare?.startISO || resolved.compare?.start,
-      compareEndISO: resolved.compareEndISO || resolved.compare?.endISO || resolved.compare?.end,
+      startISO: effective.startISO || effective.start,
+      endISO: effective.endISO || effective.end,
+      compareStartISO: effective.compareStartISO || effective.compare?.startISO || effective.compare?.start,
+      compareEndISO: effective.compareEndISO || effective.compare?.endISO || effective.compare?.end,
       teamId,
       mode,
       lang: document.documentElement?.lang || 'en'
