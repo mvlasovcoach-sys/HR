@@ -251,6 +251,7 @@ function createCard(metricKey, metricConfig, cardTemplate) {
   const fragment = cardTemplate.content.cloneNode(true);
   const element = fragment.querySelector('.kpi-card');
   element.dataset.metric = metricKey;
+  const headerEl = element.querySelector('.kpi-card__header');
   const labelEl = element.querySelector('.kpi-card__label');
   const numberEl = element.querySelector('.kpi-card__number');
   const unitEl = element.querySelector('.kpi-card__unit');
@@ -261,6 +262,12 @@ function createCard(metricKey, metricConfig, cardTemplate) {
   const assistiveEl = element.querySelector('.kpi-card__assistive');
   const miniFillEl = element.querySelector('.kpi-card__mini-fill');
   const deltaEl = element.querySelector('.kpi-card__delta');
+  const infoButton = element.querySelector('.kpi-info');
+
+  if (infoButton) {
+    infoButton.remove();
+    headerEl?.classList.remove('kpi-header');
+  }
 
   const idBase = `kpi-card-${metricKey}-${cardIdCounter += 1}`;
   const labelId = `${idBase}-label`;
