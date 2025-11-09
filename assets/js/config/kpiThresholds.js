@@ -1,11 +1,8 @@
-import { levelForWellbeing } from '../../../js/kpi-config.js';
-
 const defaultThresholds = {
   wellbeing: value => {
     if (!Number.isFinite(value)) return 'neutral';
-    const level = levelForWellbeing(value);
-    if (level.name === 'green') return 'green';
-    if (level.name === 'yellow') return 'amber';
+    if (value >= 75) return 'green';
+    if (value >= 50) return 'amber';
     return 'red';
   },
   stress: value => {
