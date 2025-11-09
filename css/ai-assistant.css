@@ -1,0 +1,5 @@
+.ai-card { border-radius: 14px; padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+.ai-risk { font-size: 24px; font-weight: 700; }
+.ai-risk.bad { color: #e24a4a; } .ai-risk.mid { color: #df9d22; } .ai-risk.good { color: #2b7a4b; }
+.ai-factors { opacity:.9; margin-top:8px; font-size: 14px; }
+.ai-actions button { margin-right: 8px; }
