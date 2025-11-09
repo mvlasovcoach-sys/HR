@@ -8,9 +8,11 @@ const btnRecommend = () => document.getElementById('ai-btn-recommend');
 const btnWhatIf = () => document.getElementById('ai-btn-whatif');
 
 function setBtnsEnabled(enabled) {
-  [btnExplain(), btnRecommend(), btnWhatIf()].forEach(b => {
-    if (!b) return;
+  ['ai-btn-explain','ai-btn-recommend','ai-btn-whatif'].forEach(id=>{
+    const b=document.getElementById(id); if(!b) return;
     b.disabled = !enabled;
+    // активный вид как у Today — заполняем
+    b.classList.toggle('pill-btn--primary', enabled);
   });
 }
 
