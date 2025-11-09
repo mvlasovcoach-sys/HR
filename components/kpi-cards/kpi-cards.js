@@ -1,5 +1,3 @@
-import { levelForWellbeing } from '../../js/kpi-config.js';
-
 const TEMPLATE_URL = new URL('./kpi-cards.html', import.meta.url);
 let templatePromise = null;
 let cardIdCounter = 0;
@@ -59,9 +57,8 @@ export const KPI_CONFIG = {
   thresholds: {
     wellbeing: v => {
       if (typeof v !== 'number') return 'amber';
-      const level = levelForWellbeing(v);
-      if (level.name === 'green') return 'green';
-      if (level.name === 'yellow') return 'amber';
+      if (v >= 75) return 'green';
+      if (v >= 50) return 'amber';
       return 'red';
     },
     stressAvg: v => (typeof v === 'number' ? (v <= 35 ? 'green' : v <= 55 ? 'amber' : 'red') : 'amber'),
