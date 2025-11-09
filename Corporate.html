@@ -176,6 +176,16 @@
   </main>
 </div>
   <script type="module" defer src="assets/build/corporate.bundle.js?v=2025-11-07"></script>
+  <script type="module">
+    import { loadCorporateData } from './js/data-loader.js';
+    // Detect mode from query (?mode=demo|life)
+    const url = new URL(window.location.href);
+    const mode = (url.searchParams.get('mode') || 'demo').toLowerCase();
+    window.APP_MODE = mode; // expose globally for other modules
+    window.DEMO_DATA = await loadCorporateData(mode);
+    // Optional: dispatch event when data is ready
+    window.dispatchEvent(new CustomEvent('corporate:data-ready', { detail: { mode, data: window.DEMO_DATA }}));
+  </script>
 <!-- global overlay root -->
 <div id="ui-portal"></div>
 
