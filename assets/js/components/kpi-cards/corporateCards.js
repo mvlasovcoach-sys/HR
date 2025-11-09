@@ -1,4 +1,5 @@
 import { resolveBand, KPI_THRESHOLDS } from '../../config/kpiThresholds.js';
+import { renderOrgWellbeing } from '../../../../js/kpi/compute-org-wellbeing.js';
 
 const TEMPLATE_URL = new URL('../../../../components/kpi-cards/kpi-cards.html', import.meta.url);
 let templatePromise = null;
@@ -325,6 +326,11 @@ export async function mountCorporateKpiCards(target, options = {}){
         isInsufficient: Boolean(lastData?.isInsufficient),
         thresholds: options.thresholds || KPI_THRESHOLDS
       });
+    });
+
+    renderOrgWellbeing({
+      containerId: 'kpi-org-wellbeing',
+      value: Number.isFinite(lastData?.wellbeing) && !lastData?.isInsufficient ? lastData.wellbeing : null
     });
   }
 

@@ -1,0 +1,32 @@
+/* рамка карточки по уровню */
+.kpi-card.kwb--good    { outline: 1px solid rgba(38,194,129,.55); }
+.kpi-card.kwb--medium  { outline: 1px solid rgba(230,179,31,.55); }
+.kpi-card.kwb--anomaly { outline: 1px solid rgba(226,74,74,.65);  }
+
+/* бейдж уровня */
+.kpi-badge{
+  margin-left:10px; padding:6px 10px; border-radius:9999px;
+  font:600 12px/1 Inter,system-ui,sans-serif;
+  border:1px solid transparent; display:inline-flex; align-items:center; gap:6px;
+}
+.badge--good{
+  color:#0e3a2d; background:#26c28122; border-color:#26c28166;
+}
+.badge--medium{
+  color:#3b2c0a; background:#e6b31f22; border-color:#e6b31f66;
+}
+.badge--anomaly{
+  color:#3a0e0e; background:#e24a4a22; border-color:#e24a4a88;
+}
+
+/* бейдж Affected */
+.kpi-affected{
+  margin-left:8px; padding:6px 10px; border-radius:9999px;
+  font:600 12px/1 Inter,system-ui,sans-serif;
+  color:#3a0e0e; background:#e24a4a15; border:1px dashed #e24a4a88;
+}
+
+/* полоска-бар можно тонировать по уровню */
+.kpi-card.kwb--good   .kpi-bar{ box-shadow: inset 0 0 0 1px #26c28155; }
+.kpi-card.kwb--medium .kpi-bar{ box-shadow: inset 0 0 0 1px #e6b31f55; }
+.kpi-card.kwb--anomaly .kpi-bar{ box-shadow: inset 0 0 0 1px #e24a4a66; }
