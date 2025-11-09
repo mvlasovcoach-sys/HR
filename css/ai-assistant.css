@@ -54,7 +54,13 @@
   border:1px solid rgba(255,255,255,.08);
 }
 .risk--low   + #ai-risk-level{ color:#0e3a2d; background:#26c28122; border-color:#26c28155; }
-.risk--medium+ #ai-risk-level{ color:#3b2c0a; background:#e6b31f22; border-color:#e6b31f55; }
+.risk--medium+ #ai-risk-level{
+  color:#fff4bd;
+  background-color:transparent;
+  border-color:#f1d87a;
+  opacity:1;
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
+}
 .risk--high  + #ai-risk-level{ color:#3a0e0e; background:#e24a4a22; border-color:#e24a4a55; }
 .ai-factors { opacity:.9; margin-top:8px; font-size: 14px; }
 .ai-actions .pill-btn { margin-right: 8px; }
