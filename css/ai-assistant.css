@@ -43,8 +43,19 @@
 .pill-btn--sm{ padding:6px 12px; font-weight:600; font-size:13px; }
 
 .ai-card { border-radius: 14px; padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
-.ai-risk { font-size: 24px; font-weight: 700; }
-.ai-risk.bad { color: #e24a4a; } .ai-risk.mid { color: #df9d22; } .ai-risk.good { color: #2b7a4b; }
+.ai-risk { font-size: 28px; font-weight: 800; letter-spacing:.3px; }
+.ai-risk.risk--low    { color:#26c281; }
+.ai-risk.risk--medium { color:#e6b31f; }
+.ai-risk.risk--high   { color:#e24a4a; }
+
+#ai-risk-level{
+  margin-left:10px; padding:6px 10px; border-radius:9999px;
+  font:600 12px/1 Inter,system-ui,sans-serif; opacity:.9;
+  border:1px solid rgba(255,255,255,.08);
+}
+.risk--low   + #ai-risk-level{ color:#0e3a2d; background:#26c28122; border-color:#26c28155; }
+.risk--medium+ #ai-risk-level{ color:#3b2c0a; background:#e6b31f22; border-color:#e6b31f55; }
+.risk--high  + #ai-risk-level{ color:#3a0e0e; background:#e24a4a22; border-color:#e24a4a55; }
 .ai-factors { opacity:.9; margin-top:8px; font-size: 14px; }
 .ai-actions .pill-btn { margin-right: 8px; }
 

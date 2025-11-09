@@ -1,5 +1,3 @@
-export const RISK_THRESHOLDS = { yellow: 40, red: 70 };
-
 const clamp01 = x => Math.max(0, Math.min(1, x));
 const norm100 = (x, min = 0, max = 100) => (x == null || isNaN(x)) ? null : clamp01((x - min) / (max - min));
 const series = (hist, key) => hist.map(d => ({ date: d.date, value: d[key] ?? 0 }));

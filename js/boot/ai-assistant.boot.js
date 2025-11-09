@@ -1,11 +1,27 @@
 import { loadCorporateData } from '../data-loader.js';
-import { computeRisk, recommend, simulate, RISK_THRESHOLDS } from '../ai-assistant.js';
+import { computeRisk, recommend, simulate } from '../ai-assistant.js';
+import { levelFor } from '../ai-config.js';
 
 const riskEl = () => document.getElementById('ai-risk');
 const factorsEl = () => document.getElementById('ai-factors');
 const btnExplain = () => document.getElementById('ai-btn-explain');
 const btnRecommend = () => document.getElementById('ai-btn-recommend');
 const btnWhatIf = () => document.getElementById('ai-btn-whatif');
+
+const renderRisk = (risk) => {
+  const el = riskEl();
+  if (!el) return;
+
+  el.textContent = `Risk: ${risk}`;
+  el.classList.remove('risk--low', 'risk--medium', 'risk--high');
+
+  const level = levelFor(risk);
+  el.classList.add(level.colorClass);
+  el.setAttribute('aria-label', `Risk ${risk}, ${level.label}`);
+
+  const badge = document.getElementById('ai-risk-level');
+  if (badge) badge.textContent = level.label;
+};
 
 function setBtnsEnabled(enabled) {
   ['ai-btn-explain','ai-btn-recommend','ai-btn-whatif'].forEach(id=>{
@@ -14,12 +30,6 @@ function setBtnsEnabled(enabled) {
     // активный вид как у Today — заполняем
     b.classList.toggle('pill-btn--primary', enabled);
   });
-}
-
-function colorizeRisk(el, val) {
-  el.classList.remove('good','mid','bad');
-  el.classList.add(val >= RISK_THRESHOLDS.red ? 'bad' :
-                   val >= RISK_THRESHOLDS.yellow ? 'mid' : 'good');
 }
 
 async function boot() {
@@ -40,17 +50,21 @@ async function boot() {
     const person = team?.members?.[0];
 
     if (!person?.history?.length) {
-      if (riskEl()) riskEl().textContent = 'Risk: —';
+      const el = riskEl();
+      if (el) {
+        el.textContent = 'Risk: —';
+        el.classList.remove('risk--low', 'risk--medium', 'risk--high');
+        el.removeAttribute('aria-label');
+      }
+      const badge = document.getElementById('ai-risk-level');
+      if (badge) badge.textContent = '';
       if (factorsEl()) factorsEl().textContent = 'No data';
       setBtnsEnabled(false);
       return;
     }
 
     const res = computeRisk(person.history);
-    if (riskEl()) {
-      riskEl().textContent = `Risk: ${res.risk} · WellScore: ${res.wellscore}`;
-      colorizeRisk(riskEl(), res.risk);
-    }
+    renderRisk(res.risk);
     if (factorsEl()) {
       factorsEl().textContent = res.contribs.slice(0,3)
         .map(c => `${c.key} +${c.percent}%`).join('  •  ');
@@ -76,7 +90,14 @@ async function boot() {
 
   } catch (e) {
     console.error('[ai-assistant.boot] init failed', e);
-    if (riskEl()) riskEl().textContent = 'Risk: —';
+    const el = riskEl();
+    if (el) {
+      el.textContent = 'Risk: —';
+      el.classList.remove('risk--low', 'risk--medium', 'risk--high');
+      el.removeAttribute('aria-label');
+    }
+    const badge = document.getElementById('ai-risk-level');
+    if (badge) badge.textContent = '';
     if (factorsEl()) factorsEl().textContent = 'Init error';
     setBtnsEnabled(false);
   }
