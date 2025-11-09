@@ -2,7 +2,7 @@ export function renderOrgWellbeing({ containerId, value }) {
   const root = document.getElementById(containerId);
   if (!root) return;
 
-  const valueEl = root.querySelector('.kpi-value');
+  const valueEl = root.querySelector('.kpi-value, .kpi-card__number');
   if (!valueEl) return;
 
   const numericValue = Number(value);

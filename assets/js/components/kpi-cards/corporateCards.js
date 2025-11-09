@@ -39,6 +39,13 @@ const METRIC_CONFIG = [
   }
 ];
 
+const CARD_INFO_META = {
+  wellbeing: { elementId: 'kpi-org-wellbeing', infoKey: 'org_wellbeing' },
+  stress: { elementId: 'kpi-stress', infoKey: 'stress_avg' },
+  burnout: { elementId: 'kpi-burnout', infoKey: 'burnout_risk' },
+  fatigue: { elementId: 'kpi-fatigue', infoKey: 'fatigue_share' }
+};
+
 function t(key, fallback){
   if (!key) return fallback;
   const translated = window.I18N?.t?.(key, fallback);
@@ -153,6 +160,10 @@ function createCard(cardTemplate, metric){
   const fragment = cardTemplate.content.cloneNode(true);
   const element = fragment.querySelector('.kpi-card');
   element.dataset.metric = metric.key;
+  const infoMeta = CARD_INFO_META[metric.key];
+  if (infoMeta?.elementId) {
+    element.id = infoMeta.elementId;
+  }
   const labelEl = element.querySelector('.kpi-card__label');
   const hintEl = element.querySelector('.kpi-card__hint');
   const numberEl = element.querySelector('.kpi-card__number');
@@ -163,6 +174,18 @@ function createCard(cardTemplate, metric){
   const assistiveEl = element.querySelector('.kpi-card__assistive');
   const miniFillEl = element.querySelector('.kpi-card__mini-fill');
   const badgeEl = element.querySelector('.kpi-card__badge');
+  const infoButton = element.querySelector('.kpi-info');
+
+  if (infoButton) {
+    if (infoMeta?.infoKey) {
+      infoButton.hidden = false;
+      infoButton.dataset.kpi = infoMeta.infoKey;
+      infoButton.setAttribute('aria-label', t('kpi.infoButtonLabel', 'About this KPI'));
+      infoButton.setAttribute('aria-expanded', 'false');
+    } else {
+      infoButton.remove();
+    }
+  }
 
   labelEl.textContent = t(metric.labelKey, metric.fallback);
   hintEl.textContent = metric.description || '';

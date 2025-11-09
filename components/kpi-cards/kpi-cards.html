@@ -13,9 +13,10 @@
 
 <template id="tpl-kpi-card">
   <article class="kpi-card" role="group">
-    <header class="kpi-card__header">
-      <span class="kpi-card__label"></span>
+    <header class="kpi-card__header kpi-header">
+      <span class="kpi-card__label kpi-title"></span>
       <span class="kpi-card__hint sr-only"></span>
+      <button class="kpi-info" type="button" aria-label="About this KPI" aria-expanded="false" data-kpi="" hidden>i</button>
       <span class="kpi-card__badge" aria-hidden="true"></span>
     </header>
     <div class="kpi-card__body">
