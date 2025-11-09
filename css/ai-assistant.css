@@ -3,3 +3,7 @@
 .ai-risk.bad { color: #e24a4a; } .ai-risk.mid { color: #df9d22; } .ai-risk.good { color: #2b7a4b; }
 .ai-factors { opacity:.9; margin-top:8px; font-size: 14px; }
 .ai-actions button { margin-right: 8px; }
+
+#ai-assistant[data-risk-level="high"] { outline: 2px solid #e24a4a; }
+#ai-assistant[data-risk-level="mid"]  { outline: 2px solid #df9d22; }
+#ai-assistant[data-risk-level="low"]  { outline: 2px solid rgba(0,0,0,.08); }
