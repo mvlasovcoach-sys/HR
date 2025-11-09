@@ -9,7 +9,6 @@
   connect-src 'self';
   object-src 'none';
   base-uri 'self';
-  frame-ancestors 'none';
   upgrade-insecure-requests;">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -132,9 +131,9 @@
         <div id="ai-risk" class="ai-risk">Risk: —</div>
         <div id="ai-factors" class="ai-factors"></div>
         <div class="ai-actions">
-          <button id="ai-btn-explain">Explain</button>
-          <button id="ai-btn-recommend">Recommend</button>
-          <button id="ai-btn-whatif">What-if</button>
+          <button id="ai-btn-explain" disabled>Explain</button>
+          <button id="ai-btn-recommend" disabled>Recommend</button>
+          <button id="ai-btn-whatif" disabled>What-if</button>
         </div>
       </section>
       <div id="fatigue-today-card" class="trend-card-host is-hidden" aria-live="polite"></div>
@@ -187,145 +186,7 @@
   </main>
 </div>
   <script type="module" defer src="assets/build/corporate.bundle.js?v=2025-11-07"></script>
-  <script>
-  // TODO: integrate with real RBAC later
-  window.USER_ROLE = (new URL(location.href).searchParams.get('role') || 'hr').toLowerCase();
-  </script>
-  <script type="module">
-  import { computeRisk, recommend, simulate, RISK_THRESHOLDS } from './js/ai-assistant.js';
-  import { sliceHistoryByRange } from './js/ai-assistant-range.js';
-  import { applyRiskBadge } from './js/ai-alerts.js';
-
-  const VALID_RANGES = new Set(['today', '7d', 'month']);
-  const RANGE_ALIASES = {
-    day: 'today',
-    '1d': 'today',
-    week: '7d',
-    '7': '7d',
-    mtd: 'month'
-  };
-  let RANGE = 'today';
-  let PERSON_HISTORY = [];
-
-  const normaliseRange = (value) => {
-    if (typeof value !== 'string') return 'today';
-    const key = value.trim().toLowerCase();
-    if (VALID_RANGES.has(key)) return key;
-    if (RANGE_ALIASES[key]) return RANGE_ALIASES[key];
-    return 'today';
-  };
-
-  const getCurrentHistory = () => sliceHistoryByRange(PERSON_HISTORY, RANGE);
-
-  const dispatchRangeChange = (range) => {
-    window.dispatchEvent(new CustomEvent('range:changed', { detail: range }));
-  };
-
-  const setRange = (next) => {
-    const resolved = normaliseRange(next);
-    if (RANGE !== resolved) {
-      RANGE = resolved;
-      dispatchRangeChange(RANGE);
-    } else {
-      dispatchRangeChange(RANGE);
-    }
-  };
-
-  const pickFirstPerson = (data) => {
-    const t = data?.teams?.[0];
-    return t?.members?.[0] || null;
-  };
-
-  const setFallbackState = () => {
-    const riskEl = document.getElementById('ai-risk');
-    const factorsEl = document.getElementById('ai-factors');
-    const cardEl = document.getElementById('ai-assistant');
-    riskEl.textContent = 'Risk: N/A  ·  WellScore: N/A';
-    riskEl.classList.remove('good', 'mid', 'bad');
-    factorsEl.textContent = 'No data available';
-    if (cardEl) cardEl.removeAttribute('data-risk-level');
-  };
-
-  const render = (res) => {
-    const riskEl = document.getElementById('ai-risk');
-    const factorsEl = document.getElementById('ai-factors');
-    riskEl.textContent = `Risk: ${res.risk}  ·  WellScore: ${res.wellscore}`;
-    riskEl.classList.remove('good','mid','bad');
-    riskEl.classList.add(res.risk >= RISK_THRESHOLDS.red ? 'bad' :
-                         res.risk >= RISK_THRESHOLDS.yellow ? 'mid' : 'good');
-
-    const topFactors = res.contribs.slice(0, 3);
-    const role = window.USER_ROLE || 'hr';
-    const factorsText = (role === 'hr')
-      ? topFactors.map(c => `${c.key}`).join('  •  ')
-      : topFactors.map(c => `${c.key} +${c.percent}%`).join('  •  ');
-    factorsEl.textContent = factorsText || 'No data available';
-
-    applyRiskBadge(res.risk, 'ai-assistant');
-  };
-
-  const bind = () => {
-    document.getElementById('ai-btn-explain').onclick = () => {
-      const r = computeRisk(getCurrentHistory());
-      alert('Top factors:\n' + r.contribs.map(c => `${c.key}: ${c.percent}%`).join('\n'));
-    };
-    document.getElementById('ai-btn-recommend').onclick = () => {
-      const r = computeRisk(getCurrentHistory());
-      const recs = recommend(r);
-      alert('Recommendations:\n' + recs.map(x => `• ${x.title} (${x.role}) ~Δ${x.expected_delta}`).join('\n'));
-    };
-    document.getElementById('ai-btn-whatif').onclick = () => {
-      const sim = simulate(getCurrentHistory(), { reduce_load_pct: 10, wfh_days: 2 });
-      alert(`What-if:\nBefore: ${sim.before}\nAfter: ${sim.after}`);
-    };
-  };
-
-  const updateAssistant = () => {
-    if (window.APP_MODE === 'life' || !PERSON_HISTORY?.length) {
-      setFallbackState();
-      return;
-    }
-    const result = computeRisk(getCurrentHistory());
-    render(result);
-  };
-
-  window.addEventListener('corporate:data-ready', (e) => {
-    const person = pickFirstPerson(e.detail.data);
-    PERSON_HISTORY = Array.isArray(person?.history) ? person.history : [];
-    if (window.APP_MODE === 'life' || !PERSON_HISTORY.length) {
-      setFallbackState();
-      return;
-    }
-    updateAssistant();
-    bind();
-  });
-
-  window.addEventListener('range:changed', () => {
-    updateAssistant();
-  });
-
-  document.addEventListener('state:range-changed', (event) => {
-    const kind = event?.detail?.selection?.kind || event?.detail?.range?.kind;
-    if (!kind) return;
-    setRange(kind);
-  });
-
-  document.addEventListener('demo:range', (event) => {
-    const range = event?.detail?.range;
-    if (!range) return;
-    setRange(range);
-  });
-  </script>
-  <script type="module">
-    import { loadCorporateData } from './js/data-loader.js';
-    // Detect mode from query (?mode=demo|life)
-    const url = new URL(window.location.href);
-    const mode = (url.searchParams.get('mode') || 'demo').toLowerCase();
-    window.APP_MODE = mode; // expose globally for other modules
-    window.DEMO_DATA = await loadCorporateData(mode);
-    // Optional: dispatch event when data is ready
-    window.dispatchEvent(new CustomEvent('corporate:data-ready', { detail: { mode, data: window.DEMO_DATA }}));
-  </script>
+  <script type="module" src="./js/boot/ai-assistant.boot.js"></script>
 <!-- global overlay root -->
 <div id="ui-portal"></div>
 
