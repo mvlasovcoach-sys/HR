@@ -189,6 +189,42 @@
   <script type="module" defer src="assets/build/corporate.bundle.js?v=2025-11-07"></script>
   <script type="module">
   import { computeRisk, recommend, simulate, RISK_THRESHOLDS } from './js/ai-assistant.js';
+  import { sliceHistoryByRange } from './js/ai-assistant-range.js';
+
+  const VALID_RANGES = new Set(['today', '7d', 'month']);
+  const RANGE_ALIASES = {
+    day: 'today',
+    '1d': 'today',
+    week: '7d',
+    '7': '7d',
+    mtd: 'month'
+  };
+  let RANGE = 'today';
+  let PERSON_HISTORY = [];
+
+  const normaliseRange = (value) => {
+    if (typeof value !== 'string') return 'today';
+    const key = value.trim().toLowerCase();
+    if (VALID_RANGES.has(key)) return key;
+    if (RANGE_ALIASES[key]) return RANGE_ALIASES[key];
+    return 'today';
+  };
+
+  const getCurrentHistory = () => sliceHistoryByRange(PERSON_HISTORY, RANGE);
+
+  const dispatchRangeChange = (range) => {
+    window.dispatchEvent(new CustomEvent('range:changed', { detail: range }));
+  };
+
+  const setRange = (next) => {
+    const resolved = normaliseRange(next);
+    if (RANGE !== resolved) {
+      RANGE = resolved;
+      dispatchRangeChange(RANGE);
+    } else {
+      dispatchRangeChange(RANGE);
+    }
+  };
 
   const pickFirstPerson = (data) => {
     const t = data?.teams?.[0];
@@ -206,32 +242,54 @@
       res.contribs.slice(0,3).map(c => `${c.key} +${c.percent}%`).join('  •  ');
   };
 
-  const bind = (history) => {
+  const bind = () => {
     document.getElementById('ai-btn-explain').onclick = () => {
-      const r = computeRisk(history);
+      const r = computeRisk(getCurrentHistory());
       alert('Top factors:\n' + r.contribs.map(c => `${c.key}: ${c.percent}%`).join('\n'));
     };
     document.getElementById('ai-btn-recommend').onclick = () => {
-      const r = computeRisk(history);
+      const r = computeRisk(getCurrentHistory());
       const recs = recommend(r);
       alert('Recommendations:\n' + recs.map(x => `• ${x.title} (${x.role}) ~Δ${x.expected_delta}`).join('\n'));
     };
     document.getElementById('ai-btn-whatif').onclick = () => {
-      const sim = simulate(history, { reduce_load_pct: 10, wfh_days: 2 });
+      const sim = simulate(getCurrentHistory(), { reduce_load_pct: 10, wfh_days: 2 });
       alert(`What-if:\nBefore: ${sim.before}\nAfter: ${sim.after}`);
     };
   };
 
+  const updateAssistant = () => {
+    if (!PERSON_HISTORY?.length) return;
+    const result = computeRisk(getCurrentHistory());
+    render(result);
+  };
+
   window.addEventListener('corporate:data-ready', (e) => {
     const person = pickFirstPerson(e.detail.data);
-    if (!person?.history?.length) {
+    PERSON_HISTORY = Array.isArray(person?.history) ? person.history : [];
+    if (!PERSON_HISTORY.length) {
       document.getElementById('ai-risk').textContent = 'Risk: N/A  ·  WellScore: N/A';
       document.getElementById('ai-factors').textContent = 'No data available';
       return;
     }
-    const result = computeRisk(person.history);
-    render(result);
-    bind(person.history);
+    updateAssistant();
+    bind();
+  });
+
+  window.addEventListener('range:changed', () => {
+    updateAssistant();
+  });
+
+  document.addEventListener('state:range-changed', (event) => {
+    const kind = event?.detail?.selection?.kind || event?.detail?.range?.kind;
+    if (!kind) return;
+    setRange(kind);
+  });
+
+  document.addEventListener('demo:range', (event) => {
+    const range = event?.detail?.range;
+    if (!range) return;
+    setRange(range);
   });
   </script>
   <script type="module">
